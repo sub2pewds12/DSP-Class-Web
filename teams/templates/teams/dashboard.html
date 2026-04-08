@@ -1,0 +1,28 @@
+{% extends 'teams/base.html' %}
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white">
+                <h3 class="mb-0">Welcome, {{ student.first_name }}!</h3>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-primary mb-4">Your Team: <span class="fw-bold">{{ team.name }}</span></h5>
+                <p class="text-muted small">Team Created on: {{ team.created_at|date:"F j, Y" }}</p>
+                <hr>
+                <h6 class="mb-3">Your Teammates:</h6>
+                <ul class="list-group list-group-flush border">
+                    {% for member in team.members.all %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center {% if member.id == student.id %}bg-light{% endif %}">
+                            {{ member.first_name }} {{ member.last_name }}
+                            {% if member.id == student.id %}
+                                <span class="badge bg-primary rounded-pill">You</span>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends 'teams/base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Project Teams Gallery</h2>
+    <a href="{% url 'dashboard' %}" class="btn btn-outline-primary">My Dashboard</a>
+</div>
+
+<div class="row g-4">
+    {% for team in teams %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ team.name }}</h5>
+                    <span class="badge bg-light text-primary rounded-pill">{{ team.members.count }} Members</span>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush pt-2">
+                        {% for member in team.members.all %}
+                            <li class="list-group-item px-0 py-2 border-0 border-bottom d-flex align-items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person me-2 text-muted" viewBox="0 0 16 16">
+                                  <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0Zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4Zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10Z"/>
+                                </svg>
+                                {{ member.first_name }} {{ member.last_name }}
+                            </li>
+                        {% empty %}
+                            <li class="list-group-item px-0 text-muted fst-italic">No members yet.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="card-footer bg-white border-0 text-end">
+                    <small class="text-muted">Created {{ team.created_at|timesince }} ago</small>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12 mt-5 text-center">
+            <div class="alert alert-info py-5">
+                <h4>No Teams Available</h4>
+                <p class="mb-0">It looks like no project topics have been registered yet. Be the first to start a team!</p>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}
