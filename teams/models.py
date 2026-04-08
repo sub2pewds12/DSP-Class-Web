@@ -1,5 +1,18 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
+from django.conf import settings
+
+class CustomUser(AbstractUser):
+    ROLE_CHOICES = (
+        ('STUDENT', 'Student'),
+        ('LECTURER', 'Lecturer/Teacher'),
+    )
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='STUDENT')
+    email = models.EmailField(unique=True)
+
+    def __str__(self):
+        return f"{self.get_full_name()} ({self.role})"
 
 class SystemSettings(models.Model):
     max_team_size = models.IntegerField(default=4)
@@ -33,10 +46,15 @@ class Team(models.Model):
 
 
 class Student(models.Model):
-    first_name = models.CharField(max_length=255)
-    last_name = models.CharField(max_length=255)
-    email = models.EmailField(unique=True)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='student_profile')
     team = models.ForeignKey(Team, null=True, blank=True, on_delete=models.SET_NULL, related_name='members')
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name}"
+        return f"Student: {self.user.get_full_name()}"
+
+class Lecturer(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='lecturer_profile')
+    department = models.CharField(max_length=255, blank=True)
+
+    def __str__(self):
+        return f"Lecturer: {self.user.get_full_name()}"

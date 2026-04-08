@@ -3,24 +3,33 @@
 <div class="row">
     <div class="col-md-8 mx-auto">
         <div class="card shadow-sm border-0">
-            <div class="card-header bg-white">
-                <h3 class="mb-0">Welcome, {{ student.first_name }}!</h3>
+            <div class="card-header bg-white py-3">
+                <h3 class="mb-0">Welcome, {{ student.user.first_name }}!</h3>
             </div>
             <div class="card-body">
-                <h5 class="card-title text-primary mb-4">Your Team: <span class="fw-bold">{{ team.name }}</span></h5>
-                <p class="text-muted small">Team Created on: {{ team.created_at|date:"F j, Y" }}</p>
+                <div class="alert alert-info d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0 text-primary">Your Team: <span class="fw-bold">{{ team.name }}</span></h5>
+                        <small class="text-muted">Team Created on: {{ team.created_at|date:"F j, Y" }}</small>
+                    </div>
+                </div>
                 <hr>
                 <h6 class="mb-3">Your Teammates:</h6>
-                <ul class="list-group list-group-flush border">
+                <ul class="list-group list-group-flush border rounded">
                     {% for member in team.members.all %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center {% if member.id == student.id %}bg-light{% endif %}">
-                            {{ member.first_name }} {{ member.last_name }}
-                            {% if member.id == student.id %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center {% if member.user.id == user.id %}bg-light fw-bold{% endif %}">
+                            {{ member.user.get_full_name }}
+                            {% if member.user.id == user.id %}
                                 <span class="badge bg-primary rounded-pill">You</span>
+                            {% else %}
+                                <small class="text-muted">{{ member.user.email }}</small>
                             {% endif %}
                         </li>
                     {% endfor %}
                 </ul>
+            </div>
+            <div class="card-footer bg-white border-0 text-center py-3">
+                 <p class="small text-muted mb-0 font-italic">Role: Student Profile</p>
             </div>
         </div>
     </div>

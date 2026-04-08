@@ -1,0 +1,39 @@
+{% extends 'teams/base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow border-0">
+            <div class="card-header bg-success text-white py-3">
+                <h4 class="mb-0">Join the DSP Class</h4>
+            </div>
+            <div class="card-body p-4">
+                <p class="text-muted small mb-4">Register here. You will receive an email to set your password immediately after.</p>
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{{ field.label }}</label>
+                            {% if field.name == 'role' %}
+                                <div class="d-flex gap-4">
+                                    {% for radio in field %}
+                                        <div class="form-check">
+                                            {{ radio.tag }}
+                                            <label class="form-check-label">{{ radio.choice_label }}</label>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ field }}
+                            {% endif %}
+                            {% if field.errors %}
+                                <div class="text-danger small mt-1">{{ field.errors }}</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-success w-100 py-2 mt-3">Register Account</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

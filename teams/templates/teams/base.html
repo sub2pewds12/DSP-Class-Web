@@ -15,13 +15,30 @@
             </button>
 
             <div class="collapse navbar-collapse" id="navbarsExample">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
-                    </li>
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'gallery' %}">Public Gallery</a>
                     </li>
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link fw-bold" href="{% url 'dashboard' %}">
+                                {% if user.role == "LECTURER" %}Teacher{% else %}Student{% endif %} Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">{{ user.get_full_name|default:user.username }}</a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><form action="{% url 'logout' %}" method="post">{% csrf_token %}<button type="submit" class="dropdown-item">Logout</button></form></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-outline-light ms-lg-2" href="{% url 'signup' %}">Sign Up</a>
+                        </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>

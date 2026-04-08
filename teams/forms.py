@@ -1,11 +1,26 @@
 from django import forms
 from django.core.exceptions import ValidationError
-from .models import Team, Student, SystemSettings
+from django.contrib.auth import get_user_model
+from .models import Team, Student, SystemSettings, Lecturer
+
+User = get_user_model()
+
+class UserRegistrationForm(forms.ModelForm):
+    first_name = forms.CharField(required=True)
+    last_name = forms.CharField(required=True)
+    role = forms.ChoiceField(choices=User.ROLE_CHOICES, widget=forms.RadioSelect)
+
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email', 'role']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            if not isinstance(field.widget, forms.RadioSelect):
+                field.widget.attrs.update({'class': 'form-control'})
 
 class TeamRegistrationForm(forms.Form):
-    first_name = forms.CharField(max_length=255)
-    last_name = forms.CharField(max_length=255)
-    email = forms.EmailField()
     team_choice = forms.ModelChoiceField(queryset=Team.objects.all(), required=False, empty_label="--- Join an Existing Team ---")
     new_team_name = forms.CharField(max_length=255, required=False, label="Or Create a New Team")
 
@@ -16,15 +31,8 @@ class TeamRegistrationForm(forms.Form):
 
     def clean(self):
         cleaned_data = super().clean()
-        email = cleaned_data.get('email')
         team_choice = cleaned_data.get('team_choice')
         new_team_name = cleaned_data.get('new_team_name')
-
-        # Check if student is already assigned
-        if email:
-            student = Student.objects.filter(email=email).first()
-            if student and student.team:
-                raise ValidationError("A student with this email is already assigned to a team.")
 
         # Require one of team_choice or new_team_name
         if team_choice and new_team_name:
