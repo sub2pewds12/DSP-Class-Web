@@ -1,7 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
-from .models import Team, Student, SystemSettings, Lecturer
+from .models import Team, Student, SystemSettings, Lecturer, ClassDocument
 
 User = get_user_model()
 
@@ -59,3 +59,13 @@ class TeamRegistrationForm(forms.Form):
                 raise ValidationError(f"The team '{team_choice.name}' is already at maximum capacity ({max_size} members).")
             
         return cleaned_data
+
+class DocumentUploadForm(forms.ModelForm):
+    class Meta:
+        model = ClassDocument
+        fields = ['title', 'file']
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs.update({'class': 'form-control'})

@@ -17,4 +17,7 @@ urlpatterns = [
     path('reset/done/', auth_views.PasswordResetCompleteView.as_view(), name='password_reset_complete'),
     path('password-reset/', auth_views.PasswordResetView.as_view(), name='password_reset'),
     path('password-reset/done/', auth_views.PasswordResetDoneView.as_view(), name='password_reset_done'),
+    
+    # Document Management
+    path('document/delete/<int:pk>/', views.delete_document, name='delete_document'),
 ]

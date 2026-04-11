@@ -1,8 +1,9 @@
 {% extends 'teams/base.html' %}
 {% block content %}
 <div class="row">
-    <div class="col-md-8 mx-auto">
-        <div class="card shadow-sm border-0">
+    <!-- Your Team Card -->
+    <div class="col-lg-8 mb-4">
+        <div class="card shadow border-0 h-100">
             <div class="card-header bg-white py-3">
                 <h3 class="mb-0">Welcome, {{ student.user.first_name }}!</h3>
             </div>
@@ -22,14 +23,33 @@
                             {% if member.user.id == user.id %}
                                 <span class="badge bg-primary rounded-pill">You</span>
                             {% else %}
-                                <small class="text-muted">{{ member.user.email }}</small>
+                                <small class="text-muted text-truncate">{{ member.user.email }}</small>
                             {% endif %}
                         </li>
                     {% endfor %}
                 </ul>
             </div>
-            <div class="card-footer bg-white border-0 text-center py-3">
-                 <p class="small text-muted mb-0 font-italic">Role: Student Profile</p>
+        </div>
+    </div>
+
+    <!-- Class Materials Section -->
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow border-0 h-100">
+            <div class="card-header bg-success text-white py-3">
+                <h5 class="mb-0">Class Materials</h5>
+            </div>
+            <div class="list-group list-group-flush scrollable-docs">
+                {% for doc in documents %}
+                    <a href="{{ doc.file.url }}" target="_blank" class="list-group-item list-group-item-action py-3">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1 text-primary">{{ doc.title }}</h6>
+                            <small class="text-muted">{{ doc.uploaded_at|date:"M d" }}</small>
+                        </div>
+                        <small class="text-muted">Download / View</small>
+                    </a>
+                {% empty %}
+                    <div class="py-5 text-center text-muted">No materials uploaded yet.</div>
+                {% endfor %}
             </div>
         </div>
     </div>
