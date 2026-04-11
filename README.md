@@ -20,12 +20,9 @@ A comprehensive, production-ready platform designed to manage student team regis
 ## 🛠️ Management Commands
 Populate your local or remote database with realistic test data:
 ```bash
-python manage.py seed_dsp
+.\.venv\Scripts\python.exe manage.py seed_dsp
 ```
 Surgically remove only test data while preserving real user accounts:
 ```bash
-python manage.py seed_dsp --clear
+.\.venv\Scripts\python.exe manage.py seed_dsp --clear
 ```
-
----
-*Created by [Antigravity AI] for the DSP Class.*

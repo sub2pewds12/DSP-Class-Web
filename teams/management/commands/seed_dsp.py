@@ -1,7 +1,9 @@
-from django.db import models
+from django.utils import timezone
+from datetime import timedelta
+from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
-from teams.models import Team, Student, Lecturer, ClassDocument, TeamSubmission
+from teams.models import Team, Student, Lecturer, CustomUser, ClassDocument, TeamSubmission, Assignment
 
 User = get_user_model()
 
@@ -22,6 +24,10 @@ class Command(BaseCommand):
             
             # Submissions for those teams
             TeamSubmission.objects.filter(team__in=test_teams).delete()
+            
+            # Delete test assignments
+            test_assignments = Assignment.objects.filter(title__in=["Basics of DSP", "Midterm Report", "Final Prototype"])
+            test_assignments.delete()
             
             # Test Students/Lecturers (using username patterns)
             test_users = User.objects.filter(
@@ -56,8 +62,35 @@ class Command(BaseCommand):
             lecturer_user.set_password("password123")
             lecturer_user.save()
             Lecturer.objects.get_or_create(user=lecturer_user, department="DSP Engineering")
+        
+        lecturer_profile = lecturer_user.lecturer_profile
 
-        # 2. Create Teams
+        # 2. Create Assignments (Past, Present, Future)
+        now = timezone.now()
+        assignments_data = [
+            ("Basics of DSP", "Exercise on signal convolution.", now - timedelta(days=7), True),
+            ("Midterm Report", "Analysis of real-time signals.", now + timedelta(hours=2), False),
+            ("Final Prototype", "Working hardware demonstration.", now + timedelta(days=60), False),
+        ]
+        
+        created_assignments = []
+        for title, desc, deadline, released in assignments_data:
+            assign, _ = Assignment.objects.get_or_create(
+                title=title,
+                defaults={
+                    "description": desc,
+                    "deadline": deadline,
+                    "created_by": lecturer_user,
+                    "grades_released": released
+                }
+            )
+            # Add mock instruction file
+            if not assign.instruction_file:
+                content = ContentFile(f"Instructions for {title}".encode('utf-8'))
+                assign.instruction_file.save(f"instructions_{title.lower().replace(' ', '_')}.txt", content)
+            created_assignments.append(assign)
+
+        # 3. Create Teams and Simulating Submissions
         teams_data = [
             ("Cyber Shadows", "Real-time Encryption Algorithm", "Developing a high-speed DSP based encryption"),
             ("Robo Pulse", "Autonomous Drone Navigation", "Using Fourier transforms for signal processing in drone sensors"),
@@ -103,7 +136,37 @@ class Command(BaseCommand):
 
                 student_count += 1
             
-            self.stdout.write(f"Created Team: {t_name}")
+            # Simulating Submissions for this team
+            # 1. Past assignment (Graded)
+            sub1, s_created = TeamSubmission.objects.get_or_create(
+                team=team, 
+                assignment=created_assignments[0],
+                defaults={
+                    "title": "Module 1 Submission",
+                    "submitted_by": team.leader.user,
+                    "grade": 95,
+                    "feedback": "Perfect signal filtering logic. Well documented."
+                }
+            )
+            if s_created:
+                sub1.file.save(f"{team.name}_basics.txt", ContentFile("Mock submission content".encode('utf-8')))
+
+            # 2. Midterm (Late)
+            sub2, s_created = TeamSubmission.objects.get_or_create(
+                team=team,
+                assignment=created_assignments[1],
+                defaults={
+                    "title": "Midterm Draft",
+                    "submitted_by": team.leader.user,
+                }
+            )
+            if s_created:
+                # Force submitted_at to be late relative to deadline (+2h from now)
+                # Note: models.DateTimeField(auto_now_add=True) is hard to override in save(), 
+                # but we can do it via queryset.update() after creation if needed.
+                sub2.file.save(f"{team.name}_midterm.txt", ContentFile("Draft content".encode('utf-8')))
+
+            self.stdout.write(f"Created Team: {t_name} with simulated submissions")
 
         self.stdout.write(self.style.SUCCESS("Finished populating test data!"))
         self.stdout.write("\nAll test accounts have the password: password123")
