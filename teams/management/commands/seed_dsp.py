@@ -1,4 +1,4 @@
-import random
+from django.db import models
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from teams.models import Team, Student, Lecturer, ClassDocument, TeamSubmission
@@ -12,16 +12,32 @@ class Command(BaseCommand):
         parser.add_argument('--clear', action='store_true', help='Clear all data instead of populating')
 
     def handle(self, *args, **options):
+        test_team_names = ["Cyber Shadows", "Robo Pulse", "Signal Sentinels"]
+        
         if options['clear']:
-            self.stdout.write("Clearing all data...")
-            # Delete in order of dependencies
-            TeamSubmission.objects.all().delete()
-            ClassDocument.objects.all().delete()
-            Lecturer.objects.all().delete()
-            Student.objects.all().delete()
-            Team.objects.all().delete()
-            User.objects.exclude(is_superuser=True).delete()
-            self.stdout.write(self.style.SUCCESS("Database cleared successfully!"))
+            self.stdout.write("Surgically removing ONLY test data...")
+            
+            # Find the test teams
+            test_teams = Team.objects.filter(name__in=test_team_names)
+            
+            # Submissions for those teams
+            TeamSubmission.objects.filter(team__in=test_teams).delete()
+            
+            # Test Students/Lecturers (using username patterns)
+            test_users = User.objects.filter(
+                models.Q(username__startswith="student_") | 
+                models.Q(username="teacher_test")
+            )
+            
+            # Profile cleanup (cascades naturally, but let's be explicit)
+            Student.objects.filter(user__in=test_users).delete()
+            Lecturer.objects.filter(user__in=test_users).delete()
+            
+            # Delete teams and users
+            test_teams.delete()
+            test_users.delete()
+            
+            self.stdout.write(self.style.SUCCESS("Test data removed. Your real data remains untouched!"))
             return
 
         self.stdout.write("Populating database with test data...")
