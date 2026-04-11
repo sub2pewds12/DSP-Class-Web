@@ -26,17 +26,16 @@ class Command(BaseCommand):
             # Submissions for those teams
             TeamSubmission.objects.filter(team__in=test_teams).delete()
             
-            # Delete test assignments
-            test_assignments = Assignment.objects.filter(title__in=["Basics of DSP", "Midterm Report", "Final Prototype"])
-            test_assignments.delete()
-            
-            # Test Students/Lecturers (using username patterns)
+            # Test Users
             test_users = User.objects.filter(
                 models.Q(username__startswith="student_") | 
                 models.Q(username="teacher_test")
             )
+
+            # Delete ALL assignments created by the test teacher
+            Assignment.objects.filter(created_by__in=test_users).delete()
             
-            # Profile cleanup (cascades naturally, but let's be explicit)
+            # Profile cleanup
             Student.objects.filter(user__in=test_users).delete()
             Lecturer.objects.filter(user__in=test_users).delete()
             
@@ -59,10 +58,9 @@ class Command(BaseCommand):
                 "last_name": "Professor"
             }
         )
-        if created:
-            lecturer_user.set_password("password123")
-            lecturer_user.save()
-            Lecturer.objects.get_or_create(user=lecturer_user, department="DSP Engineering")
+        lecturer_user.set_password("password123")
+        lecturer_user.save()
+        Lecturer.objects.get_or_create(user=lecturer_user, department="DSP Engineering")
         
         lecturer_profile = lecturer_user.lecturer_profile
 
@@ -76,7 +74,7 @@ class Command(BaseCommand):
         
         created_assignments = []
         for title, desc, deadline, released in assignments_data:
-            assign, _ = Assignment.objects.get_or_create(
+            assign, _ = Assignment.objects.update_or_create(
                 title=title,
                 defaults={
                     "description": desc,
@@ -121,9 +119,8 @@ class Command(BaseCommand):
                         "last_name": f"Number {student_count}"
                     }
                 )
-                if s_created:
-                    s_user.set_password("password123")
-                    s_user.save()
+                s_user.set_password("password123")
+                s_user.save()
                 
                 student, _ = Student.objects.get_or_create(user=s_user)
                 student.team = team
