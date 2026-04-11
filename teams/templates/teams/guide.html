@@ -1,0 +1,73 @@
+{% extends 'teams/base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="text-center mb-5">
+            <h1 class="display-5 fw-bold text-dark"><i class="bi bi-journal-text text-primary"></i> User Guide & Handbook</h1>
+            <p class="lead text-muted">A quick guide to navigating the DSP Class Registration & Assignment platform.</p>
+        </div>
+
+        <div class="row">
+            <!-- Student Section -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 shadow border-0">
+                    <div class="card-header bg-primary text-white py-3 text-center">
+                        <h4 class="mb-0"><i class="bi bi-person-fill"></i> Student Instructions</h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="mb-4">
+                            <h6 class="fw-bold text-primary"><i class="bi bi-people"></i> 1. Joining a Team</h6>
+                            <p class="small text-muted">After signing up, you must either create a new named team or join an existing one from the dropdown list. Teams have a maximum size set by the system.</p>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="fw-bold text-primary"><i class="bi bi-star"></i> 2. Leadership & Project Info</h6>
+                            <p class="small text-muted">The first person to join a team is the **Leader**. Leaders can update the project name and objectives. All members can (and should) set their specific **Roles** in the team.</p>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="fw-bold text-primary"><i class="bi bi-cloud-arrow-up"></i> 3. Submitting Work</h6>
+                            <p class="small text-muted">Active assignments will appear on your dashboard. Download the instruction files if provided, and upload your team's work before the deadline. Late submissions are allowed but will be flagged.</p>
+                        </div>
+                        <div class="mb-0">
+                            <h6 class="fw-bold text-primary"><i class="bi bi-award"></i> 4. Viewing Results</h6>
+                            <p class="small text-muted">Numeric scores and detailed feedback from the lecturer will appear on your assignment card once the grades have been officially released.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lecturer Section -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 shadow border-0">
+                    <div class="card-header bg-dark text-white py-3 text-center">
+                        <h4 class="mb-0"><i class="bi bi-mortarboard-fill"></i> Lecturer Instructions</h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="mb-4">
+                            <h6 class="fw-bold text-dark"><i class="bi bi-file-earmark-plus"></i> 1. Resource Repository</h6>
+                            <p class="small text-muted">Upload lecture slides, templates, or helpful documents to the "Class Materials" section. Students can view and download these at any time.</p>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="fw-bold text-dark"><i class="bi bi-calendar-event"></i> 2. Assignment Management</h6>
+                            <p class="small text-muted">Create new tasks by setting a title, description, and **Deadline**. You can optionally attach an instruction PDF for each task.</p>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="fw-bold text-dark"><i class="bi bi-clipboard-check"></i> 3. Grading Flow</h6>
+                            <p class="small text-muted">Use the tracking table to see who has submitted. Click **"Grade"** to enter a numeric score (0-100) and specific feedback for a team's work.</p>
+                        </div>
+                        <div class="mb-0">
+                            <h6 class="fw-bold text-dark"><i class="bi bi-broadcast"></i> 4. Releasing Grades</h6>
+                            <p class="small text-muted">Grades and feedback are private by default. When you are finished grading the class, click **"Release Grades"** on the assignment card to make them visible to students.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tech Support / Footer -->
+        <div class="bg-light rounded p-4 text-center border mt-4">
+            <h6 class="fw-bold mb-1">Need Technical Help?</h6>
+            <p class="small text-muted mb-0">Contact the department administrator or check the project <a href="https://github.com/sub2pewds12/DSP-Class-Web" target="_blank">Source Code</a> for more details.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

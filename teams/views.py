@@ -222,3 +222,6 @@ def signup_view(request):
 def gallery_view(request):
     teams = Team.objects.prefetch_related('members__user').all()
     return render(request, 'teams/gallery.html', {'teams': teams})
+
+def guide_view(request):
+    return render(request, 'teams/guide.html')
