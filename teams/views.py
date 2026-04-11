@@ -54,33 +54,21 @@ def signup_view(request):
         if form.is_valid():
             user = form.save(commit=False)
             user.username = user.email # Use email as username
+            password = form.cleaned_data.get('password')
+            user.set_password(password)
             user.save()
             
             # Create profiles
             role = form.cleaned_data.get('role')
             if role == 'STUDENT':
-                Student.objects.create(user=user)
+                Student.objects.get_or_create(user=user)
             else:
-                Lecturer.objects.create(user=user)
+                Lecturer.objects.get_or_create(user=user)
             
-            # Trigger "Set Password" email using standard Django PasswordResetForm
-            reset_form = PasswordResetForm({'email': user.email})
-            if reset_form.is_valid():
-                try:
-                    reset_form.save(
-                        request=request,
-                        use_https=request.is_secure(),
-                        subject_template_name='registration/password_set_subject.txt',
-                        email_template_name='registration/password_set_email.html',
-                    )
-                    messages.success(request, "Account created! Please check your Gmail to set your initial password.")
-                except Exception as e:
-                    # Log failure to console for debugging on Render
-                    print(f"SMTP Error: {e}")
-                    # Log failure but allow signup to finish.
-                    messages.warning(request, "Account created, but we couldn't send the onboarding email. Please try the 'Forgot Password' link later or contact the teacher.")
-            
-            return redirect('login')
+            # Automatically log the user in after signup
+            login(request, user)
+            messages.success(request, f"Welcome, {user.first_name}! Your account has been created successfully.")
+            return redirect('dashboard')
     else:
         form = UserRegistrationForm()
     return render(request, 'registration/signup.html', {'form': form})

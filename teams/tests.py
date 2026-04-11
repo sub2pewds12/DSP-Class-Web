@@ -50,12 +50,13 @@ class AuthRedirectionTests(TestCase):
 
     def test_signup_creates_profiles(self):
         """Verify that signing up creates the correct profile (Student vs Lecturer)."""
-        # Testing the view logic specifically
         url = reverse('signup')
         data = {
             'first_name': 'New',
             'last_name': 'User',
             'email': 'new@test.com',
+            'password': 'newpassword123',
+            'password_confirm': 'newpassword123',
             'role': 'STUDENT'
         }
         self.client.post(url, data)
@@ -64,26 +65,22 @@ class AuthRedirectionTests(TestCase):
         self.assertEqual(user.role, 'STUDENT')
         self.assertTrue(Student.objects.filter(user=user).exists())
 
-    def test_signup_sends_email(self):
-        """Verify that a password-set email is triggered upon signup."""
-        from django.core import mail
-        
+    def test_signup_auto_login(self):
+        """Verify that a user is automatically logged in after signing up."""
         url = reverse('signup')
         data = {
-            'first_name': 'Email',
-            'last_name': 'Tester',
-            'email': 'tester@gmail.com',
+            'first_name': 'Auto',
+            'last_name': 'Login',
+            'email': 'auto@test.com',
+            'password': 'autopassword123',
+            'password_confirm': 'autopassword123',
             'role': 'STUDENT'
         }
-        self.client.post(url, data)
-        
-        # Check that one message was sent to the virtual outbox
-        self.assertEqual(len(mail.outbox), 1)
-        
-        # Verify the recipient and subject
-        self.assertEqual(mail.outbox[0].subject, 'Set your DSP Registration password')
-        self.assertIn('tester@gmail.com', mail.outbox[0].to)
-        self.assertIn('finish setting up your account', mail.outbox[0].body)
+        response = self.client.post(url, data, follow=True)
+        # Verify the user is redirected to the dashboard and is authenticated
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('_auth_user_id', self.client.session)
+        self.assertTemplateUsed(response, 'teams/register.html')
 
 class TeamRegistrationTests(TestCase):
     def setUp(self):

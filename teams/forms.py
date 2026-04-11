@@ -8,17 +8,28 @@ User = get_user_model()
 class UserRegistrationForm(forms.ModelForm):
     first_name = forms.CharField(required=True)
     last_name = forms.CharField(required=True)
+    password = forms.CharField(widget=forms.PasswordInput, required=True)
+    password_confirm = forms.CharField(widget=forms.PasswordInput, required=True, label="Confirm Password")
     role = forms.ChoiceField(choices=User.ROLE_CHOICES, widget=forms.RadioSelect)
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'role']
+        fields = ['first_name', 'last_name', 'email', 'password', 'role']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
             if not isinstance(field.widget, forms.RadioSelect):
                 field.widget.attrs.update({'class': 'form-control'})
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get("password")
+        password_confirm = cleaned_data.get("password_confirm")
+
+        if password and password_confirm and password != password_confirm:
+            raise ValidationError("Passwords do not match!")
+        return cleaned_data
 
 class TeamRegistrationForm(forms.Form):
     team_choice = forms.ModelChoiceField(queryset=Team.objects.all(), required=False, empty_label="--- Join an Existing Team ---")
