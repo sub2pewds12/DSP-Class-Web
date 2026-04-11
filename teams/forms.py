@@ -1,7 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
-from .models import Team, Student, SystemSettings, Lecturer, ClassDocument
+from .models import Team, Student, SystemSettings, Lecturer, ClassDocument, TeamSubmission
 
 User = get_user_model()
 
@@ -63,6 +63,35 @@ class TeamRegistrationForm(forms.Form):
 class DocumentUploadForm(forms.ModelForm):
     class Meta:
         model = ClassDocument
+        fields = ['title', 'file']
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs.update({'class': 'form-control'})
+
+class TeamProjectForm(forms.ModelForm):
+    class Meta:
+        model = Team
+        fields = ['project_name', 'project_description']
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs.update({'class': 'form-control'})
+
+class StudentRoleForm(forms.ModelForm):
+    class Meta:
+        model = Student
+        fields = ['role']
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['role'].widget.attrs.update({'class': 'form-control', 'placeholder': 'e.g. Lead Coder, Designer...'})
+
+class AssignmentUploadForm(forms.ModelForm):
+    class Meta:
+        model = TeamSubmission
         fields = ['title', 'file']
     
     def __init__(self, *args, **kwargs):

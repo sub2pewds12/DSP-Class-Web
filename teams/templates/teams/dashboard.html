@@ -1,40 +1,151 @@
 {% extends 'teams/base.html' %}
 {% block content %}
 <div class="row">
-    <!-- Your Team Card -->
-    <div class="col-lg-8 mb-4">
-        <div class="card shadow border-0 h-100">
-            <div class="card-header bg-white py-3">
-                <h3 class="mb-0">Welcome, {{ student.user.first_name }}!</h3>
+    <!-- Main Content Column -->
+    <div class="col-lg-8">
+        <!-- Welcome & Team Stats -->
+        <div class="card shadow border-0 mb-4">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h3 class="mb-0 text-dark">Team: {{ team.name }}</h3>
+                {% if team.leader == student %}
+                    <span class="badge bg-warning text-dark"><i class="bi bi-star-fill"></i> Team Leader</span>
+                {% else %}
+                    <span class="badge bg-light text-muted border">Team Member</span>
+                {% endif %}
             </div>
             <div class="card-body">
-                <div class="alert alert-info d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="mb-0 text-primary">Your Team: <span class="fw-bold">{{ team.name }}</span></h5>
-                        <small class="text-muted">Team Created on: {{ team.created_at|date:"F j, Y" }}</small>
+                {% if not team.project_name %}
+                    <div class="alert alert-warning py-2 small">
+                        <i class="bi bi-exclamation-triangle"></i> No project name set. {% if team.leader == student %}Please update project details below.{% else %}Ask your leader to set the project name.{% endif %}
                     </div>
-                </div>
-                <hr>
-                <h6 class="mb-3">Your Teammates:</h6>
-                <ul class="list-group list-group-flush border rounded">
+                {% else %}
+                    <h5 class="text-primary mb-1">Project: {{ team.project_name }}</h5>
+                    <p class="text-muted small mb-0">{{ team.project_description|default:"No description provided yet."|truncatewords:30 }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Team Members & Roles -->
+        <div class="card shadow border-0 mb-4">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Group Members</h5>
+                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#roleModal">Set My Role</button>
+            </div>
+            <div class="card-body">
+                <div class="row row-cols-1 row-cols-md-2 g-3">
                     {% for member in team.members.all %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center {% if member.user.id == user.id %}bg-light fw-bold{% endif %}">
-                            {{ member.user.get_full_name }}
-                            {% if member.user.id == user.id %}
-                                <span class="badge bg-primary rounded-pill">You</span>
-                            {% else %}
-                                <small class="text-muted text-truncate">{{ member.user.email }}</small>
-                            {% endif %}
-                        </li>
+                        <div class="col">
+                            <div class="p-3 border rounded {% if member.user == user %}bg-light border-primary{% endif %}">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="text-truncate">
+                                        <div class="fw-bold text-dark text-truncate">{{ member.user.get_full_name }}</div>
+                                        <div class="small text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">{{ member.role|default:"Member" }}</div>
+                                    </div>
+                                    {% if team.leader == member %}
+                                        <span class="badge bg-warning text-dark" style="font-size: 0.6rem;">LEAD</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
                     {% endfor %}
-                </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Project Management (Leader Only) OR Teams View -->
+        <div class="card shadow border-0 mb-4">
+            <div class="card-header {% if team.leader == student %}bg-dark text-white{% else %}bg-light{% endif %}">
+                <h5 class="mb-0">Project details</h5>
+            </div>
+            <div class="card-body">
+                {% if team.leader == student %}
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="update_project" value="1">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Project Name</label>
+                            {{ project_form.project_name }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Objectives / Description</label>
+                            {{ project_form.project_description }}
+                        </div>
+                        <button type="submit" class="btn btn-dark w-100">Update Project Info</button>
+                    </form>
+                {% else %}
+                    <div class="py-3 text-center">
+                        <p class="text-muted small">Only the team leader (<strong>{{ team.leader.user.get_full_name }}</strong>) can edit project details.</p>
+                        <hr>
+                        <h6 class="text-dark">Current Info:</h6>
+                        <p><strong>Name:</strong> {{ team.project_name|default:"Not set" }}</p>
+                        <p><strong>Description:</strong> {{ team.project_description|default:"Not set" }}</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Assignments Section -->
+        <div class="card shadow border-0 mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Teamwork Assignments</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" class="mb-4 pb-4 border-bottom">
+                    {% csrf_token %}
+                    <input type="hidden" name="upload_assignment" value="1">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-5">
+                            <label class="form-label small fw-bold">Assignment Title</label>
+                            {{ assign_form.title }}
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label small fw-bold">Upload File</label>
+                            {{ assign_form.file }}
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">Post</button>
+                        </div>
+                    </div>
+                </form>
+
+                <h6 class="mb-3">Submission History</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr class="text-muted small">
+                                <th>Title</th>
+                                <th>Date</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sub in submissions %}
+                                <tr>
+                                    <td class="fw-bold small">{{ sub.title }}</td>
+                                    <td class="text-muted small">{{ sub.submitted_at|date:"M d, H:i" }}</td>
+                                    <td class="text-end">
+                                        <a href="{{ sub.file.url }}" target="_blank" class="btn btn-sm btn-link p-0 text-primary me-2">View</a>
+                                        {% if team.leader == student %}
+                                            <a href="{% url 'delete_submission' sub.pk %}" class="btn btn-sm btn-link p-0 text-danger" onclick="return confirm('Delete this submission?')">Delete</a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-4 text-muted small">No assignments submitted yet.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Class Materials Section -->
+    <!-- Sidebar Column -->
     <div class="col-lg-4 mb-4">
-        <div class="card shadow border-0 h-100">
+        <!-- Class Materials -->
+        <div class="card shadow border-0 mb-4 h-100">
             <div class="card-header bg-success text-white py-3">
                 <h5 class="mb-0">Class Materials</h5>
             </div>
@@ -51,6 +162,30 @@
                     <div class="py-5 text-center text-muted">No materials uploaded yet.</div>
                 {% endfor %}
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Role Modal -->
+<div class="modal fade" id="roleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="update_role" value="1">
+                <div class="modal-header">
+                    <h5 class="modal-title">Define Your Role</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-muted mb-3">State your responsibility in this project (e.g., UI Designer, Core Programmer, Research Lead).</p>
+                    {{ role_form.role }}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

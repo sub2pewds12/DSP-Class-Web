@@ -31,6 +31,9 @@ class SystemSettings(models.Model):
 
 class Team(models.Model):
     name = models.CharField(max_length=255, unique=True)
+    project_name = models.CharField(max_length=255, blank=True)
+    project_description = models.TextField(blank=True)
+    leader = models.ForeignKey('Student', null=True, blank=True, on_delete=models.SET_NULL, related_name='led_teams')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def clean(self):
@@ -48,6 +51,7 @@ class Team(models.Model):
 class Student(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='student_profile')
     team = models.ForeignKey(Team, null=True, blank=True, on_delete=models.SET_NULL, related_name='members')
+    role = models.CharField(max_length=255, blank=True, default="Member")
 
     def __str__(self):
         return f"Student: {self.user.get_full_name()}"
@@ -67,3 +71,13 @@ class ClassDocument(models.Model):
 
     def __str__(self):
         return self.title
+
+class TeamSubmission(models.Model):
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='submissions')
+    title = models.CharField(max_length=255)
+    file = models.FileField(upload_to='team_submissions/')
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    submitted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.team.name} - {self.title}"

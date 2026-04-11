@@ -20,4 +20,5 @@ urlpatterns = [
     
     # Document Management
     path('document/delete/<int:pk>/', views.delete_document, name='delete_document'),
+    path('submission/delete/<int:pk>/', views.delete_submission, name='delete_submission'),
 ]
