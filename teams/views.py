@@ -75,6 +75,8 @@ def signup_view(request):
                     )
                     messages.success(request, "Account created! Please check your Gmail to set your initial password.")
                 except Exception as e:
+                    # Log failure to console for debugging on Render
+                    print(f"SMTP Error: {e}")
                     # Log failure but allow signup to finish.
                     messages.warning(request, "Account created, but we couldn't send the onboarding email. Please try the 'Forgot Password' link later or contact the teacher.")
             
