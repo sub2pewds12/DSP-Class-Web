@@ -17,12 +17,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the entire Django project into the container
 COPY . .
 
-# Prepare static files and run database migrations
+# Prepare static files
 RUN python manage.py collectstatic --noinput
-RUN python manage.py migrate
 
 # Expose the port exactly as Render expects
 EXPOSE 8000
 
-# Tell Docker to boot our Gunicorn server, binding to all interfaces
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "config.wsgi:application"]
+# Run migrations and then start the Gunicorn server
+CMD python manage.py migrate && gunicorn --bind 0.0.0.0:8000 config.wsgi:application
