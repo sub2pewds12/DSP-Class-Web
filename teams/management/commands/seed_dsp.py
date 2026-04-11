@@ -85,8 +85,11 @@ class Command(BaseCommand):
             )
             # Add mock instruction file
             if not assign.instruction_file:
-                content = ContentFile(f"Instructions for {title}".encode('utf-8'))
-                assign.instruction_file.save(f"instructions_{title.lower().replace(' ', '_')}.txt", content)
+                try:
+                    content = ContentFile(f"Instructions for {title}".encode('utf-8'))
+                    assign.instruction_file.save(f"instructions_{title.lower().replace(' ', '_')}.txt", content)
+                except Exception as e:
+                    self.stdout.write(self.style.WARNING(f"Skipping instruction file for {title}: {str(e)}"))
             created_assignments.append(assign)
 
         # 3. Create Teams and Simulating Submissions
@@ -147,7 +150,10 @@ class Command(BaseCommand):
                 }
             )
             if s_created:
-                sub1.file.save(f"{team.name}_basics.txt", ContentFile("Mock submission content".encode('utf-8')))
+                try:
+                    sub1.file.save(f"{team.name}_basics.txt", ContentFile("Mock submission content".encode('utf-8')))
+                except Exception as e:
+                    self.stdout.write(self.style.WARNING(f"Skipping submission file 1 for {team.name}: {str(e)}"))
 
             # 2. Midterm (Late)
             sub2, s_created = TeamSubmission.objects.get_or_create(
@@ -159,10 +165,10 @@ class Command(BaseCommand):
                 }
             )
             if s_created:
-                # Force submitted_at to be late relative to deadline (+2h from now)
-                # Note: models.DateTimeField(auto_now_add=True) is hard to override in save(), 
-                # but we can do it via queryset.update() after creation if needed.
-                sub2.file.save(f"{team.name}_midterm.txt", ContentFile("Draft content".encode('utf-8')))
+                try:
+                    sub2.file.save(f"{team.name}_midterm.txt", ContentFile("Draft content".encode('utf-8')))
+                except Exception as e:
+                    self.stdout.write(self.style.WARNING(f"Skipping submission file 2 for {team.name}: {str(e)}"))
 
             self.stdout.write(f"Created Team: {t_name} with simulated submissions")
 
