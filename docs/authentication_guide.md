@@ -1,31 +1,24 @@
 # 🔑 Authentication & Role Guide
 
-The site uses a dual-role system (Student vs. Teacher) with a secure "Email-First" onboarding process.
+The site uses a dual-role system (Student vs. Teacher) with a simple, direct registration process.
 
-## 1. Gmail Configuration (Required)
-For the website to send the "Set Password" invites or reset passwords, you must configure a Gmail account in your `.env` file.
+## 1. Direct Registration
+Unlike traditional "email-first" onboarding, this site uses **Direct Registration** to ensure reliability on all hosting platforms (like Render Free).
 
-> [!IMPORTANT]
-> **Do not use your regular Gmail password.** You must generate an **App Password**.
-> 1. Go to your [Google Account Security](https://myaccount.google.com/security).
-> 2. Enable 2-Step Verification.
-> 3. Search for "App Passwords" and create one labeled "Django".
-> 4. Copy the 16-character code into your `.env`:
-
-```text
-EMAIL_HOST_USER=your-email@gmail.com
-EMAIL_HOST_PASSWORD=xxxx-xxxx-xxxx-xxxx
-```
+- **How it works**: New users choose their password immediately during signup.
+- **Login**: Users are automatically logged in upon successful registration.
+- **Username**: Your **Email Address** serves as your username for logging in.
 
 ## 2. User Roles
-- **Student**: Land on the standard dashboard to join or create a project team.
-- **Lecturer / Teacher**: Land on the **Teacher Dashboard** (`/teacher/`) which shows an overview of all teams and their members.
+- **Student**: Can join or create a team after logging in.
+- **Lecturer / Teacher**: Gain access to the **Teacher Dashboard** (`/teacher/`) to oversee all class activity.
 
-## 3. Onboarding Flow
-1. **Signup**: User enters Name, Email, and Role. No password is asked for.
-2. **Invite**: The system sends a Gmail with a secure link.
-3. **Set Password**: The user clicks the link and creates their password.
-4. **Login**: User can now log in normally.
+## 3. Gmail Configuration (Optional)
+Gmail is **only** required if a user forgets their password and needs to reset it.
+
+> [!TIP]
+> If you are on a "Free" render tier, automated emails may be blocked. Teachers can manually reset a student's password using the terminal command:
+> `python manage.py changepassword student-email@gmail.com`
 
 ## 4. URL Map for Accounts
 - Login: `/login/`

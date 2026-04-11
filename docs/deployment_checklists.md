@@ -9,10 +9,14 @@ For your live site to work securely, you **must** add these variables in the Ren
 | :--- | :--- |
 | `DEBUG` | `False` |
 | `SECRET_KEY` | *(A long random string)* |
+| `DATABASE_URL` | *(The **Internal Database URL** from your Render PostgreSQL)* |
 | `ALLOWED_HOSTS` | `your-app-name.onrender.com` |
 | `CSRF_TRUSTED_ORIGINS` | `https://your-app-name.onrender.com` |
 | `EMAIL_HOST_USER` | `your-email@gmail.com` |
 | `EMAIL_HOST_PASSWORD` | `xxxx-xxxx-xxxx-xxxx` (App Password) |
+
+> [!IMPORTANT]
+> **Database Persistence**: To keep your users/teams forever, you must click **"New +" -> "PostgreSQL"** in Render. Copy the **Internal Database URL** and add it to the table above.
 
 ## 2. Deployment Process
 1.  **Commit**: `git add .` then `git commit -m "Update message"`
