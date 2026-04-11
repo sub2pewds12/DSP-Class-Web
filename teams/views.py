@@ -6,7 +6,8 @@ from django.utils import timezone
 from .models import Student, Team, Lecturer, CustomUser, ClassDocument, TeamSubmission, Assignment
 from .forms import (
     TeamRegistrationForm, UserRegistrationForm, DocumentUploadForm, 
-    TeamProjectForm, StudentRoleForm, AssignmentForm, AssignmentSubmissionForm
+    TeamProjectForm, StudentRoleForm, AssignmentForm, AssignmentSubmissionForm,
+    GradeSubmissionForm
 )
 
 @login_required
@@ -139,8 +140,34 @@ def teacher_dashboard(request):
         'assignments': assignments,
         'doc_form': DocumentUploadForm(),
         'assign_form': AssignmentForm(),
+        'grade_form': GradeSubmissionForm(),
         'documents': documents
     })
+
+@login_required
+def grade_submission(request, pk):
+    if request.user.role != 'LECTURER':
+        return redirect('dashboard')
+    
+    submission = get_object_or_404(TeamSubmission, pk=pk)
+    if request.method == 'POST':
+        form = GradeSubmissionForm(request.POST, instance=submission)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Grade updated for {submission.team.name}.")
+    
+    return redirect('teacher_dashboard')
+
+@login_required
+def release_grades(request, pk):
+    if request.user.role != 'LECTURER':
+        return redirect('dashboard')
+    
+    assignment = get_object_or_404(Assignment, pk=pk)
+    assignment.grades_released = True
+    assignment.save()
+    messages.success(request, f"Grades released for '{assignment.title}'. Students can now see their results!")
+    return redirect('teacher_dashboard')
 
 @login_required
 def delete_document(request, pk):

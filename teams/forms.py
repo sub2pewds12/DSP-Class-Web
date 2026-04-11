@@ -112,3 +112,12 @@ class AssignmentSubmissionForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
             field.widget.attrs.update({'class': 'form-control'})
+
+class GradeSubmissionForm(forms.ModelForm):
+    class Meta:
+        model = TeamSubmission
+        fields = ['grade', 'feedback']
+        widgets = {
+            'grade': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 100, 'placeholder': '0-100'}),
+            'feedback': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Enter your comments...'}),
+        }

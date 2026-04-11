@@ -21,4 +21,8 @@ urlpatterns = [
     # Document Management
     path('document/delete/<int:pk>/', views.delete_document, name='delete_document'),
     path('submission/delete/<int:pk>/', views.delete_submission, name='delete_submission'),
+    
+    # Grading
+    path('submission/grade/<int:pk>/', views.grade_submission, name='grade_submission'),
+    path('assignment/release/<int:pk>/', views.release_grades, name='release_grades'),
 ]

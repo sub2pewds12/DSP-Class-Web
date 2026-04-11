@@ -99,15 +99,28 @@
                                     <div class="small text-muted mb-2">{{ assign.description }}</div>
                                 </div>
                                 {% if assign.team_submission %}
-                                    {% if assign.is_late %}
-                                        <span class="badge bg-danger">SUBMITTED (LATE)</span>
+                                    {% if assign.grades_released %}
+                                        <div class="text-end">
+                                            <span class="badge bg-dark rounded-pill" style="font-size: 0.8rem;">Score: {{ assign.team_submission.grade|floatformat:0 }}/100</span>
+                                        </div>
                                     {% else %}
-                                        <span class="badge bg-success">SUBMITTED</span>
+                                        {% if assign.is_late %}
+                                            <span class="badge bg-danger">SUBMITTED (LATE)</span>
+                                        {% else %}
+                                            <span class="badge bg-success">SUBMITTED</span>
+                                        {% endif %}
                                     {% endif %}
                                 {% else %}
                                     <span class="badge bg-secondary">NOT SUBMITTED</span>
                                 {% endif %}
                             </div>
+
+                            {% if assign.grades_released and assign.team_submission.feedback %}
+                                <div class="alert alert-light border small py-2 mb-3">
+                                    <div class="fw-bold text-dark"><i class="bi bi-chat-left-text"></i> Lecturer Feedback:</div>
+                                    {{ assign.team_submission.feedback|linebreaksbr }}
+                                </div>
+                            {% endif %}
 
                             <div class="row align-items-center g-2">
                                 <div class="col-sm-6">

@@ -79,6 +79,7 @@ class Assignment(models.Model):
     deadline = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='created_assignments')
+    grades_released = models.BooleanField(default=False)
 
     def __str__(self):
         return self.title
@@ -90,6 +91,8 @@ class TeamSubmission(models.Model):
     file = models.FileField(upload_to='team_submissions/')
     submitted_at = models.DateTimeField(auto_now_add=True)
     submitted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    grade = models.IntegerField(null=True, blank=True)
+    feedback = models.TextField(blank=True)
 
     def __str__(self):
         return f"{self.team.name} - {self.title}"

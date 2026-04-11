@@ -18,17 +18,29 @@
                     {% for assign in assignments %}
                         <div class="col">
                             <div class="card h-100 border-0 shadow-sm bg-light">
-                                <div class="card-body">
-                                    <h6 class="fw-bold text-primary">{{ assign.title }}</h6>
-                                    <p class="small text-muted mb-2">{{ assign.description|truncatechars:100 }}</p>
+                                <div class="card-body d-flex flex-column">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="fw-bold text-primary mb-0">{{ assign.title }}</h6>
+                                        {% if assign.grades_released %}
+                                            <span class="badge bg-success" style="font-size: 0.6rem;">GRADES RELEASED</span>
+                                        {% endif %}
+                                    </div>
+                                    <p class="small text-muted mb-3 flex-grow-1">{{ assign.description|truncatechars:80 }}</p>
                                     <div class="small mb-2">
                                         <i class="bi bi-clock"></i> Deadline: <span class="fw-bold">{{ assign.deadline|date:"M d, H:i" }}</span>
                                     </div>
-                                    {% if assign.instruction_file %}
-                                        <a href="{{ assign.instruction_file.url }}" target="_blank" class="btn btn-sm btn-outline-dark py-0" style="font-size: 0.75rem;">
-                                            <i class="bi bi-file-earmark-pdf"></i> Instructions
-                                        </a>
-                                    {% endif %}
+                                    <div class="d-flex gap-2">
+                                        {% if assign.instruction_file %}
+                                            <a href="{{ assign.instruction_file.url }}" target="_blank" class="btn btn-sm btn-outline-dark py-0" style="font-size: 0.75rem;">
+                                                Instructions
+                                            </a>
+                                        {% endif %}
+                                        {% if not assign.grades_released %}
+                                            <a href="{% url 'release_grades' assign.id %}" class="btn btn-sm btn-primary py-0" style="font-size: 0.75rem;" onclick="return confirm('Release all grades for this task?')">
+                                                Release Grades
+                                            </a>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -55,8 +67,8 @@
                         <thead>
                             <tr class="table-light">
                                 <th style="width: 20%;">Team & Project</th>
-                                <th style="width: 25%;">Members</th>
-                                <th style="width: 55%;">Task Status / Submissions</th>
+                                <th style="width: 20%;">Members</th>
+                                <th style="width: 60%;">Task Status / Submissions / Grading</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -71,7 +83,6 @@
                                             {% for member in team.members.all %}
                                                 <div class="small" style="font-size: 0.75rem;">
                                                     • {{ member.user.get_full_name }}
-                                                    <span class="text-muted">({{ member.role|default:"Mem" }})</span>
                                                 </div>
                                             {% endfor %}
                                         </div>
@@ -79,23 +90,63 @@
                                     <td>
                                         <div class="d-flex flex-nowrap gap-2 overflow-auto py-2">
                                             {% for assign in assignments %}
-                                                {% with submission=team.submissions.all|dictsort:"submitted_at" %}
-                                                    {% for sub in submission %}
+                                                {% with team_submissions=team.submissions.all %}
+                                                    {% for sub in team_submissions %}
                                                         {% if sub.assignment == assign %}
-                                                            <div class="border rounded p-2 bg-white flex-shrink-0" style="min-width: 180px;">
+                                                            <div class="border rounded p-2 bg-white flex-shrink-0" style="min-width: 220px;">
                                                                 <div class="d-flex justify-content-between align-items-start mb-1">
-                                                                    <div class="fw-bold small text-truncate" style="max-width: 120px;">{{ assign.title }}</div>
+                                                                    <div class="fw-bold small text-truncate" style="max-width: 130px;">{{ assign.title }}</div>
                                                                     {% if sub.is_late %}
                                                                         <span class="badge bg-danger" style="font-size: 0.6rem;">LATE</span>
-                                                                    {% else %}
-                                                                        <span class="badge bg-success" style="font-size: 0.6rem;">OK</span>
                                                                     {% endif %}
                                                                 </div>
-                                                                <div class="d-flex justify-content-between align-items-center">
+                                                                
+                                                                <div class="d-flex align-items-center gap-2 mb-2">
+                                                                    {% if sub.grade is not None %}
+                                                                        <span class="badge bg-dark rounded-pill">{{ sub.grade|floatformat:0 }}/100</span>
+                                                                    {% else %}
+                                                                        <span class="badge bg-light text-muted border rounded-pill">Ungraded</span>
+                                                                    {% endif %}
                                                                     <small class="text-muted" style="font-size: 0.7rem;">{{ sub.submitted_at|date:"M d" }}</small>
-                                                                    <div class="d-flex gap-1">
-                                                                        <a href="{{ sub.file.url }}" target="_blank" class="btn btn-sm btn-link p-0 text-primary">View</a>
-                                                                        <a href="{% url 'delete_submission' sub.pk %}" class="btn btn-sm btn-link p-0 text-danger" onclick="return confirm('Delete?')"><i class="bi bi-trash"></i></a>
+                                                                </div>
+
+                                                                <div class="d-flex justify-content-between">
+                                                                    <div class="d-flex gap-2">
+                                                                        <a href="{{ sub.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary py-0" style="font-size: 0.7rem;">View</a>
+                                                                        <button class="btn btn-sm btn-success py-0" style="font-size: 0.7rem;" data-bs-toggle="modal" data-bs-target="#gradeModal{{ sub.id }}">
+                                                                            {% if sub.grade is not None %}Edit Grade{% else %}Grade{% endif %}
+                                                                        </button>
+                                                                    </div>
+                                                                    <a href="{% url 'delete_submission' sub.pk %}" class="btn btn-sm btn-link p-0 text-danger" onclick="return confirm('Delete?')"><i class="bi bi-trash"></i></a>
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- Grading Modal -->
+                                                            <div class="modal fade" id="gradeModal{{ sub.id }}" tabindex="-1">
+                                                                <div class="modal-dialog">
+                                                                    <div class="modal-content">
+                                                                        <form action="{% url 'grade_submission' sub.id %}" method="post">
+                                                                            {% csrf_token %}
+                                                                            <div class="modal-header bg-success text-white">
+                                                                                <h5 class="modal-title">Grade: {{ team.name }}</h5>
+                                                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                                            </div>
+                                                                            <div class="modal-body">
+                                                                                <p class="small text-muted mb-3">Assignment: <strong>{{ assign.title }}</strong></p>
+                                                                                <div class="mb-3">
+                                                                                    <label class="form-label fw-bold">Score (0-100)</label>
+                                                                                    <input type="number" name="grade" class="form-control" value="{{ sub.grade|default:'' }}" min="0" max="100" required>
+                                                                                </div>
+                                                                                <div class="mb-3">
+                                                                                    <label class="form-label fw-bold">Feedback / Comments</label>
+                                                                                    <textarea name="feedback" class="form-control" rows="4">{{ sub.feedback }}</textarea>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="modal-footer">
+                                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                                                <button type="submit" class="btn btn-success">Save Grade</button>
+                                                                            </div>
+                                                                        </form>
                                                                     </div>
                                                                 </div>
                                                             </div>
