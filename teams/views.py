@@ -66,14 +66,18 @@ def signup_view(request):
             # Trigger "Set Password" email using standard Django PasswordResetForm
             reset_form = PasswordResetForm({'email': user.email})
             if reset_form.is_valid():
-                reset_form.save(
-                    request=request,
-                    use_https=request.is_secure(),
-                    subject_template_name='registration/password_set_subject.txt',
-                    email_template_name='registration/password_set_email.html',
-                )
+                try:
+                    reset_form.save(
+                        request=request,
+                        use_https=request.is_secure(),
+                        subject_template_name='registration/password_set_subject.txt',
+                        email_template_name='registration/password_set_email.html',
+                    )
+                    messages.success(request, "Account created! Please check your Gmail to set your initial password.")
+                except Exception as e:
+                    # Log failure but allow signup to finish.
+                    messages.warning(request, "Account created, but we couldn't send the onboarding email. Please try the 'Forgot Password' link later or contact the teacher.")
             
-            messages.success(request, "Account created! Please check your Gmail to set your initial password.")
             return redirect('login')
     else:
         form = UserRegistrationForm()
