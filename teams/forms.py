@@ -1,7 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
-from .models import Team, Student, SystemSettings, Lecturer, ClassDocument, TeamSubmission
+from .models import Team, Student, SystemSettings, Lecturer, ClassDocument, TeamSubmission, Assignment
 
 User = get_user_model()
 
@@ -89,7 +89,21 @@ class StudentRoleForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['role'].widget.attrs.update({'class': 'form-control', 'placeholder': 'e.g. Lead Coder, Designer...'})
 
-class AssignmentUploadForm(forms.ModelForm):
+class AssignmentForm(forms.ModelForm):
+    class Meta:
+        model = Assignment
+        fields = ['title', 'description', 'instruction_file', 'deadline']
+        widgets = {
+            'deadline': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            if name != 'deadline':
+                field.widget.attrs.update({'class': 'form-control'})
+
+class AssignmentSubmissionForm(forms.ModelForm):
     class Meta:
         model = TeamSubmission
         fields = ['title', 'file']

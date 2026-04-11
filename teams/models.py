@@ -72,8 +72,20 @@ class ClassDocument(models.Model):
     def __str__(self):
         return self.title
 
+class Assignment(models.Model):
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    instruction_file = models.FileField(upload_to='assignment_instructions/', null=True, blank=True)
+    deadline = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='created_assignments')
+
+    def __str__(self):
+        return self.title
+
 class TeamSubmission(models.Model):
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='submissions')
+    assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE, related_name='submissions', null=True, blank=True)
     title = models.CharField(max_length=255)
     file = models.FileField(upload_to='team_submissions/')
     submitted_at = models.DateTimeField(auto_now_add=True)

@@ -1,10 +1,9 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from django.contrib.auth import login, authenticate, logout
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import PasswordResetForm
-from .models import Student, Team, Lecturer, CustomUser, ClassDocument, TeamSubmission
-from .forms import TeamRegistrationForm, UserRegistrationForm, DocumentUploadForm, TeamProjectForm, StudentRoleForm, AssignmentUploadForm
+from django.utils import timezone
+from .models import Student, Team, Lecturer, CustomUser, ClassDocument, TeamSubmission, Assignment
+from .forms import (
+    TeamRegistrationForm, UserRegistrationForm, DocumentUploadForm, 
+    TeamProjectForm, StudentRoleForm, AssignmentForm, AssignmentSubmissionForm
+)
 
 @login_required
 def dashboard_view(request):
@@ -13,10 +12,10 @@ def dashboard_view(request):
     
     student, created = Student.objects.get_or_create(user=request.user)
     documents = ClassDocument.objects.all().order_by('-uploaded_at')
+    assignments = Assignment.objects.all().order_by('-deadline')
     
     if student.team:
         team = student.team
-        # First person joining/creating is the leader
         if not team.leader:
             team.leader = student
             team.save()
@@ -37,24 +36,36 @@ def dashboard_view(request):
                     return redirect('dashboard')
 
             elif 'upload_assignment' in request.POST:
-                assign_form = AssignmentUploadForm(request.POST, request.FILES)
+                assign_id = request.POST.get('assignment_id')
+                assignment = get_object_or_404(Assignment, id=assign_id)
+                assign_form = AssignmentSubmissionForm(request.POST, request.FILES)
                 if assign_form.is_valid():
                     sub = assign_form.save(commit=False)
                     sub.team = team
+                    sub.assignment = assignment
                     sub.submitted_by = request.user
                     sub.save()
-                    messages.success(request, f"Assignment '{sub.title}' submitted successfully.")
+                    
+                    status = "on time"
+                    if sub.submitted_at > assignment.deadline:
+                        status = "LATE"
+                    messages.success(request, f"Successfully submitted to '{assignment.title}' ({status}).")
                     return redirect('dashboard')
 
-        # Prep forms for display
+        # Annotate assignments with student's team submissions
+        for a in assignments:
+            a.team_submission = team.submissions.filter(assignment=a).first()
+            if a.team_submission:
+                a.is_late = a.team_submission.submitted_at > a.deadline
+
         return render(request, 'teams/dashboard.html', {
             'student': student, 
             'team': team,
             'documents': documents,
+            'assignments': assignments,
             'project_form': TeamProjectForm(instance=team),
             'role_form': StudentRoleForm(instance=student),
-            'assign_form': AssignmentUploadForm(),
-            'submissions': team.submissions.all().order_by('-submitted_at')
+            'assign_form': AssignmentSubmissionForm(),
         })
 
     if request.method == 'POST':
@@ -88,26 +99,42 @@ def teacher_dashboard(request):
     if request.user.role != 'LECTURER':
         return redirect('dashboard')
     
-    # Create a lecturer profile if missing
     Lecturer.objects.get_or_create(user=request.user)
     
-    if request.method == 'POST' and 'upload_doc' in request.POST:
-        doc_form = DocumentUploadForm(request.POST, request.FILES)
-        if doc_form.is_valid():
-            doc = doc_form.save(commit=False)
-            doc.uploaded_by = request.user
-            doc.save()
-            messages.success(request, f"Document '{doc.title}' uploaded successfully.")
-            return redirect('teacher_dashboard')
-    else:
-        doc_form = DocumentUploadForm()
+    if request.method == 'POST':
+        if 'upload_doc' in request.POST:
+            doc_form = DocumentUploadForm(request.POST, request.FILES)
+            if doc_form.is_valid():
+                doc = doc_form.save(commit=False)
+                doc.uploaded_by = request.user
+                doc.save()
+                messages.success(request, f"Document '{doc.title}' uploaded.")
+                return redirect('teacher_dashboard')
+        
+        elif 'create_assignment' in request.POST:
+            assign_form = AssignmentForm(request.POST, request.FILES)
+            if assign_form.is_valid():
+                assign = assign_form.save(commit=False)
+                assign.created_by = request.user
+                assign.save()
+                messages.success(request, f"Assignment '{assign.title}' set with deadline: {assign.deadline}")
+                return redirect('teacher_dashboard')
 
-    teams = Team.objects.prefetch_related('members__user', 'submissions').all()
+    teams = Team.objects.prefetch_related('members__user', 'submissions__assignment').all()
     documents = ClassDocument.objects.all().order_by('-uploaded_at')
+    assignments = Assignment.objects.all().order_by('-deadline')
     
+    # Process teams to check if submissions were late
+    for t in teams:
+        for s in t.submissions.all():
+            if s.assignment:
+                s.is_late = s.submitted_at > s.assignment.deadline
+
     return render(request, 'teams/teacher_dashboard.html', {
         'teams': teams, 
-        'doc_form': doc_form,
+        'assignments': assignments,
+        'doc_form': DocumentUploadForm(),
+        'assign_form': AssignmentForm(),
         'documents': documents
     })
 
