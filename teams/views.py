@@ -104,6 +104,7 @@ def teacher_dashboard(request):
     if request.user.role != 'LECTURER':
         return redirect('dashboard')
     
+    # Ensure lecturer profile exists
     Lecturer.objects.get_or_create(user=request.user)
     
     if request.method == 'POST':
@@ -125,14 +126,20 @@ def teacher_dashboard(request):
                 messages.success(request, f"Assignment '{assign.title}' set with deadline: {assign.deadline}")
                 return redirect('teacher_dashboard')
 
-    teams = Team.objects.prefetch_related('members__user', 'submissions__assignment').all()
+    # Prefetch with safer logic
+    teams = Team.objects.prefetch_related(
+        'members__user', 
+        'submissions__assignment'
+    ).all().order_by('name')
+    
     documents = ClassDocument.objects.all().order_by('-uploaded_at')
     assignments = Assignment.objects.all().order_by('-deadline')
     
-    # Process teams to check if submissions were late
+    # Process teams to check if submissions were late with safeguards
     for t in teams:
         for s in t.submissions.all():
-            if s.assignment:
+            s.is_late = False
+            if s.assignment and s.submitted_at and s.assignment.deadline:
                 s.is_late = s.submitted_at > s.assignment.deadline
 
     return render(request, 'teams/teacher_dashboard.html', {
