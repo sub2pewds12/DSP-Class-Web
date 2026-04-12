@@ -1,39 +1,64 @@
 {% extends 'teams/base.html' %}
+{% load static %}
+
 {% block content %}
-<div class="row justify-content-center">
+<div class="row justify-content-center align-items-center" style="min-height: 85vh;">
     <div class="col-md-6">
-        <div class="card shadow border-0">
-            <div class="card-header bg-success text-white py-3">
-                <h4 class="mb-0">Join the DSP Class</h4>
+        <div class="bento-card shadow-lg p-5">
+            <div class="text-center mb-5">
+                <span class="text-muted small text-uppercase fw-bold ls-1">Expedition Registration</span>
+                <h1 class="h2 text-dark mt-2 fw-800">Join the DSP Class</h1>
+                <p class="text-muted small">Initialize your identity on the tactical network</p>
             </div>
-            <div class="card-body p-4">
-                <p class="text-muted small mb-4">Register here. You will set your password and be logged in immediately after.</p>
-                <form method="post">
-                    {% csrf_token %}
+
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="row g-4">
                     {% for field in form %}
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">{{ field.label }}</label>
+                        <div class="{% if field.name == 'role' %}col-12{% else %}col-md-6{% endif %}">
+                            <label class="form-label small fw-bold text-uppercase text-muted mb-2">{{ field.label }}</label>
+                            
                             {% if field.name == 'role' %}
-                                <div class="d-flex gap-4">
+                                <div class="p-3 bg-light rounded-4 d-flex gap-4 justify-content-center border-0">
                                     {% for radio in field %}
-                                        <div class="form-check">
+                                        <div class="form-check custom-radio">
                                             {{ radio.tag }}
-                                            <label class="form-check-label">{{ radio.choice_label }}</label>
+                                            <label class="form-check-label fw-bold small text-dark" for="{{ radio.id_for_label }}">
+                                                {{ radio.choice_label }}
+                                            </label>
                                         </div>
                                     {% endfor %}
                                 </div>
                             {% else %}
                                 {{ field }}
                             {% endif %}
+                            
                             {% if field.errors %}
-                                <div class="text-danger small mt-1">{{ field.errors }}</div>
+                                <div class="text-danger small mt-1" style="font-size: 0.7rem;">{{ field.errors }}</div>
                             {% endif %}
                         </div>
                     {% endfor %}
-                    <button type="submit" class="btn btn-success w-100 py-2 mt-3">Register Account</button>
-                </form>
+                </div>
+
+                <div class="mt-5 text-center">
+                    <p class="text-muted small mb-4">By registering, you agree to follow the class instructional protocol.</p>
+                    <button type="submit" class="btn btn-dark w-100 py-3 rounded-pill shadow-sm fw-bold">Register Identity <i class="bi bi-person-check ms-2"></i></button>
+                </div>
+            </form>
+
+            <div class="text-center mt-4">
+                <a href="{% url 'login' %}" class="small text-primary-red fw-bold text-decoration-none">Already have an ID? Sign in</a>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    /* Custom Radio Refinement */
+    .custom-radio .form-check-input:checked {
+        background-color: var(--primary-red);
+        border-color: var(--primary-red);
+    }
+</style>
 {% endblock %}

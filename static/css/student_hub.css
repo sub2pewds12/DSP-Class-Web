@@ -1,0 +1,162 @@
+/* 
+   MASTER DESIGN SYSTEM: THE CRIMSON SPECTRUM
+   A high-fidelity academic aesthetic with glassmorphism and bento-grid modularity.
+*/
+
+:root {
+    --primary-red: #D32F2F;
+    --primary-red-glow: rgba(211, 47, 47, 0.15);
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    --glass-border: rgba(255, 255, 255, 0.3);
+    --text-main: #1A1A1A;
+    --text-muted: #666666;
+    --bg-main: #f8f9fa;
+    --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+    --bento-gap: 1.5rem;
+}
+
+[data-theme="dark"] {
+    --primary-red: #FF5252;
+    --primary-red-glow: rgba(255, 82, 82, 0.2);
+    --glass-bg: rgba(18, 18, 18, 0.85);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --text-main: #F5F5F5;
+    --text-muted: #AAAAAA;
+    --bg-main: #0A0A0A;
+    --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    transition: background-color 0.4s ease, color 0.4s ease;
+    margin: 0;
+    min-height: 100vh;
+}
+
+/* --- Global Navbar Rebrand --- */
+.navbar-crimson {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--glass-border);
+    transition: all 0.4s ease;
+}
+
+.navbar-crimson .navbar-brand {
+    color: var(--primary-red) !important;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+}
+
+.navbar-crimson .nav-link {
+    color: var(--text-main) !important;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.navbar-crimson .nav-link:hover {
+    color: var(--primary-red) !important;
+}
+
+/* --- Bento Grid Engine --- */
+.bento-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-gap: var(--bento-gap);
+    padding: var(--bento-gap);
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+@media (max-width: 1100px) {
+    .bento-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .bento-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+.bento-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    padding: 1.5rem;
+    box-shadow: var(--card-shadow);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.bento-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px 0 rgba(211, 47, 47, 0.1);
+    border-color: var(--primary-red);
+}
+
+/* --- Spanning Logic --- */
+.span-2 { grid-column: span 2; }
+.span-3 { grid-column: span 3; }
+.span-4 { grid-column: span 4; }
+.row-2 { grid-row: span 2; }
+
+/* --- UI Elements --- */
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.btn-primary-red {
+    background-color: var(--primary-red);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 20px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary-red:hover {
+    filter: brightness(1.1);
+    box-shadow: 0 4px 15px var(--primary-red-glow);
+}
+
+.text-primary-red { color: var(--primary-red) !important; }
+
+/* --- Floating Theme Toggle --- */
+.theme-toggle-btn {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 56px;
+    height: 56px;
+    border-radius: 28px;
+    background: var(--primary-red);
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    cursor: pointer;
+    z-index: 1000;
+    box-shadow: 0 8px 24px rgba(211, 47, 47, 0.3);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-main); }
+::-webkit-scrollbar-thumb {
+    background: var(--primary-red);
+    border-radius: 10px;
+}

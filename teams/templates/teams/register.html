@@ -1,36 +1,64 @@
 {% extends 'teams/base.html' %}
 {% load static %}
 
-{% block extra_head %}
-<!-- Native Red/White Design System -->
-<link rel="stylesheet" href="{% static 'teams/css/student_hub.css' %}">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-{% endblock %}
-
 {% block content %}
-<div class="student-hub-grid">
+<div class="bento-container">
     
     <!-- Area: Welcome/Status (Bento Lg) -->
-    <div class="bento-card area-welcome">
-        <div class="text-center py-4">
+    <div class="bento-card span-2">
+        <div class="text-center py-5">
             <span class="text-muted small text-uppercase fw-bold ls-1">Project Enrollment</span>
-            <h1 class="h2 text-dark mt-1">Join or Create Team</h1>
-            <div class="mt-3">
+            <h1 class="h1 text-dark mt-2 fw-800">Ready to Begin?</h1>
+            <div class="mt-4 p-4 bg-light rounded-4 border-0">
                 <p class="mb-1 text-muted small">Authenticated Identity:</p>
-                <h5 class="text-primary-red">{{ user.get_full_name }}</h5>
-                <span class="status-badge bg-light text-dark border">{{ user.get_role_display }}</span>
+                <h4 class="text-primary-red fw-bold">{{ user.get_full_name }}</h4>
+                <div class="mt-3">
+                    <span class="status-badge bg-white text-dark shadow-sm border">{{ user.get_role_display }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Area: Materials Sidebar (Bento Sidebar) -->
+    <div class="bento-card span-2 row-2">
+        <h5 class="mb-4 fw-bold"><i class="bi bi-file-earmark-text text-primary-red"></i> Enrollment Brief</h5>
+        <p class="text-muted small mb-4">Review these essential documents before committing to a project unit.</p>
+        <div class="list-group list-group-flush">
+            {% for doc in documents %}
+                <a href="{{ doc.file.url }}" target="_blank" class="list-group-item list-group-item-action border-0 px-0 d-flex justify-content-between align-items-center mb-2">
+                    <div class="d-flex align-items-center">
+                        <div class="p-2 rounded-3 bg-light text-primary-red me-3">
+                            <i class="bi bi-file-earmark-pdf-fill h5 mb-0"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-dark small">{{ doc.title }}</div>
+                            <small class="text-muted" style="font-size: 0.7rem;">Released {{ doc.uploaded_at|date:"M d" }}</small>
+                        </div>
+                    </div>
+                    <i class="bi bi-cloud-download text-muted h5 mb-0"></i>
+                </a>
+            {% empty %}
+                <div class="text-center py-5 text-muted small opacity-50">
+                    <i class="bi bi-journal-x h1 d-block mb-3"></i>
+                    No brief documents available.
+                </div>
+            {% endfor %}
+        </div>
+        <div class="mt-auto pt-4 border-top">
+            <div class="alert bg-red-soft text-danger border-0 small mb-0">
+                <i class="bi bi-shield-lock-fill me-2"></i> Only authenticated DSP students can proceed.
             </div>
         </div>
     </div>
 
     <!-- Area: Task/Enrollment Form (Bento Wide) -->
-    <div class="bento-card area-assignments">
-        <h5 class="mb-4"><i class="bi bi-person-add text-primary-red"></i> Team Registration</h5>
+    <div class="bento-card span-2">
+        <h5 class="mb-4 fw-bold"><i class="bi bi-person-plus-fill text-primary-red"></i> Unit Allocation</h5>
         <form method="post">
             {% csrf_token %}
             <div class="row g-4">
                 {% for field in form %}
-                    <div class="col-md-6">
+                    <div class="col-12">
                         <label class="form-label small fw-bold text-uppercase text-muted">{{ field.label }}</label>
                         {{ field }}
                         {% if field.errors %}
@@ -39,62 +67,12 @@
                     </div>
                 {% endfor %}
             </div>
-            <div class="mt-5 border-top pt-4">
-                <button type="submit" class="btn btn-dark w-100 py-3 rounded-pill shadow-sm">
-                    Confirm Team Sync <i class="bi bi-arrow-right-short"></i>
+            <div class="mt-5 pt-4 border-top">
+                <button type="submit" class="btn btn-dark w-100 py-3 rounded-pill shadow-lg hover-up">
+                    Initialize Deployment <i class="bi bi-arrow-right-short ms-2"></i>
                 </button>
             </div>
         </form>
     </div>
-
-    <!-- Area: Materials Sidebar (Bento Sidebar) -->
-    <div class="bento-card area-materials">
-        <h5 class="mb-3 border-bottom pb-2"><i class="bi bi-file-earmark-text text-primary-red"></i> Enrollment Brief</h5>
-        <div class="list-group list-group-flush" style="font-size: 0.85rem;">
-            {% for doc in documents %}
-                <a href="{{ doc.file.url }}" target="_blank" class="list-group-item list-group-item-action border-0 px-0 d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="text-primary-red fw-bold text-truncate" style="max-width: 150px;">{{ doc.title }}</div>
-                        <small class="text-muted">{{ doc.uploaded_at|date:"M d" }}</small>
-                    </div>
-                    <i class="bi bi-download text-muted"></i>
-                </a>
-            {% empty %}
-                <p class="text-muted py-5 text-center small">No brief documents available.</p>
-            {% endfor %}
-        </div>
-    </div>
 </div>
-
-<!-- Floating Theme Switcher -->
-<button class="theme-toggle-btn shadow" onclick="toggleTheme()" title="Toggle Visual Mode">
-    <i class="bi bi-brightness-high" id="theme-icon"></i>
-</button>
-
-<script>
-    function toggleTheme() {
-        const body = document.body;
-        const icon = document.getElementById('theme-icon');
-        const currentTheme = body.getAttribute('data-theme');
-        
-        if (currentTheme === 'dark') {
-            body.removeAttribute('data-theme');
-            icon.className = 'bi bi-brightness-high';
-            localStorage.setItem('hub-theme', 'light');
-        } else {
-            body.setAttribute('data-theme', 'dark');
-            icon.className = 'bi bi-moon-stars';
-            localStorage.setItem('hub-theme', 'dark');
-        }
-    }
-
-    // Persist logic
-    window.onload = () => {
-        const savedTheme = localStorage.getItem('hub-theme');
-        if (savedTheme === 'dark') {
-            document.body.setAttribute('data-theme', 'dark');
-            document.getElementById('theme-icon').className = 'bi bi-moon-stars';
-        }
-    };
-</script>
 {% endblock %}
