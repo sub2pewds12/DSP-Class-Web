@@ -8,13 +8,13 @@
     <div class="bento-card span-4">
         <div class="d-flex justify-content-between align-items-center">
             <div>
-                <span class="text-muted small text-uppercase fw-bold ls-1">Public Showcase</span>
-                <h1 class="h2 text-dark mt-1 fw-800">Project Teams Gallery</h1>
-                <p class="text-muted small mb-0 fw-500">Discover active research units and creative project teams within the DSP Class.</p>
+                <span class="text-muted small text-uppercase fw-bold ls-1">Showcase</span>
+                <h1 class="h2 text-dark mt-1 fw-800">Project Gallery</h1>
+                <p class="text-muted small mb-0 fw-500">View active research teams and project groups within the course.</p>
             </div>
             <div class="text-end">
                 <div class="h3 fw-800 text-primary-red mb-0">{{ teams|length }}</div>
-                <div class="small text-muted text-uppercase fw-bold" style="font-size: 0.6rem;">Active Units</div>
+                <div class="small text-muted text-uppercase fw-bold" style="font-size: 0.6rem;">Active Teams</div>
             </div>
         </div>
     </div>
@@ -25,49 +25,49 @@
             <div class="d-flex justify-content-between align-items-start mb-4">
                 <div>
                     <h5 class="fw-bold text-dark mb-1">{{ team.name }}</h5>
-                    <div class="text-primary-red fw-600 small">{{ team.project_name|default:"Mission Objectives Redacted" }}</div>
+                    <div class="text-primary-red fw-600 small">{{ team.project_name|default:"Project Description Pending" }}</div>
                 </div>
                 <span class="badge bg-light text-dark border rounded-pill px-3">{{ team.members.count }} Members</span>
             </div>
             
             <div class="p-3 bg-light rounded-4 border-0 mb-4 h-100">
-                <h6 class="small fw-bold text-uppercase text-muted mb-2 ls-1">Personnel Ledger</h6>
+                <h6 class="small fw-bold text-uppercase text-muted mb-2 ls-1">Team Members</h6>
                 <div class="d-flex flex-wrap gap-2">
                     {% for member in team.members.all %}
                         <div class="status-badge bg-white text-dark shadow-sm border small" style="font-size: 0.7rem;">
-                            <i class="bi bi-person-fill text-muted me-1"></i> {{ member.user.get_full_name }}
+                            <i class="bi bi-person me-1"></i> {{ member.user.get_full_name }}
                         </div>
                     {% empty %}
-                        <span class="text-muted small italic">Awaiting personnel deployment...</span>
+                        <span class="text-muted small italic">Awaiting registration...</span>
                     {% endfor %}
                 </div>
             </div>
 
             <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
-                <small class="text-muted">Unit Active for {{ team.created_at|timesince }}</small>
+                <small class="text-muted">Established {{ team.created_at|date:"M d, Y" }}</small>
                 {% if user.is_authenticated %}
-                <a href="{% url 'dashboard' %}" class="btn btn-sm btn-dark rounded-pill px-3" style="font-size: 0.7rem;">Focus Dashboard</a>
+                <a href="{% url 'dashboard' %}" class="btn btn-sm btn-dark rounded-pill px-3" style="font-size: 0.7rem;">Dashboard</a>
                 {% endif %}
             </div>
         </div>
     {% empty %}
         <div class="bento-card span-4 py-5 text-center">
             <div class="py-5">
-                <i class="bi bi-grid-3x3-gap text-primary-red display-1 opacity-25"></i>
-                <h4 class="mt-4 fw-bold">No Active Units</h4>
-                <p class="text-muted">The class repository is Currently empty. Be the first to initialize a team!</p>
-                <a href="{% url 'register' %}" class="btn btn-primary-red rounded-pill px-5 py-2 mt-3">Start Team Deployment</a>
+                <i class="bi bi-grid-3x3-gap text-muted display-1 opacity-25"></i>
+                <h4 class="mt-4 fw-bold">No Active Teams</h4>
+                <p class="text-muted">The project repository is currently empty. Be the first to create a team!</p>
+                <a href="{% url 'register' %}" class="btn btn-primary-red rounded-pill px-5 py-2 mt-3 text-white">Register a Team</a>
             </div>
         </div>
     {% endfor %}
 
     <!-- Area: Call to Action (Bento Sidebar) -->
     <div class="bento-card span-4 text-center py-4 bg-dark text-white border-0">
-        <h4 class="fw-800 mb-1">Ready to sync?</h4>
-        <p class="opacity-75 small">Join the DSP project ecosystem and start your mission today.</p>
+        <h4 class="fw-800 mb-1">Ready to start?</h4>
+        <p class="opacity-75 small">Join a project team and start collaborating today.</p>
         <div class="d-flex justify-content-center gap-3 mt-3">
-            <a href="{% url 'signup' %}" class="btn btn-primary-red rounded-pill px-4 shadow">Get Started</a>
-            <a href="{% url 'guide' %}" class="btn btn-outline-light rounded-pill px-4">Read Briefing</a>
+            <a href="{% url 'signup' %}" class="btn btn-primary-red rounded-pill px-4 shadow text-white">Join Now</a>
+            <a href="{% url 'guide' %}" class="btn btn-outline-light rounded-pill px-4">View Guide</a>
         </div>
     </div>
 </div>

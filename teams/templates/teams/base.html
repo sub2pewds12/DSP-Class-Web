@@ -12,10 +12,10 @@
     <link rel="stylesheet" href="{% static 'css/student_hub.css' %}">
     {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-light">
+<body class="">
     <nav class="navbar navbar-expand-lg navbar-crimson mb-2 sticky-top">
         <div class="container">
-            <a class="navbar-brand" href="{% url 'dashboard' %}">DSP Registration</a>
+            <a class="navbar-brand" href="{% url 'dashboard' %}">Project Registration</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExample">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -23,16 +23,16 @@
             <div class="collapse navbar-collapse" id="navbarsExample">
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'gallery' %}">Public Gallery</a>
+                        <a class="nav-link" href="{% url 'gallery' %}">Gallery</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'guide' %}">How to Use</a>
+                        <a class="nav-link" href="{% url 'guide' %}">Guide</a>
                     </li>
                     {% if user.is_authenticated %}
                         <li class="nav-item">
                             <a class="nav-link fw-bold" href="{% url 'dashboard' %}">
                                 <span class="text-primary-red">
-                                    {% if user.role == "LECTURER" %}Lector{% else %}Hub{% endif %}
+                                    {% if user.role == "LECTURER" %}Lecturer Dashboard{% else %}Student Dashboard{% endif %}
                                 </span>
                             </a>
                         </li>

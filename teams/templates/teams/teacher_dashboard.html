@@ -4,11 +4,11 @@
 {% block content %}
 <div class="bento-container">
     
-    <!-- Area: Welcome & Metrics (Wide Bento) -->
+    <!-- Area: Dashboard Overview (Wide Bento) -->
     <div class="bento-card span-3">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <span class="text-muted small text-uppercase fw-bold ls-1">Command Center</span>
+                <span class="text-muted small text-uppercase fw-bold ls-1">Instruction Management</span>
                 <h1 class="h2 text-dark mt-1 fw-800">Lecturer Dashboard</h1>
             </div>
             <div class="d-flex gap-3">
@@ -18,36 +18,36 @@
                 </div>
                 <div class="text-center p-3 bg-dark text-white rounded-4 shadow">
                     <div class="h3 fw-800 mb-0 text-white">{{ assignments|length }}</div>
-                    <div class="small opacity-75 text-uppercase fw-bold" style="font-size: 0.6rem;">Tasks</div>
+                    <div class="small opacity-75 text-uppercase fw-bold" style="font-size: 0.6rem;">Assignments</div>
                 </div>
             </div>
         </div>
-        <p class="text-muted small mb-0 fw-500">Welcome back. You are currently overseeing all active project units and mission deployments.</p>
+        <p class="text-muted small mb-0 fw-500">Overview of all active project teams, submissions, and course assignments.</p>
     </div>
 
-    <!-- Area: Global Tools (Small Bento) -->
+    <!-- Area: Actions (Small Bento) -->
     <div class="bento-card">
-        <h6 class="small fw-bold text-uppercase text-muted mb-3">Expedition Tools</h6>
+        <h6 class="small fw-bold text-uppercase text-muted mb-3">Quick Actions</h6>
         <div class="d-grid gap-2">
             <button class="btn btn-primary-red w-100 py-2 rounded-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#assignmentModal">
-                <i class="bi bi-plus-lg me-2"></i> New Task
+                <i class="bi bi-plus-lg me-2"></i> New Assignment
             </button>
             <div class="p-2 bg-light rounded-3 text-center border-0 border-top mt-2">
-                <span class="badge text-dark fw-bold">Active Deployment</span>
+                <span class="badge text-dark fw-bold">Management Mode</span>
             </div>
         </div>
     </div>
 
     <!-- Area: Submission Tracking (Large Bento) -->
     <div class="bento-card span-4">
-        <h5 class="mb-4 fw-bold"><i class="bi bi-broadcast text-primary-red"></i> Unit Submission Tracking</h5>
+        <h5 class="mb-4 fw-bold"><i class="bi bi-table text-primary-red"></i> Assignment Submissions</h5>
         <div class="table-responsive">
             <table class="table table-hover align-middle border-0">
                 <thead>
                     <tr class="text-muted small text-uppercase fw-bold border-bottom">
-                        <th style="width: 25%;">Unit Identity</th>
-                        <th style="width: 20%;">Signal Personnel</th>
-                        <th style="width: 55%;">Mission Status & Grading</th>
+                        <th style="width: 25%;">Team Name</th>
+                        <th style="width: 20%;">Members</th>
+                        <th style="width: 55%;">Assignment Status & Grading</th>
                     </tr>
                 </thead>
                 <tbody class="border-0">
@@ -55,7 +55,7 @@
                         <tr class="border-bottom">
                             <td class="py-4">
                                 <div class="fw-800 text-dark">{{ team.name }}</div>
-                                <div class="small text-primary-red fw-600 text-truncate" style="max-width: 180px;">{{ team.project_name|default:"Mission Redacted" }}</div>
+                                <div class="small text-primary-red fw-600 text-truncate" style="max-width: 180px;">{{ team.project_name|default:"Project Name Unassigned" }}</div>
                             </td>
                             <td>
                                 <div class="member-stack">
@@ -70,7 +70,7 @@
                                         {% with team_submissions=team.submissions.all %}
                                             {% for sub in team_submissions %}
                                                 {% if sub.assignment == assign %}
-                                                    <div class="p-3 rounded-4 bg-light border-0 shadow-sm flex-shrink-0" style="min-width: 240px; transition: transform 0.2s;">
+                                                    <div class="p-3 rounded-4 bg-light border-0 shadow-sm flex-shrink-0" style="min-width: 240px;">
                                                         <div class="d-flex justify-content-between align-items-start mb-2">
                                                             <div class="fw-bold small text-truncate" style="max-width: 150px;">{{ assign.title }}</div>
                                                             {% if sub.is_late %}
@@ -82,15 +82,15 @@
                                                             {% if sub.grade is not None %}
                                                                 <span class="badge bg-dark rounded-pill shadow-sm">{{ sub.grade|floatformat:0 }}%</span>
                                                             {% else %}
-                                                                <span class="badge bg-white text-muted border rounded-pill small">Evaluating...</span>
+                                                                <span class="badge bg-white text-muted border rounded-pill small">Pending</span>
                                                             {% endif %}
                                                             <small class="text-muted ms-auto" style="font-size: 0.65rem;">{{ sub.submitted_at|date:"M d" }}</small>
                                                         </div>
 
                                                         <div class="d-flex justify-content-between align-items-center pt-2 border-top">
-                                                            <a href="{{ sub.file.url }}" target="_blank" class="btn btn-sm btn-link p-0 text-primary-red text-decoration-none fw-bold small">View File</a>
+                                                            <a href="{{ sub.file.url }}" target="_blank" class="btn btn-sm btn-link p-0 text-primary-red text-decoration-none fw-bold small">Download</a>
                                                             <button class="btn btn-dark btn-sm rounded-pill px-3" style="font-size: 0.65rem;" data-bs-toggle="modal" data-bs-target="#gradeModal{{ sub.id }}">
-                                                                {% if sub.grade is not None %}Re-Grade{% else %}Grade{% endif %}
+                                                                {% if sub.grade is not None %}Update Grade{% else %}Grade{% endif %}
                                                             </button>
                                                         </div>
                                                     </div>
@@ -102,22 +102,22 @@
                                                                 <form action="{% url 'grade_submission' sub.id %}" method="post">
                                                                     {% csrf_token %}
                                                                     <div class="modal-header border-0 bg-dark text-white py-4">
-                                                                        <h5 class="modal-title fw-bold">Evaluate: {{ team.name }}</h5>
+                                                                        <h5 class="modal-title fw-bold">Grade Submission: {{ team.name }}</h5>
                                                                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                                                     </div>
                                                                     <div class="modal-body p-4">
-                                                                        <p class="small text-muted mb-4 uppercase fw-bold ls-1">Mission Task: <span class="text-dark">{{ assign.title }}</span></p>
+                                                                        <p class="small text-muted mb-4 uppercase fw-bold ls-1">Assignment: <span class="text-dark">{{ assign.title }}</span></p>
                                                                         <div class="mb-4">
-                                                                            <label class="form-label small fw-bold text-muted text-uppercase">Score Allocation (0-100)</label>
+                                                                            <label class="form-label small fw-bold text-muted text-uppercase">Grade Score (0-100)</label>
                                                                             <input type="number" name="grade" class="form-control form-control-lg rounded-4" value="{{ sub.grade|default:'' }}" min="0" max="100" required>
                                                                         </div>
                                                                         <div class="mb-0">
-                                                                            <label class="form-label small fw-bold text-muted text-uppercase">Tactical Feedback</label>
-                                                                            <textarea name="feedback" class="form-control rounded-4" rows="5" placeholder="Enter evaluation notes here...">{{ sub.feedback }}</textarea>
+                                                                            <label class="form-label small fw-bold text-muted text-uppercase">Feedback</label>
+                                                                            <textarea name="feedback" class="form-control rounded-4" rows="5" placeholder="Enter evaluation comments here...">{{ sub.feedback }}</textarea>
                                                                         </div>
                                                                     </div>
                                                                     <div class="modal-footer border-0 p-4">
-                                                                        <button type="submit" class="btn btn-primary-red w-100 py-3 rounded-pill shadow">Commit Grade</button>
+                                                                        <button type="submit" class="btn btn-primary-red w-100 py-3 rounded-pill shadow">Save Grade</button>
                                                                     </div>
                                                                 </form>
                                                             </div>
@@ -131,7 +131,7 @@
                             </td>
                         </tr>
                     {% empty %}
-                        <tr><td colspan="3" class="text-center py-5 text-muted">No tactical units registered.</td></tr>
+                        <tr><td colspan="3" class="text-center py-5 text-muted">No teams have registered yet.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -140,33 +140,33 @@
 
     <!-- Area: Assignment Management (Mid Bento) -->
     <div class="bento-card span-2 row-2">
-        <h5 class="mb-4 fw-bold"><i class="bi bi-calendar-check text-primary-red"></i> Active Missions</h5>
+        <h5 class="mb-4 fw-bold"><i class="bi bi-calendar-event text-primary-red"></i> Course Assignments</h5>
         <div class="mission-list scroll-hide" style="overflow-y: auto;">
             {% for assign in assignments %}
                 <div class="p-3 bg-light rounded-4 border-0 mb-3 shadow-sm">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <div class="fw-bold text-dark">{{ assign.title }}</div>
                         {% if assign.grades_released %}
-                            <span class="status-badge bg-success text-white" style="font-size: 0.55rem;">BROADCASTED</span>
+                            <span class="status-badge bg-success text-white" style="font-size: 0.55rem;">RELEASED</span>
                         {% endif %}
                     </div>
-                    <div class="small text-muted mb-3">{{ assign.deadline|date:"M d, H:i" }}</div>
+                    <div class="small text-muted mb-3">Due: {{ assign.deadline|date:"M d, H:i" }}</div>
                     <div class="d-flex justify-content-between align-items-center pt-2 border-top">
-                        <a href="{% url 'release_grades' assign.id %}" class="btn btn-link p-0 text-primary-red text-decoration-none small fw-bold {% if assign.grades_released %}disabled opacity-50{% endif %}" onclick="return confirm('Release all grades?')">Release All</a>
+                        <a href="{% url 'release_grades' assign.id %}" class="btn btn-link p-0 text-primary-red text-decoration-none small fw-bold {% if assign.grades_released %}disabled opacity-50{% endif %}" onclick="return confirm('Release all grades for this assignment?')">Release Grades</a>
                         {% if assign.instruction_file %}
-                            <a href="{{ assign.instruction_file.url }}" target="_blank" class="btn btn-sm btn-dark rounded-pill px-3" style="font-size: 0.65rem;">Briefing</a>
+                            <a href="{{ assign.instruction_file.url }}" target="_blank" class="btn btn-sm btn-dark rounded-pill px-3" style="font-size: 0.65rem;">View File</a>
                         {% endif %}
                     </div>
                 </div>
             {% empty %}
-                <p class="text-center py-5 text-muted small">No active missions created.</p>
+                <p class="text-center py-5 text-muted small">No assignments created.</p>
             {% endfor %}
         </div>
     </div>
 
-    <!-- Area: Repository (Small Bento) -->
+    <!-- Area: Class Documents (Small Bento) -->
     <div class="bento-card span-2">
-        <h5 class="mb-4 fw-bold"><i class="bi bi-folder2-open text-primary-red"></i> Field Repository</h5>
+        <h5 class="mb-4 fw-bold"><i class="bi bi-folder2 text-primary-red"></i> Class Materials</h5>
         <div class="repo-list" style="max-height: 200px; overflow-y: auto;">
             {% for doc in documents %}
                 <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded-3 bg-white border">
@@ -175,20 +175,20 @@
                     </div>
                     <div class="d-flex gap-2">
                         <a href="{{ doc.file.url }}" target="_blank" class="text-primary-red"><i class="bi bi-eye"></i></a>
-                        <a href="{% url 'delete_document' doc.pk %}" class="text-muted" onclick="return confirm('Erase document?')"><i class="bi bi-x-circle"></i></a>
+                        <a href="{% url 'delete_document' doc.pk %}" class="text-muted" onclick="return confirm('Delete document?')"><i class="bi bi-trash"></i></a>
                     </div>
                 </div>
             {% endfor %}
         </div>
         <div class="mt-4 pt-3 border-top">
-            <h6 class="small fw-bold text-uppercase text-muted mb-3">Upload Briefing</h6>
+            <h6 class="small fw-bold text-uppercase text-muted mb-3">Upload Material</h6>
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                 <input type="hidden" name="upload_doc" value="1">
                 <div class="mb-2">{{ doc_form.title }}</div>
                 <div class="d-flex gap-2">
                     <div class="flex-grow-1">{{ doc_form.file }}</div>
-                    <button type="submit" class="btn btn-dark btn-sm rounded-3">Add</button>
+                    <button type="submit" class="btn btn-dark btn-sm rounded-3">Upload</button>
                 </div>
             </form>
         </div>
@@ -204,29 +204,29 @@
                 {% csrf_token %}
                 <input type="hidden" name="create_assignment" value="1">
                 <div class="modal-header border-0 bg-dark text-white py-4">
-                    <h5 class="modal-title fw-bold">Deploy New Mission</h5>
+                    <h5 class="modal-title fw-bold">Create New Assignment</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label small fw-bold text-uppercase text-muted">Mission Title</label>
+                        <label class="form-label small fw-bold text-uppercase text-muted">Assignment Title</label>
                         {{ assign_form.title }}
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold text-uppercase text-muted">Objective Briefing</label>
+                        <label class="form-label small fw-bold text-uppercase text-muted">Description</label>
                         {{ assign_form.description }}
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold text-uppercase text-muted">Tactical Deadline</label>
+                        <label class="form-label small fw-bold text-uppercase text-muted">Deadline</label>
                         {{ assign_form.deadline }}
                     </div>
                     <div class="mb-0">
-                        <label class="form-label small fw-bold text-uppercase text-muted">Briefing File (Optional)</label>
+                        <label class="form-label small fw-bold text-uppercase text-muted">Instruction File (Optional)</label>
                         {{ assign_form.instruction_file }}
                     </div>
                 </div>
                 <div class="modal-footer border-0 p-4">
-                    <button type="submit" class="btn btn-primary-red w-100 py-3 rounded-pill shadow">Publish Mission</button>
+                    <button type="submit" class="btn btn-primary-red w-100 py-3 rounded-pill shadow">Create Assignment</button>
                 </div>
             </form>
         </div>
