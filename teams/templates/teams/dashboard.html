@@ -1,238 +1,233 @@
 {% extends 'teams/base.html' %}
+{% load static %}
+
+{% block extra_head %}
+<!-- Native Red/White Design System -->
+<link rel="stylesheet" href="{% static 'teams/css/student_hub.css' %}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+{% endblock %}
+
 {% block content %}
-<div class="row">
-    <!-- Main Content Column -->
-    <div class="col-lg-8">
-        <!-- Welcome & Team Stats -->
-        <div class="card shadow border-0 mb-4">
-            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                <h3 class="mb-0 text-dark">Team: {{ team.name }}</h3>
-                {% if team.leader == student %}
-                    <span class="badge bg-warning text-dark"><i class="bi bi-star-fill"></i> Team Leader</span>
-                {% else %}
-                    <span class="badge bg-light text-muted border">Team Member</span>
-                {% endif %}
+<div class="student-hub-grid">
+    
+    <!-- Area: Welcome & Identity (Bento Lg) -->
+    <div class="bento-card area-welcome">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+                <span class="text-muted small text-uppercase fw-bold ls-1">Connected Project</span>
+                <h1 class="h2 text-dark mb-1">{{ team.name }}</h1>
             </div>
-            <div class="card-body">
-                {% if not team.project_name %}
-                    <div class="alert alert-warning py-2 small">
-                        <i class="bi bi-exclamation-triangle"></i> No project name set. {% if team.leader == student %}Please update project details below.{% else %}Ask your leader to set the project name.{% endif %}
-                    </div>
-                {% else %}
-                    <h5 class="text-primary mb-1">Project: {{ team.project_name }}</h5>
-                    <p class="text-muted small mb-0">{{ team.project_description|default:"No description provided yet."|truncatewords:30 }}</p>
-                {% endif %}
-            </div>
+            {% if team.leader == student %}
+                <span class="status-badge bg-warning text-dark"><i class="bi bi-star-fill"></i> Leader</span>
+            {% else %}
+                <span class="status-badge bg-light text-muted border">Member</span>
+            {% endif %}
         </div>
 
-        <!-- Team Members & Roles -->
-        <div class="card shadow border-0 mb-4">
-            <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Group Members</h5>
-                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#roleModal">Set My Role</button>
+        {% if not team.project_name %}
+            <div class="alert alert-soft-red py-2 small border-0 bg-light">
+                <i class="bi bi-exclamation-circle text-danger"></i> No project mission defined.
             </div>
-            <div class="card-body">
-                <div class="row row-cols-1 row-cols-md-2 g-3">
-                    {% for member in team.members.all %}
-                        <div class="col">
-                            <div class="p-3 border rounded {% if member.user == user %}bg-light border-primary{% endif %}">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div class="text-truncate">
-                                        <div class="fw-bold text-dark text-truncate">{{ member.user.get_full_name }}</div>
-                                        <div class="small text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">{{ member.role|default:"Member" }}</div>
-                                    </div>
-                                    {% if team.leader == member %}
-                                        <span class="badge bg-warning text-dark" style="font-size: 0.6rem;">LEAD</span>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                    {% endfor %}
+        {% else %}
+            <h4 class="text-primary-red mb-1">{{ team.project_name }}</h4>
+            <p class="text-muted small mb-0">{{ team.project_description|default:"Awaiting project details..."|truncatewords:40 }}</p>
+        {% endif %}
+    </div>
+
+    <!-- Area: Project Details (Bento Sm) -->
+    <div class="bento-card area-project">
+        <h5 class="mb-3"><i class="bi bi-gear-wide-connected text-primary-red"></i> Project Engine</h5>
+        {% if team.leader == student %}
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="update_project" value="1">
+                <div class="mb-2">
+                    <label class="form-label small fw-bold text-muted">Mission Name</label>
+                    <div class="input-group input-group-sm">
+                        {{ project_form.project_name }}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-muted">Objective</label>
+                    {{ project_form.project_description }}
+                </div>
+                <button type="submit" class="btn btn-dark btn-sm w-100 rounded-pill">Update Sync</button>
+            </form>
+        {% else %}
+            <div class="text-center py-2">
+                <p class="text-muted small">Managed by Lead <strong>{{ team.leader.user.username }}</strong></p>
+                <div class="p-2 bg-light rounded small text-dark border-start border-4 border-danger">
+                    {{ team.project_name|default:"Mission Unknown" }}
                 </div>
             </div>
-        </div>
+        {% endif %}
+    </div>
 
-        <!-- Project Management (Leader Only) OR Teams View -->
-        <div class="card shadow border-0 mb-4">
-            <div class="card-header {% if team.leader == student %}bg-dark text-white{% else %}bg-light{% endif %}">
-                <h5 class="mb-0">Project details</h5>
-            </div>
-            <div class="card-body">
-                {% if team.leader == student %}
-                    <form method="post">
-                        {% csrf_token %}
-                        <input type="hidden" name="update_project" value="1">
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Project Name</label>
-                            {{ project_form.project_name }}
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Objectives / Description</label>
-                            {{ project_form.project_description }}
-                        </div>
-                        <button type="submit" class="btn btn-dark w-100">Update Project Info</button>
-                    </form>
-                {% else %}
-                    <div class="py-3 text-center">
-                        <p class="text-muted small">Only the team leader (<strong>{{ team.leader.user.get_full_name }}</strong>) can edit project details.</p>
-                        <hr>
-                        <h6 class="text-dark">Current Info:</h6>
-                        <p><strong>Name:</strong> {{ team.project_name|default:"Not set" }}</p>
-                        <p><strong>Description:</strong> {{ team.project_description|default:"Not set" }}</p>
+    <!-- Area: Group Members (Bento Sm) -->
+    <div class="bento-card area-members">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">Signal Team</h5>
+            <button class="btn btn-sm btn-outline-danger rounded-pill" style="font-size: 0.7rem;" data-bs-toggle="modal" data-bs-target="#roleModal">Set Role</button>
+        </div>
+        <div class="member-list">
+            {% for member in team.members.all %}
+                <div class="d-flex align-items-center p-2 mb-2 rounded {% if member.user == user %}bg-light border-start border-3 border-danger{% endif %}">
+                    <div class="flex-grow-1 min-width-0">
+                        <div class="fw-bold small text-truncate">{{ member.user.get_full_name }}</div>
+                        <div class="text-muted" style="font-size: 0.65rem;">{{ member.role|default:"Analyst"|upper }}</div>
                     </div>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- Assignments & Tasks Section -->
-        <div class="card shadow border-0 mb-4">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Assignments & Tasks</h5>
-            </div>
-            <div class="card-body">
-                <div class="list-group list-group-flush">
-                    {% for assign in assignments %}
-                        <div class="list-group-item border rounded mb-3 p-3 bg-white shadow-sm">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div>
-                                    <h6 class="fw-bold mb-1 text-dark">{{ assign.title }}</h6>
-                                    <div class="small text-muted mb-2">{{ assign.description }}</div>
-                                </div>
-                                {% if assign.team_submission %}
-                                    {% if assign.grades_released %}
-                                        <div class="text-end">
-                                            <span class="badge bg-dark rounded-pill" style="font-size: 0.8rem;">Score: {{ assign.team_submission.grade|floatformat:0 }}/100</span>
-                                        </div>
-                                    {% else %}
-                                        {% if assign.is_late %}
-                                            <span class="badge bg-danger">SUBMITTED (LATE)</span>
-                                        {% else %}
-                                            <span class="badge bg-success">SUBMITTED</span>
-                                        {% endif %}
-                                    {% endif %}
-                                {% else %}
-                                    <span class="badge bg-secondary">NOT SUBMITTED</span>
-                                {% endif %}
-                            </div>
-
-                            {% if assign.grades_released and assign.team_submission.feedback %}
-                                <div class="alert alert-light border small py-2 mb-3">
-                                    <div class="fw-bold text-dark"><i class="bi bi-chat-left-text"></i> Lecturer Feedback:</div>
-                                    {{ assign.team_submission.feedback|linebreaksbr }}
-                                </div>
-                            {% endif %}
-
-                            <div class="row align-items-center g-2">
-                                <div class="col-sm-6">
-                                    <div class="small">
-                                        <i class="bi bi-calendar-check"></i> Deadline: 
-                                        <span class="fw-bold {% if assign.is_late %}text-danger{% endif %}">{{ assign.deadline|date:"M d, H:i" }}</span>
-                                    </div>
-                                    {% if assign.instruction_file %}
-                                        <a href="{{ assign.instruction_file.url }}" target="_blank" class="small text-decoration-none me-3">
-                                            <i class="bi bi-file-earmark-pdf"></i> View Instructions
-                                        </a>
-                                    {% endif %}
-                                </div>
-                                <div class="col-sm-6 text-sm-end">
-                                    {% if assign.team_submission %}
-                                        <a href="{{ assign.team_submission.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary me-2">View My Submission</a>
-                                        {% if team.leader == student %}
-                                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#submitModal{{ assign.id }}">Update</button>
-                                        {% endif %}
-                                    {% else %}
-                                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#submitModal{{ assign.id }}">Submit Work</button>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Submission Modal for this Assignment -->
-                        <div class="modal fade" id="submitModal{{ assign.id }}" tabindex="-1">
-                            <div class="modal-dialog">
-                                <div class="modal-content text-start">
-                                    <form method="post" enctype="multipart/form-data">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="upload_assignment" value="1">
-                                        <input type="hidden" name="assignment_id" value="{{ assign.id }}">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title">Submit: {{ assign.title }}</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <div class="mb-3">
-                                                <label class="form-label fw-bold">File Label (e.g., Final Draft)</label>
-                                                {{ assign_form.title }}
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label fw-bold">Upload Document</label>
-                                                {{ assign_form.file }}
-                                            </div>
-                                            <div class="alert alert-info py-2 small">
-                                                <i class="bi bi-info-circle"></i> Posting a new file will replace your previous submission for this task.
-                                            </div>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" class="btn btn-primary">Submit Now</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    {% empty %}
-                        <div class="text-center py-5 text-muted">No assignments assigned yet.</div>
-                    {% endfor %}
+                    {% if team.leader == member %}
+                        <i class="bi bi-shield-check text-primary-red"></i>
+                    {% endif %}
                 </div>
-            </div>
+            {% endfor %}
         </div>
     </div>
 
-    <!-- Sidebar Column -->
-    <div class="col-lg-4 mb-4">
-        <!-- Class Materials -->
-        <div class="card shadow border-0 mb-4 h-100">
-            <div class="card-header bg-success text-white py-3">
-                <h5 class="mb-0">Class Materials</h5>
-            </div>
-            <div class="list-group list-group-flush scrollable-docs">
-                {% for doc in documents %}
-                    <a href="{{ doc.file.url }}" target="_blank" class="list-group-item list-group-item-action py-3">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h6 class="mb-1 text-primary">{{ doc.title }}</h6>
-                            <small class="text-muted">{{ doc.uploaded_at|date:"M d" }}</small>
+    <!-- Area: Class Documents (Bento Sidebar) -->
+    <div class="bento-card area-materials">
+        <h5 class="mb-3 border-bottom pb-2">Reference Lab</h5>
+        <div class="list-group list-group-flush" style="font-size: 0.85rem;">
+            {% for doc in documents %}
+                <a href="{{ doc.file.url }}" target="_blank" class="list-group-item list-group-item-action border-0 px-0 d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-primary-red fw-bold">{{ doc.title }}</div>
+                        <small class="text-muted">Research Paper</small>
+                    </div>
+                    <i class="bi bi-cloud-download text-muted"></i>
+                </a>
+            {% empty %}
+                <p class="text-muted py-4 small text-center">No research files shared yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Area: Assignments & Tasks (Bento Wide) -->
+    <div class="bento-card area-assignments">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="mb-0"><i class="bi bi-lightning-charge-fill text-primary-red"></i> Task Pipeline</h5>
+            <span class="badge text-bg-dark rounded-pill">{{ assignments|length }} active tasks</span>
+        </div>
+
+        <div class="row g-3">
+            {% for assign in assignments %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="task-card h-100 d-flex flex-column">
+                        <div class="d-flex justify-content-between mb-2">
+                            <h6 class="fw-bold mb-0 text-truncate">{{ assign.title }}</h6>
+                            {% if assign.team_submission %}
+                                <i class="bi bi-check-circle-fill text-success"></i>
+                            {% else %}
+                                <i class="bi bi-circle text-muted"></i>
+                            {% endif %}
                         </div>
-                        <small class="text-muted">Download / View</small>
-                    </a>
-                {% empty %}
-                    <div class="py-5 text-center text-muted">No materials uploaded yet.</div>
-                {% endfor %}
-            </div>
+                        <p class="text-muted small flex-grow-1" style="font-size: 0.75rem;">{{ assign.description|truncatechars:100 }}</p>
+                        
+                        <div class="mt-3 pt-3 border-top d-flex justify-content-between align-items-center">
+                            <div class="small">
+                                <i class="bi bi-clock-history"></i> {{ assign.deadline|date:"M d" }}
+                            </div>
+                            {% if assign.team_submission %}
+                                <div class="badge status-submitted">Done</div>
+                            {% else %}
+                                <button class="btn btn-sm btn-primary-red px-3 rounded-pill text-white" style="font-size: 0.7rem; background-color: var(--primary-red);" data-bs-toggle="modal" data-bs-target="#submitModal{{ assign.id }}">Submit</button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submission Modal for this Assignment -->
+                <div class="modal fade" id="submitModal{{ assign.id }}" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 shadow-lg">
+                            <form method="post" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <input type="hidden" name="upload_assignment" value="1">
+                                <input type="hidden" name="assignment_id" value="{{ assign.id }}">
+                                <div class="modal-header border-0 pb-0">
+                                    <h5 class="fw-bold">Mission: {{ assign.title }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Identification Label</label>
+                                        {{ assign_form.title }}
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Payload (File)</label>
+                                        {{ assign_form.file }}
+                                    </div>
+                                    <div class="p-2 bg-light rounded small text-muted">
+                                        <i class="bi bi-info-circle"></i> New uploads overwrite existing data for this task.
+                                    </div>
+                                </div>
+                                <div class="modal-footer border-0 pt-0">
+                                    <button type="submit" class="btn btn-dark w-100 rounded-pill">Upload Package</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
         </div>
     </div>
 </div>
 
+<!-- Floating Theme Switcher -->
+<button class="theme-toggle-btn shadow" onclick="toggleTheme()" title="Toggle Visual Mode">
+    <i class="bi bi-brightness-high" id="theme-icon"></i>
+</button>
+
 <!-- Role Modal -->
 <div class="modal fade" id="roleModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0">
             <form method="post">
                 {% csrf_token %}
                 <input type="hidden" name="update_role" value="1">
-                <div class="modal-header">
-                    <h5 class="modal-title">Define Your Role</h5>
+                <div class="modal-header border-0">
+                    <h5 class="fw-bold">Update Specialization</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
-                    <p class="small text-muted mb-3">State your responsibility in this project (e.g., UI Designer, Core Programmer, Research Lead).</p>
-                    {{ role_form.role }}
+                <div class="modal-body pt-0">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Primary Role</label>
+                        {{ role_form.role }}
+                    </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                <div class="modal-footer border-0">
+                    <button type="submit" class="btn btn-dark w-100 rounded-pill">Save Profile</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<script>
+    function toggleTheme() {
+        const body = document.body;
+        const icon = document.getElementById('theme-icon');
+        const currentTheme = body.getAttribute('data-theme');
+        
+        if (currentTheme === 'dark') {
+            body.removeAttribute('data-theme');
+            icon.className = 'bi bi-brightness-high';
+            localStorage.setItem('hub-theme', 'light');
+        } else {
+            body.setAttribute('data-theme', 'dark');
+            icon.className = 'bi bi-moon-stars';
+            localStorage.setItem('hub-theme', 'dark');
+        }
+    }
+
+    // Persist logic
+    window.onload = () => {
+        const savedTheme = localStorage.getItem('hub-theme');
+        if (savedTheme === 'dark') {
+            document.body.setAttribute('data-theme', 'dark');
+            document.getElementById('theme-icon').className = 'bi bi-moon-stars';
+        }
+    };
+</script>
+
 {% endblock %}

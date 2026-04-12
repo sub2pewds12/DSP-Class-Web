@@ -1,0 +1,118 @@
+/* 
+ * Crimson Spectrum Design System
+ * Native, Security-Vetted Student Hub Styles
+ */
+
+:root {
+    /* Color Tokens (Crimson & White) */
+    --primary-red: #D32F2F;
+    --primary-red-dim: #FFB3AC;
+    --primary-red-glow: rgba(211, 47, 47, 0.4);
+    
+    /* Default Light Mode Tokens */
+    --bg-surface: #F8F9FA;
+    --card-bg: rgba(255, 255, 255, 0.9);
+    --card-border: rgba(211, 47, 47, 0.1);
+    --text-main: #212529;
+    --text-muted: #6C757D;
+    --bento-gap: 1.5rem;
+    --radius-md: 12px;
+}
+
+/* Dark Mode Tokens */
+[data-theme="dark"] {
+    --bg-surface: #121212;
+    --card-bg: rgba(30, 30, 30, 0.85);
+    --card-border: rgba(255, 179, 172, 0.15);
+    --text-main: #E5E2E1;
+    --text-muted: #A0A0A0;
+    --primary-red: #FFBAB3; /* Softer red for dark mode readability */
+}
+
+body {
+    background-color: var(--bg-surface);
+    color: var(--text-main);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Bento Grid Layout */
+.student-hub-grid {
+    display: grid;
+    gap: var(--bento-gap);
+    margin-bottom: 2rem;
+    grid-template-areas: 
+        "welcome welcome materials"
+        "members project materials"
+        "assignments assignments assignments";
+}
+
+@media (max-width: 992px) {
+    .student-hub-grid {
+        grid-template-areas: 
+            "welcome"
+            "project"
+            "members"
+            "materials"
+            "assignments";
+    }
+}
+
+/* Base Bento Card */
+.bento-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
+    backdrop-filter: blur(10px);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.bento-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(211, 47, 47, 0.1);
+}
+
+/* Section-Specific Grid Areas */
+.area-welcome { grid-area: welcome; border-left: 4px solid var(--primary-red); }
+.area-members { grid-area: members; }
+.area-project { grid-area: project; }
+.area-materials { grid-area: materials; }
+.area-assignments { grid-area: assignments; }
+
+/* Assignments Styling */
+.task-card {
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(211, 47, 47, 0.05);
+    margin-bottom: 1rem;
+    padding: 1.25rem;
+}
+
+.status-badge {
+    padding: 0.4rem 0.8rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.status-submitted { background: rgba(46, 125, 50, 0.1); color: #2E7D32; }
+.status-not-submitted { background: rgba(211, 47, 47, 0.1); color: #D32F2F; }
+
+/* Theme Toggle Button */
+.theme-toggle-btn {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 1000;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--primary-red);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px var(--primary-red-glow);
+    cursor: pointer;
+}
