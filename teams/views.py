@@ -10,9 +10,6 @@ from .forms import (
     GradeSubmissionForm
 )
 
-def landing_view(request):
-    return render(request, 'teams/landing.html')
-
 @login_required
 def dashboard_view(request):
     if request.user.role == 'LECTURER':
@@ -243,8 +240,11 @@ def dev_dashboard(request):
     
     from django.db.models import Count, Q
     from django.db.models.functions import TruncDate
-    from django.db import connection
+    from django.db import connection, OperationalError
     from django.conf import settings
+    import platform
+    import sys
+    import django
 
     # 1. System Infrastructure Portals
     portals = {
@@ -266,8 +266,16 @@ def dev_dashboard(request):
         'User': CustomUser.objects.count(),
         'db_engine': settings.DATABASES['default']['ENGINE'].split('.')[-1],
         'db_host': settings.DATABASES['default']['HOST'],
-        'db_status': 'Connected' if connection.ensure_connection() is None else 'Error',
+        'db_status': 'Unknown'
     }
+
+    try:
+        connection.ensure_connection()
+        db_telemetry['db_status'] = 'Connected'
+    except OperationalError:
+        db_telemetry['db_status'] = 'Error'
+    except Exception:
+        db_telemetry['db_status'] = 'Error'
 
     # 3. Submission Activity Trends (Last 14 days)
     last_14_days = timezone.now() - timezone.timedelta(days=14)

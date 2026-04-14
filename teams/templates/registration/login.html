@@ -1,55 +1,152 @@
 {% extends 'teams/base.html' %}
 {% load static %}
 
+{% block extra_head %}
+<style>
+    .login-gateway {
+        min-height: 90vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        background: radial-gradient(circle at 10% 20%, rgba(211, 47, 47, 0.05) 0%, transparent 40%),
+                    radial-gradient(circle at 90% 80%, rgba(211, 47, 47, 0.05) 0%, transparent 40%);
+    }
+
+    .gateway-brand {
+        text-align: center;
+        margin-bottom: 3rem;
+        animate__animated animate__fadeInDown;
+    }
+
+    .gateway-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--glass-border);
+        border-radius: 2.5rem;
+        padding: 3.5rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+        max-width: 500px;
+        width: 100%;
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .gateway-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .hero-badge {
+        display: inline-block;
+        padding: 0.5rem 1.25rem;
+        background: rgba(211, 47, 47, 0.1);
+        color: var(--primary-red);
+        border-radius: 100px;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        letter-spacing: 1px;
+        margin-bottom: 1rem;
+    }
+
+    .floating-shape {
+        position: absolute;
+        z-index: -1;
+        filter: blur(60px);
+        border-radius: 50%;
+        opacity: 0.15;
+    }
+
+    .form-control-gateway {
+        background: rgba(255, 255, 255, 0.8) !important;
+        border: 1px solid rgba(0,0,0,0.05);
+        padding: 1rem 1.25rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .form-control-gateway:focus {
+        border-color: var(--primary-red);
+        box-shadow: 0 0 0 4px rgba(211, 47, 47, 0.1);
+        background: #fff !important;
+    }
+
+    .btn-gateway {
+        padding: 1.1rem;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        border-radius: 1.25rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-gateway:hover {
+        transform: scale(1.02);
+        box-shadow: 0 10px 20px rgba(211, 47, 47, 0.2);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center align-items-center" style="min-height: 80vh;">
-    <div class="col-md-5">
-        <div class="bento-card shadow-lg p-5">
+<div class="login-gateway">
+    <!-- Decorative Pulse Elements -->
+    <div class="floating-shape" style="width: 500px; height: 500px; background: var(--primary-red); top: -200px; left: -200px;"></div>
+    <div class="floating-shape" style="width: 400px; height: 400px; background: #6366f1; bottom: -150px; right: -150px;"></div>
+
+    <div class="container d-flex flex-column align-items-center">
+        
+        <div class="gateway-card animate__animated animate__fadeInUp">
             <div class="text-center mb-5">
-                <span class="text-muted small text-uppercase fw-bold ls-1">Login</span>
-                <h1 class="h2 text-main mt-2 fw-800">Welcome Back</h1>
-                <p class="text-muted small">Access your project dashboard</p>
+                <span class="hero-badge">DSP Platform Gateway</span>
+                <h1 class="h2 fw-900 text-main mt-2">Welcome Back</h1>
+                <p class="text-muted fw-500">Enter your credentials to access the workspace</p>
             </div>
 
             <form method="post">
                 {% csrf_token %}
                 
                 {% if form.non_field_errors %}
-                    <div class="alert bg-red-soft text-danger border-0 small py-2 mb-4">
-                        {{ form.non_field_errors }}
+                    <div class="alert bg-red-soft text-danger border-0 small py-3 mb-4 rounded-4">
+                        <i class="bi bi-exclamation-circle-fill me-2"></i> {{ form.non_field_errors.0 }}
                     </div>
                 {% endif %}
 
                 {% for field in form %}
                     <div class="mb-4">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <label for="{{ field.id_for_label }}" class="form-label small fw-bold text-uppercase text-muted mb-0">{% if field.name == 'username' %}Email Address{% else %}{{ field.label }}{% endif %}</label>
+                            <label for="{{ field.id_for_label }}" class="small fw-800 text-uppercase text-muted ls-1" style="font-size: 0.65rem;">
+                                {% if field.name == 'username' %}Email Identity{% else %}{{ field.label }}{% endif %}
+                            </label>
                             {% if field.name == 'password' %}
-                                <a href="{% url 'password_reset' %}" class="small text-decoration-none text-primary-red fw-bold" style="font-size: 0.7rem;">Forgot Password?</a>
+                                <a href="{% url 'password_reset' %}" class="small text-decoration-none text-primary-red fw-bold" style="font-size: 0.65rem;">Recovery?</a>
                             {% endif %}
                         </div>
                         <input 
                             type="{{ field.field.widget.input_type }}" 
                             name="{{ field.name }}" 
                             id="{{ field.id_for_label }}"
-                            class="form-control form-control-lg rounded-4 {% if field.errors %}is-invalid{% endif %}" 
+                            class="form-control form-control-gateway rounded-4 {% if field.errors %}is-invalid{% endif %}" 
                             placeholder="{% if field.name == 'username' %}name@example.com{% else %}••••••••{% endif %}" 
                             required
                         >
                         {% if field.errors %}
-                            <div class="text-danger small mt-1" style="font-size: 0.7rem;">{{ field.errors }}</div>
+                            <div class="text-danger small mt-1 fw-bold" style="font-size: 0.65rem;">{{ field.errors.0 }}</div>
                         {% endif %}
                     </div>
                 {% endfor %}
-                <button type="submit" class="btn btn-primary-red w-100 py-3 rounded-pill shadow-sm fw-bold">Sign In <i class="bi bi-box-arrow-in-right ms-2"></i></button>
+
+                <button type="submit" class="btn btn-primary-red btn-gateway w-100 shadow-sm mt-3">
+                    Sign In to Dashboard <i class="bi bi-arrow-right-short ms-1 h5 mb-0"></i>
+                </button>
             </form>
 
-            <hr class="my-5 opacity-25">
-            
-            <div class="text-center">
-                <p class="mb-3 small text-muted">Don't have an account yet?</p>
-                <a href="{% url 'signup' %}" class="btn btn-outline-danger btn-sm rounded-pill px-4 fw-bold">Register Now</a>
+            <div class="text-center mt-5 pt-3 border-top border-secondary border-opacity-10">
+                <p class="mb-3 small text-muted fw-500">New researcher joining the team?</p>
+                <a href="{% url 'signup' %}" class="btn btn-outline-dark btn-sm rounded-pill px-4 fw-800" style="font-size: 0.75rem;">Create Account</a>
             </div>
+        </div>
+
+        <div class="mt-5 text-center text-muted opacity-50 small fw-500">
+            Digital Signal Processing Project Management &copy; 2024
         </div>
     </div>
 </div>
