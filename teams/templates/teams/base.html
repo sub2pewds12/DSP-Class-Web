@@ -39,8 +39,8 @@
                     </li>
                     <!-- Theme Toggle in Nav -->
                     <li class="nav-item px-2">
-                        <button class="nav-theme-toggle" onclick="toggleTheme()" title="Toggle Visual Mode">
-                            <i class="bi bi-brightness-high" id="theme-icon"></i>
+                        <button class="nav-theme-toggle" id="theme-toggle-btn" type="button" title="Toggle Visual Mode">
+                            <i class="bi bi-brightness-high" id="theme-icon" style="pointer-events:none;"></i>
                         </button>
                     </li>
                     {% if user.is_authenticated %}
@@ -85,33 +85,40 @@
         function toggleTheme() {
             const html = document.documentElement;
             const icon = document.getElementById('theme-icon');
-            const currentTheme = html.getAttribute('data-theme');
-            let newTheme = 'light';
+            const isDark = html.getAttribute('data-theme') === 'dark';
             
-            if (currentTheme === 'dark') {
+            console.log('[Theme] Toggle clicked. Current:', isDark ? 'dark' : 'light');
+            
+            if (isDark) {
                 html.removeAttribute('data-theme');
-                if(icon) icon.className = 'bi bi-brightness-high';
-                newTheme = 'light';
+                if (icon) icon.className = 'bi bi-brightness-high';
+                localStorage.setItem('hub-theme', 'light');
             } else {
                 html.setAttribute('data-theme', 'dark');
-                if(icon) icon.className = 'bi bi-moon-stars';
-                newTheme = 'dark';
+                if (icon) icon.className = 'bi bi-moon-stars';
+                localStorage.setItem('hub-theme', 'dark');
             }
             
-            localStorage.setItem('hub-theme', newTheme);
-            
-            // Dispatch dynamic event for interactive components (Charts, etc)
-            window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: newTheme } }));
+            console.log('[Theme] New:', html.getAttribute('data-theme') || 'light');
+            window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: isDark ? 'light' : 'dark' } }));
         }
 
-        // Keep local icon in sync on load
-        (function() {
-            const savedTheme = localStorage.getItem('hub-theme');
-            const icon = document.getElementById('theme-icon');
+        // Attach listener + sync icon on load
+        document.addEventListener('DOMContentLoaded', function() {
+            var btn = document.getElementById('theme-toggle-btn');
+            if (btn) {
+                btn.addEventListener('click', toggleTheme);
+                console.log('[Theme] Toggle button found and listener attached.');
+            } else {
+                console.error('[Theme] Toggle button NOT found!');
+            }
+            
+            var savedTheme = localStorage.getItem('hub-theme');
+            var icon = document.getElementById('theme-icon');
             if (savedTheme === 'dark' && icon) {
                 icon.className = 'bi bi-moon-stars';
             }
-        })();
+        });
     </script>
 </body>
 </html>
