@@ -117,6 +117,69 @@
         </div>
     </div>
 
+    <!-- Phase 3: System Portals & Advanced DB Diagnostics -->
+    <div class="row g-4 mb-5">
+        <!-- System Portals Card -->
+        <div class="col-md-6">
+            <div class="stat-card glass-card">
+                <h5 class="fw-bold mb-4"><i class="bi bi-cpu-fill text-primary-red me-2"></i>System Infrastructure Portals</h5>
+                <div class="row g-3">
+                    <div class="col-6">
+                        <a href="{{ portals.admin }}" target="_blank" class="btn btn-outline-dark w-100 py-3 rounded-4 d-flex flex-column align-items-center gap-2 hover-bg">
+                            <i class="bi bi-shield-lock-fill h4 mb-0"></i>
+                            <span class="small fw-bold">Django Admin</span>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{{ portals.render }}" target="_blank" class="btn btn-outline-dark w-100 py-3 rounded-4 d-flex flex-column align-items-center gap-2 hover-bg">
+                            <i class="bi bi-clouds-fill h4 mb-0"></i>
+                            <span class="small fw-bold">Render Dash</span>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{{ portals.cloudinary }}" target="_blank" class="btn btn-outline-dark w-100 py-3 rounded-4 d-flex flex-column align-items-center gap-2 hover-bg">
+                            <i class="bi bi-image-fill h4 mb-0"></i>
+                            <span class="small fw-bold">Cloudinary</span>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{{ portals.gmail }}" target="_blank" class="btn btn-outline-dark w-100 py-3 rounded-4 d-flex flex-column align-items-center gap-2 hover-bg">
+                            <i class="bi bi-envelope-check-fill h4 mb-0"></i>
+                            <span class="small fw-bold">Gmail Auth</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Database Command Center Card (Extra Detailed) -->
+        <div class="col-md-6">
+            <div class="stat-card">
+                <h5 class="fw-bold mb-4"><i class="bi bi-database-fill-gear text-primary-red me-2"></i>Database Command Center</h5>
+                <div class="row g-2">
+                    {% for model, count in db_telemetry.items %}
+                        {% if model != 'db_engine' and model != 'db_host' and model != 'db_status' %}
+                        <div class="col-4">
+                            <div class="p-3 bg-soft rounded-4 border-0 text-center">
+                                <div class="h4 fw-800 mb-0 text-main">{{ count }}</div>
+                                <div class="small text-muted fw-bold" style="font-size: 0.6rem;">{{ model|upper }}S</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <!-- Connection Pulse -->
+                <div class="mt-4 pt-3 border-top">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="small text-muted fw-bold text-uppercase">Engine: <span class="text-main">{{ db_telemetry.db_engine }}</span></span>
+                        <span class="badge bg-success-soft text-success border border-success border-opacity-25 rounded-pill" style="font-size: 0.6rem;">{{ db_telemetry.db_status }}</span>
+                    </div>
+                    <div class="small text-muted text-truncate" style="font-size: 0.65rem;">Host: {{ db_telemetry.db_host }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Charts Row -->
     <div class="row g-4 mb-5">
         <div class="col-md-8">

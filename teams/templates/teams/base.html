@@ -22,9 +22,12 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body class="">
-    <nav class="navbar navbar-expand-lg navbar-crimson mb-2 sticky-top">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom py-3">
         <div class="container">
-            <a class="navbar-brand" href="{% url 'dashboard' %}">Project Registration</a>
+            <a class="navbar-brand fw-800 text-primary-red d-flex align-items-center gap-2" href="{% url 'landing' %}">
+                <div class="brand-dot"></div>
+                Project Registration
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExample">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -44,17 +47,20 @@
                         </button>
                     </li>
                     {% if user.is_authenticated %}
-                        {% if user.role == "DEV" %}
-                            <li class="nav-item">
-                                <a class="nav-link fw-bold px-2" href="{% url 'dashboard' %}"><span class="text-primary-red">Student View</span></a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link fw-bold px-2" href="{% url 'teacher_dashboard' %}"><span class="text-primary-red">Lecturer View</span></a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link fw-bold px-2" href="{% url 'dev_dashboard' %}"><span class="text-primary-red">Dev Center</span></a>
-                            </li>
-                        {% elif user.role == "LECTURER" %}
+                        {% if user.role == 'DEV' %}
+                        <li class="nav-item">
+                            <a class="nav-link fw-700 text-main" href="{% url 'dashboard' %}">Student View</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link fw-700 text-main" href="{% url 'teacher_dashboard' %}">Lecturer View</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link fw-700 text-primary-red" href="{% url 'dev_dashboard' %}">Dev Center</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link fw-700 text-muted" href="/admin/" target="_blank">Admin Console</a>
+                        </li>
+                    {% elif user.role == 'LECTURER' %}
                             <li class="nav-item">
                                 <a class="nav-link fw-bold" href="{% url 'teacher_dashboard' %}">
                                     <span class="text-primary-red">Lecturer Dashboard</span>

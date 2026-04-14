@@ -10,6 +10,9 @@ from .forms import (
     GradeSubmissionForm
 )
 
+def landing_view(request):
+    return render(request, 'teams/landing.html')
+
 @login_required
 def dashboard_view(request):
     if request.user.role == 'LECTURER':
@@ -215,7 +218,8 @@ def signup_view(request):
             user.save()
             
             # Create profiles
-            role = form.cleaned_data.get('role')
+            # Security: Force role to STUDENT regardless of POST data
+            role = 'STUDENT'
             if role == 'STUDENT':
                 Student.objects.get_or_create(user=user)
             elif role == 'DEV':
@@ -239,11 +243,33 @@ def dev_dashboard(request):
     
     from django.db.models import Count, Q
     from django.db.models.functions import TruncDate
-    import platform
-    import sys
-    import django
+    from django.db import connection
+    from django.conf import settings
 
-    # 1. Submission Activity Trends (Last 14 days)
+    # 1. System Infrastructure Portals
+    portals = {
+        'admin': '/admin/',
+        'render': 'https://dashboard.render.com',
+        'cloudinary': f"https://cloudinary.com/console/cloud/{settings.CLOUDINARY_STORAGE['CLOUD_NAME']}",
+        'postgres': 'https://dashboard.render.com', # Generic Render dash, user can find DB there
+        'gmail': 'https://myaccount.google.com/apppasswords',
+    }
+
+    # 2. Advanced DB Diagnostics (Extra Detailed)
+    db_telemetry = {
+        'Team': Team.objects.count(),
+        'Student': Student.objects.count(),
+        'Assignment': Assignment.objects.count(),
+        'Submission': TeamSubmission.objects.count(),
+        'Lecturer': Lecturer.objects.count(),
+        'ClassDocument': ClassDocument.objects.count(),
+        'User': CustomUser.objects.count(),
+        'db_engine': settings.DATABASES['default']['ENGINE'].split('.')[-1],
+        'db_host': settings.DATABASES['default']['HOST'],
+        'db_status': 'Connected' if connection.ensure_connection() is None else 'Error',
+    }
+
+    # 3. Submission Activity Trends (Last 14 days)
     last_14_days = timezone.now() - timezone.timedelta(days=14)
     submission_trends = TeamSubmission.objects.filter(
         submitted_at__gte=last_14_days
@@ -297,6 +323,8 @@ def dev_dashboard(request):
         'sys_info': sys_info,
         'recent_activity': recent_activity,
         'settings': SystemSettings.objects.first(),
+        'portals': portals,
+        'db_telemetry': db_telemetry,
     })
 
 def gallery_view(request):

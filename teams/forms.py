@@ -18,6 +18,8 @@ class UserRegistrationForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Restrict role choices to STUDENT only for public signups
+        self.fields['role'].choices = [('STUDENT', 'Student')]
         for field in self.fields.values():
             if not isinstance(field.widget, forms.RadioSelect):
                 field.widget.attrs.update({'class': 'form-control'})
