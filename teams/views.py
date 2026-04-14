@@ -59,9 +59,11 @@ def dashboard_view(request):
 
         # Annotate assignments with student's team submissions
         for a in assignments:
-            a.team_submission = team.submissions.filter(assignment=a).first()
-            if a.team_submission:
+            a.team_submission = team.submissions.filter(assignment=a).order_by('-submitted_at').first()
+            if a.team_submission and a.team_submission.submitted_at and a.deadline:
                 a.is_late = a.team_submission.submitted_at > a.deadline
+            else:
+                a.is_late = False
 
         return render(request, 'teams/dashboard.html', {
             'student': student, 
