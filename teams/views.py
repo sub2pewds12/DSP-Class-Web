@@ -14,8 +14,7 @@ from .forms import (
 def dashboard_view(request):
     if request.user.role == 'LECTURER':
         return redirect('teacher_dashboard')
-    if request.user.role == 'DEV':
-        return redirect('dev_dashboard')
+    # DEV can access student view directly, no auto-redirect to dev_dashboard
     
     student, created = Student.objects.get_or_create(user=request.user)
     documents = ClassDocument.objects.all().order_by('-uploaded_at')
@@ -105,7 +104,7 @@ def dashboard_view(request):
 
 @login_required
 def teacher_dashboard(request):
-    if request.user.role != 'LECTURER':
+    if request.user.role not in ['LECTURER', 'DEV']:
         return redirect('dashboard')
     
     # Ensure lecturer profile exists
@@ -157,7 +156,7 @@ def teacher_dashboard(request):
 
 @login_required
 def grade_submission(request, pk):
-    if request.user.role != 'LECTURER':
+    if request.user.role not in ['LECTURER', 'DEV']:
         return redirect('dashboard')
     
     submission = get_object_or_404(TeamSubmission, pk=pk)
@@ -171,7 +170,7 @@ def grade_submission(request, pk):
 
 @login_required
 def release_grades(request, pk):
-    if request.user.role != 'LECTURER':
+    if request.user.role not in ['LECTURER', 'DEV']:
         return redirect('dashboard')
     
     assignment = get_object_or_404(Assignment, pk=pk)
@@ -182,7 +181,7 @@ def release_grades(request, pk):
 
 @login_required
 def delete_document(request, pk):
-    if request.user.role != 'LECTURER':
+    if request.user.role not in ['LECTURER', 'DEV']:
         return redirect('dashboard')
     doc = get_object_or_404(ClassDocument, pk=pk)
     title = doc.title
@@ -196,7 +195,7 @@ def delete_submission(request, pk):
     # Only the team leader or a lecturer can delete a submission
     is_leader = hasattr(request.user, 'student_profile') and request.user.student_profile.team == submission.team and submission.team.leader == request.user.student_profile
     
-    if request.user.role == 'LECTURER' or is_leader:
+    if request.user.role in ['LECTURER', 'DEV'] or is_leader:
         title = submission.title
         submission.delete()
         messages.success(request, f"Submission '{title}' removed.")

@@ -44,13 +44,29 @@
                         </button>
                     </li>
                     {% if user.is_authenticated %}
-                        <li class="nav-item">
-                            <a class="nav-link fw-bold" href="{% url 'dashboard' %}">
-                                <span class="text-primary-red">
-                                    {% if user.role == "LECTURER" %}Lecturer Dashboard{% else %}Student Dashboard{% endif %}
-                                </span>
-                            </a>
-                        </li>
+                        {% if user.role == "DEV" %}
+                            <li class="nav-item">
+                                <a class="nav-link fw-bold px-2" href="{% url 'dashboard' %}"><span class="text-primary-red">Student View</span></a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link fw-bold px-2" href="{% url 'teacher_dashboard' %}"><span class="text-primary-red">Lecturer View</span></a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link fw-bold px-2" href="{% url 'dev_dashboard' %}"><span class="text-primary-red">Dev Center</span></a>
+                            </li>
+                        {% elif user.role == "LECTURER" %}
+                            <li class="nav-item">
+                                <a class="nav-link fw-bold" href="{% url 'teacher_dashboard' %}">
+                                    <span class="text-primary-red">Lecturer Dashboard</span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="nav-item">
+                                <a class="nav-link fw-bold" href="{% url 'dashboard' %}">
+                                    <span class="text-primary-red">Student Dashboard</span>
+                                </a>
+                            </li>
+                        {% endif %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle ms-2" href="#" data-bs-toggle="dropdown">{{ user.get_full_name|default:user.username }}</a>
                             <ul class="dropdown-menu dropdown-menu-end border-0 shadow">
