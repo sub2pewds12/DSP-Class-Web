@@ -7,7 +7,7 @@
         <div class="bento-card shadow-lg p-5">
             <div class="text-center mb-5">
                 <span class="text-muted small text-uppercase fw-bold ls-1">Registration</span>
-                <h1 class="h2 text-dark mt-2 fw-800">Create Account</h1>
+                <h1 class="h2 text-main mt-2 fw-800">Create Account</h1>
                 <p class="text-muted small">Register to access the project management system</p>
             </div>
 
@@ -20,11 +20,11 @@
                             <label class="form-label small fw-bold text-uppercase text-muted mb-2">{{ field.label }}</label>
                             
                             {% if field.name == 'role' %}
-                                <div class="p-3 bg-light rounded-4 d-flex gap-4 justify-content-center border-0">
+                                <div class="p-3 bg-soft rounded-4 d-flex gap-4 justify-content-center border-0">
                                     {% for radio in field %}
                                         <div class="form-check custom-radio">
                                             {{ radio.tag }}
-                                            <label class="form-check-label fw-bold small text-dark" for="{{ radio.id_for_label }}">
+                                            <label class="form-check-label fw-bold small text-main" for="{{ radio.id_for_label }}">
                                                 {{ radio.choice_label }}
                                             </label>
                                         </div>
@@ -43,7 +43,7 @@
 
                 <div class="mt-5 text-center">
                     <p class="text-muted small mb-4">By registering, you agree to adhere to the course guidelines.</p>
-                    <button type="submit" class="btn btn-dark w-100 py-3 rounded-pill shadow-sm fw-bold">Register Account <i class="bi bi-person-plus ms-2"></i></button>
+                    <button type="submit" class="btn btn-primary-red w-100 py-3 rounded-pill shadow-sm fw-bold">Register Account <i class="bi bi-person-plus ms-2"></i></button>
                 </div>
             </form>
 

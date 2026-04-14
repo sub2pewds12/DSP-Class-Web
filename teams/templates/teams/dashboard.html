@@ -16,9 +16,9 @@
                 </div>
             </div>
             {% if team.leader == student %}
-                <span class="status-badge bg-warning text-dark shadow-sm"><i class="bi bi-star-fill"></i> Team Leader</span>
+                <span class="status-badge bg-soft text-main border border-warning shadow-sm"><i class="bi bi-star-fill"></i> Team Leader</span>
             {% else %}
-                <span class="status-badge bg-light text-muted border">Team Member</span>
+                <span class="status-badge bg-soft text-muted border-0">Team Member</span>
             {% endif %}
         </div>
 
@@ -98,17 +98,17 @@
 
                             {% if assign.team_submission %}
                                 {% if assign.grades_released %}
-                                    <div class="p-3 bg-light rounded-4 mt-2">
+                                    <div class="p-3 bg-soft rounded-4 mt-2 border">
                                         <div class="d-flex justify-content-between align-items-center">
                                             <span class="small fw-bold text-uppercase text-muted" style="font-size: 0.65rem;">Result</span>
                                             <span class="badge bg-primary-red text-white rounded-pill">{{ assign.team_submission.grade }}%</span>
                                         </div>
-                                        <div class="mt-2 text-dark small" style="font-size: 0.75rem; font-style: italic;">
+                                        <div class="mt-2 text-main small" style="font-size: 0.75rem; font-style: italic;">
                                             "{{ assign.team_submission.feedback|default:"No feedback provided." }}"
                                         </div>
                                     </div>
                                 {% else %}
-                                    <div class="text-center py-2 border rounded-4 small text-muted bg-light-soft" style="font-size: 0.7rem;">
+                                    <div class="text-center py-2 border rounded-4 small text-muted bg-soft" style="font-size: 0.7rem;">
                                         <i class="bi bi-clock-history me-1"></i> Awaiting Grade
                                     </div>
                                 {% endif %}
@@ -145,7 +145,7 @@
                                     </div>
                                 </div>
                                 <div class="modal-footer border-0 p-4">
-                                    <button type="submit" class="btn btn-dark w-100 py-3 rounded-pill shadow">Upload Project File</button>
+                                    <button type="submit" class="btn btn-primary-red w-100 py-3 rounded-pill shadow">Upload Project File</button>
                                 </div>
                             </form>
                         </div>
@@ -204,7 +204,7 @@
                     </div>
                 </div>
                 <div class="modal-footer border-0 p-4">
-                    <button type="submit" class="btn btn-dark w-100 py-3 rounded-pill">Save Profile</button>
+                    <button type="submit" class="btn btn-primary-red w-100 py-3 rounded-pill">Save Profile</button>
                 </div>
             </form>
         </div>
