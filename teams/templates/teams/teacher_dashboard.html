@@ -88,7 +88,11 @@
                                                         </div>
 
                                                         <div class="d-flex justify-content-between align-items-center pt-2 border-top">
-                                                            <a href="{{ sub.file.url }}" target="_blank" class="btn btn-sm btn-link p-0 text-primary-red text-decoration-none fw-bold small">Download</a>
+                                                            {% if sub.file %}
+                                                                <a href="{{ sub.file.url }}" target="_blank" class="btn btn-sm btn-link p-0 text-primary-red text-decoration-none fw-bold small">Download</a>
+                                                            {% else %}
+                                                                <span class="small text-muted italic">File missing</span>
+                                                            {% endif %}
                                                             <button class="btn btn-dark btn-sm rounded-pill px-3" style="font-size: 0.65rem;" data-bs-toggle="modal" data-bs-target="#gradeModal{{ sub.id }}">
                                                                 {% if sub.grade is not None %}Update Grade{% else %}Grade{% endif %}
                                                             </button>
@@ -174,7 +178,9 @@
                         <div class="fw-bold small text-truncate">{{ doc.title }}</div>
                     </div>
                     <div class="d-flex gap-2">
-                        <a href="{{ doc.file.url }}" target="_blank" class="text-primary-red"><i class="bi bi-eye"></i></a>
+                        {% if doc.file %}
+                            <a href="{{ doc.file.url }}" target="_blank" class="text-primary-red"><i class="bi bi-eye"></i></a>
+                        {% endif %}
                         <a href="{% url 'delete_document' doc.pk %}" class="text-muted" onclick="return confirm('Delete document?')"><i class="bi bi-trash"></i></a>
                     </div>
                 </div>
