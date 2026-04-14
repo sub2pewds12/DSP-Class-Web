@@ -1,22 +1,81 @@
-{% extends 'teams/base.html' %}
-{% load static %}
+{% block extra_head %}
+<style>
+    .signup-gateway {
+        min-height: 100vh;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        background-color: #0f172a;
+        background-image: 
+            radial-gradient(circle at 90% 10%, rgba(211, 47, 47, 0.12) 0%, transparent 45%),
+            radial-gradient(circle at 10% 90%, rgba(211, 47, 47, 0.12) 0%, transparent 45%);
+    }
+
+    .gateway-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--glass-border);
+        border-radius: 2.5rem;
+        padding: 3.5rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+        max-width: 800px;
+        width: 100%;
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .hero-badge {
+        display: inline-block;
+        padding: 0.5rem 1.25rem;
+        background: rgba(211, 47, 47, 0.1);
+        color: var(--primary-red);
+        border-radius: 100px;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        letter-spacing: 1px;
+        margin-bottom: 0.5rem;
+    }
+
+    .floating-shape {
+        position: absolute;
+        z-index: -1;
+        filter: blur(60px);
+        border-radius: 50%;
+        opacity: 0.15;
+    }
+
+    .form-control-gateway {
+        background: rgba(255, 255, 255, 0.8) !important;
+        border: 1px solid rgba(0,0,0,0.05);
+        padding: 0.8rem 1.25rem; /* Slightly tighter for signup */
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center align-items-center" style="min-height: 85vh;">
-    <div class="col-md-6">
-        <div class="bento-card shadow-lg p-5">
-            <div class="text-center">
-                <p class="mb-3 small text-muted">Already have an account?</p>
-                <a href="{% url 'login' %}" class="btn btn-outline-adaptive btn-sm rounded-pill px-4 fw-bold">Sign In Instead</a>
+<div class="signup-gateway">
+    <div class="floating-shape" style="width: 500px; height: 500px; background: var(--primary-red); top: -200px; right: -200px;"></div>
+    <div class="floating-shape" style="width: 400px; height: 400px; background: #6366f1; bottom: -150px; left: -150px;"></div>
+
+    <div class="container d-flex flex-column align-items-center py-5">
+        <div class="gateway-card animate__animated animate__fadeInUp">
+            <div class="text-center mb-4">
+                <span class="hero-badge">Registration Terminal</span>
+                <h1 class="h2 fw-900 text-main mt-2">Create Account</h1>
+                <p class="text-muted fw-500">Join the digital signal processing researcher community</p>
             </div>
 
             <form method="post">
                 {% csrf_token %}
-                
                 <div class="row g-4">
                     {% for field in form %}
                         <div class="{% if field.name == 'role' %}col-12{% else %}col-md-6{% endif %}">
-                            <label class="form-label small fw-bold text-uppercase text-muted mb-2">{{ field.label }}</label>
+                            <label class="small fw-800 text-uppercase text-muted ls-1 mb-2 d-block" style="font-size: 0.65rem;">{{ field.label }}</label>
                             
                             {% if field.name == 'role' %}
                                 <div class="p-3 bg-soft rounded-4 d-flex gap-4 justify-content-center border-0">
@@ -30,31 +89,34 @@
                                     {% endfor %}
                                 </div>
                             {% else %}
-                                {{ field }}
+                                <input 
+                                    type="{{ field.field.widget.input_type|default:'text' }}" 
+                                    name="{{ field.name }}" 
+                                    id="{{ field.id_for_label }}"
+                                    class="form-control form-control-gateway rounded-4 {% if field.errors %}is-invalid{% endif %}" 
+                                    placeholder="{{ field.label }}"
+                                    {% if field.value %}value="{{ field.value }}"{% endif %}
+                                    required
+                                >
                             {% endif %}
                             
                             {% if field.errors %}
-                                <div class="text-danger small mt-1" style="font-size: 0.7rem;">{{ field.errors }}</div>
+                                <div class="text-danger small mt-1 fw-bold" style="font-size: 0.65rem;">{{ field.errors.0 }}</div>
                             {% endif %}
                         </div>
                     {% endfor %}
                 </div>
 
                 <div class="mt-5 text-center">
-                    <p class="text-muted small mb-4">By registering, you agree to adhere to the course guidelines.</p>
-                    <button type="submit" class="btn btn-primary-red w-100 py-3 rounded-pill shadow-sm fw-bold">Register Account <i class="bi bi-person-plus ms-2"></i></button>
+                    <button type="submit" class="btn btn-primary-red w-100 py-3 rounded-pill shadow-sm fw-bold">Initialize Researcher Profile <i class="bi bi-person-plus ms-2"></i></button>
+                    <p class="text-muted small mt-3">Already part of the team? <a href="{% url 'login' %}" class="text-primary-red fw-bold text-decoration-none border-bottom border-danger border-opacity-25">Sign In</a></p>
                 </div>
             </form>
-
-            <div class="text-center mt-4">
-                <a href="{% url 'login' %}" class="small text-primary-red fw-bold text-decoration-none">Already registered? Log in here</a>
-            </div>
         </div>
     </div>
 </div>
 
 <style>
-    /* Custom Radio Styling */
     .custom-radio .form-check-input:checked {
         background-color: var(--primary-red);
         border-color: var(--primary-red);

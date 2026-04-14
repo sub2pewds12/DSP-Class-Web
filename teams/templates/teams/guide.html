@@ -2,81 +2,87 @@
 {% load static %}
 
 {% block content %}
-<div class="bento-container">
-    
-    <!-- Area: Guide Header (Wide Bento) -->
-    <div class="bento-card span-4">
-        <div class="text-center py-5">
-            <span class="text-muted small text-uppercase fw-bold ls-1">Information</span>
-            <h1 class="h1 text-main mt-2 fw-800"><i class="bi bi-book text-primary-red me-2"></i> User Guide & Documentation</h1>
-            <p class="lead text-muted mt-3" style="max-width: 800px; margin: 0 auto;">Instructions for managing project teams, assignments, and submissions.</p>
-        </div>
-    </div>
-
-    <!-- Area: Student Instructions (Half Bento) -->
-    <div class="bento-card span-2">
-        <div class="d-flex align-items-center mb-4">
-            <div class="p-3 bg-red-soft rounded-4 text-primary-red me-3">
-                <i class="bi bi-person-badge h3 mb-0"></i>
+<div class="container mt-4 pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="bento-container">
+            
+            <!-- Area: Guide Header (Wide Bento) -->
+            <div class="bento-card span-4">
+                <div class="text-center py-5">
+                    <span class="text-muted small text-uppercase fw-bold ls-1">Information</span>
+                    <h1 class="h1 text-main mt-2 fw-800"><i class="bi bi-book text-primary-red me-2"></i> User Guide & Documentation</h1>
+                    <p class="lead text-muted mt-3" style="max-width: 800px; margin: 0 auto;">Instructions for managing project teams, assignments, and submissions.</p>
+                </div>
             </div>
-            <h4 class="fw-bold mb-0">Student Instructions</h4>
-        </div>
-        
-        <div class="mb-4">
-            <h6 class="fw-800 text-main small text-uppercase ls-1">1. Creating or Joining a Team</h6>
-            <p class="text-muted small">After logging in, use the registration portal to either join an existing team or create a new one. The first member to register for a new team is designated as the **Team Leader**.</p>
-        </div>
 
-        <div class="mb-4">
-            <h6 class="fw-800 text-main small text-uppercase ls-1">2. Defining Roles</h6>
-            <p class="text-muted small">On your dashboard, use the "Edit Role" button to specify your primary responsibility within the team (e.g., Developer, Analyst, Researcher).</p>
-        </div>
+            <!-- Area: Student Instructions (Half Bento) -->
+            <div class="bento-card span-2">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="p-3 bg-red-soft rounded-4 text-primary-red me-3">
+                        <i class="bi bi-person-badge h3 mb-0"></i>
+                    </div>
+                    <h4 class="fw-bold mb-0">Student Instructions</h4>
+                </div>
+                
+                <div class="mb-4">
+                    <h6 class="fw-800 text-main small text-uppercase ls-1">1. Creating or Joining a Team</h6>
+                    <p class="text-muted small">After logging in, use the registration portal to either join an existing team or create a new one. The first member to register for a new team is designated as the **Team Leader**.</p>
+                </div>
 
-        <div class="mb-4">
-            <h6 class="fw-800 text-main small text-uppercase ls-1">3. Submitting Assignments</h6>
-            <p class="text-muted small">Active assignments are listed on your dashboard. Upload your project files (PDF or ZIP) before the stated deadline. Late submissions will be flagged.</p>
-        </div>
+                <div class="mb-4">
+                    <h6 class="fw-800 text-main small text-uppercase ls-1">2. Defining Roles</h6>
+                    <p class="text-muted small">On your dashboard, use the "Edit Role" button to specify your primary responsibility within the team (e.g., Developer, Analyst, Researcher).</p>
+                </div>
 
-        <div class="mb-0">
-            <h6 class="fw-800 text-main small text-uppercase ls-1">4. Viewing Grades</h6>
-            <p class="text-muted small">Once the lecturer has graded your submission and released the results, your scores and feedback will appear on the assignment cards.</p>
-        </div>
-    </div>
+                <div class="mb-4">
+                    <h6 class="fw-800 text-main small text-uppercase ls-1">3. Submitting Assignments</h6>
+                    <p class="text-muted small">Active assignments are listed on your dashboard. Upload your project files (PDF or ZIP) before the stated deadline. Late submissions will be flagged.</p>
+                </div>
 
-    <!-- Area: Lecturer Instructions (Half Bento) -->
-    <div class="bento-card span-2">
-        <div class="d-flex align-items-center mb-4">
-            <div class="p-3 bg-dark rounded-4 text-white me-3">
-                <i class="bi bi-pen-fill h3 mb-0"></i>
+                <div class="mb-0">
+                    <h6 class="fw-800 text-main small text-uppercase ls-1">4. Viewing Grades</h6>
+                    <p class="text-muted small">Once the lecturer has graded your submission and released the results, your scores and feedback will appear on the assignment cards.</p>
+                </div>
             </div>
-            <h4 class="fw-bold mb-0">Lecturer Instructions</h4>
-        </div>
 
-        <div class="mb-4">
-            <h6 class="fw-800 text-main small text-uppercase ls-1">1. Managing Class Materials</h6>
-            <p class="text-muted small">Upload course documents, reference materials, and project guides to the "Class Materials" section for all students to access.</p>
-        </div>
+            <!-- Area: Lecturer Instructions (Half Bento) -->
+            <div class="bento-card span-2">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="p-3 bg-dark rounded-4 text-white me-3">
+                        <i class="bi bi-pen-fill h3 mb-0"></i>
+                    </div>
+                    <h4 class="fw-bold mb-0">Lecturer Instructions</h4>
+                </div>
 
-        <div class="mb-4">
-            <h6 class="fw-800 text-main small text-uppercase ls-1">2. Creating Assignments</h6>
-            <p class="text-muted small">Create new assignments by providing a title, description, and deadline. You can also attach instruction files for each specific task.</p>
-        </div>
+                <div class="mb-4">
+                    <h6 class="fw-800 text-main small text-uppercase ls-1">1. Managing Class Materials</h6>
+                    <p class="text-muted small">Upload course documents, reference materials, and project guides to the "Class Materials" section for all students to access.</p>
+                </div>
 
-        <div class="mb-4">
-            <h6 class="fw-800 text-main small text-uppercase ls-1">3. Grading Submissions</h6>
-            <p class="text-muted small">The "Assignment Submissions" table provides a live view of all team uploads. Download files, assign scores, and provide feedback for each submission.</p>
-        </div>
+                <div class="mb-4">
+                    <h6 class="fw-800 text-main small text-uppercase ls-1">2. Creating Assignments</h6>
+                    <p class="text-muted small">Create new assignments by providing a title, description, and deadline. You can also attach instruction files for each specific task.</p>
+                </div>
 
-        <div class="mb-0">
-            <h6 class="fw-800 text-main small text-uppercase ls-1">4. Releasing Results</h6>
-            <p class="text-muted small">Grades remain private until you click "Release All." Use this button only when you have completed evaluations for the entire class.</p>
-        </div>
-    </div>
+                <div class="mb-4">
+                    <h6 class="fw-800 text-main small text-uppercase ls-1">3. Grading Submissions</h6>
+                    <p class="text-muted small">The "Assignment Submissions" table provides a live view of all team uploads. Download files, assign scores, and provide feedback for each submission.</p>
+                </div>
 
-    <!-- Area: Support (Wide Bento) -->
-    <div class="bento-card span-4 bg-soft text-center py-4 border-0">
-        <h6 class="fw-bold mb-1">Technical Support</h6>
-        <p class="small text-muted mb-0">For issues with the registration system, please contact the course administrator.</p>
+                <div class="mb-0">
+                    <h6 class="fw-800 text-main small text-uppercase ls-1">4. Releasing Results</h6>
+                    <p class="text-muted small">Grades remain private until you click "Release All." Use this button only when you have completed evaluations for the entire class.</p>
+                </div>
+            </div>
+
+            <!-- Area: Support (Wide Bento) -->
+            <div class="bento-card span-4 bg-soft text-center py-4 border-0">
+                <h6 class="fw-bold mb-1">Technical Support</h6>
+                <p class="small text-muted mb-0">For issues with the registration system, please contact the course administrator.</p>
+            </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

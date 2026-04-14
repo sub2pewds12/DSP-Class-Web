@@ -2,7 +2,10 @@
 {% load static %}
 
 {% block content %}
-<div class="bento-container">
+<div class="container mt-4 pb-5">
+    <div class="hero-section text-center mb-5 py-5 glass-card rounded-5">
+    </div>
+    <div class="bento-container">
     
     <!-- Area: Gallery Header (Wide Bento) -->
     <div class="bento-card span-4">
@@ -69,6 +72,8 @@
             <a href="{% url 'signup' %}" class="btn btn-primary-red rounded-pill px-4 shadow text-white">Join Now</a>
             <a href="{% url 'guide' %}" class="btn btn-outline-light rounded-pill px-4">View Guide</a>
         </div>
+    </div>
+</div>
     </div>
 </div>
 {% endblock %}
