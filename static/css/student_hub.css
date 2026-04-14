@@ -57,6 +57,14 @@ body {
     min-height: 100vh;
 }
 
+/* --- Theme-Adaptive Utility Classes --- */
+.bg-main { background-color: var(--bg-main) !important; }
+.bg-soft { background-color: var(--bg-soft) !important; }
+.text-main { color: var(--text-main) !important; }
+.text-primary-red { color: var(--primary-red) !important; }
+.bg-primary-red { background-color: var(--primary-red) !important; }
+.border-soft { border-color: var(--glass-border) !important; }
+
 /* --- Global Navbar Rebrand --- */
 .navbar-crimson {
     background: var(--glass-bg) !important;
@@ -143,6 +151,58 @@ body {
     font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
+}
+
+/* --- Theme-Aware Table Engine --- */
+.table {
+    --bs-table-bg: transparent;
+    --bs-table-color: var(--text-main);
+    --bs-table-hover-bg: var(--bg-soft);
+    --bs-table-hover-color: var(--text-main);
+    --bs-table-border-color: var(--glass-border);
+    color: var(--text-main) !important;
+}
+
+.table thead th {
+    background-color: var(--bg-soft);
+    color: var(--text-muted);
+    border-bottom: 2px solid var(--glass-border);
+}
+
+.table td {
+    color: var(--text-main) !important;
+    border-color: var(--glass-border);
+}
+
+[data-theme="dark"] .table {
+    --bs-table-striped-bg: rgba(255,255,255,0.02);
+}
+
+/* --- Theme-Aware Form Controls --- */
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select {
+    background-color: var(--bg-soft);
+    color: var(--text-main);
+    border-color: var(--glass-border);
+}
+
+[data-theme="dark"] .form-control::placeholder {
+    color: var(--text-muted);
+}
+
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-select:focus {
+    background-color: var(--bg-soft);
+    color: var(--text-main);
+    border-color: var(--primary-red);
+    box-shadow: 0 0 0 0.2rem var(--primary-red-glow);
+}
+
+/* --- Theme-Aware Modals --- */
+[data-theme="dark"] .modal-content {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    border-color: var(--glass-border);
 }
 
 .btn-primary-red {

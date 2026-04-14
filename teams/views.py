@@ -139,11 +139,23 @@ def teacher_dashboard(request):
     assignments = Assignment.objects.all().order_by('-deadline')
     
     # Process teams to check if submissions were late with safeguards
+    # and build a comprehensive status map for the assignment grid
     for t in teams:
+        t.assignment_status = []
+        # Create a dictionary of the team's submissions keyed by assignment ID
+        # (Picking the latest submission if multiple exist)
+        team_subs = {}
         for s in t.submissions.all():
-            s.is_late = False
-            if s.assignment and s.submitted_at and s.assignment.deadline:
-                s.is_late = s.submitted_at > s.assignment.deadline
+            if s.assignment_id not in team_subs or s.submitted_at > team_subs[s.assignment_id].submitted_at:
+                team_subs[s.assignment_id] = s
+        
+        for a in assignments:
+            sub = team_subs.get(a.id)
+            if sub:
+                sub.is_late = False
+                if sub.submitted_at and a.deadline:
+                    sub.is_late = sub.submitted_at > a.deadline
+            t.assignment_status.append({'assignment': a, 'submission': sub})
 
     return render(request, 'teams/teacher_dashboard.html', {
         'teams': teams, 

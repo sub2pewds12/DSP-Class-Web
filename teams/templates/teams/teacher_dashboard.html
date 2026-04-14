@@ -41,7 +41,7 @@
 
     <!-- Area: Submission Tracking (Large Bento) -->
     <div class="bento-card span-4">
-        <h5 class="mb-4 fw-bold"><i class="bi bi-table text-primary-red"></i> Assignment Submissions</h5>
+        <h5 class="mb-4 fw-bold text-main"><i class="bi bi-table text-primary-red"></i> Assignment Submissions</h5>
         <div class="table-responsive">
             <table class="table table-hover align-middle border-0">
                 <thead>
@@ -53,7 +53,7 @@
                 </thead>
                 <tbody class="border-0">
                     {% for team in teams %}
-                        <tr class="border-bottom">
+                        <tr class="border-bottom border-soft">
                             <td class="py-4">
                                 <div class="fw-800 text-main">{{ team.name }}</div>
                                 <div class="small text-primary-red fw-600 text-truncate" style="max-width: 180px;">{{ team.project_name|default:"Project Name Unassigned" }}</div>
@@ -67,76 +67,86 @@
                             </td>
                             <td>
                                 <div class="d-flex flex-nowrap gap-3 py-2 scroll-hide" style="overflow-x: auto;">
-                                    {% for assign in assignments %}
-                                        {% with team_submissions=team.submissions.all %}
-                                            {% for sub in team_submissions %}
-                                                {% if sub.assignment == assign %}
-                                                    <div class="p-3 rounded-4 bg-soft border-0 shadow-sm flex-shrink-0" style="min-width: 240px;">
-                                                        <div class="d-flex justify-content-between align-items-start mb-2">
-                                                            <div class="fw-bold small text-truncate" style="max-width: 150px;">{{ assign.title }}</div>
-                                                            {% if sub.is_late %}
-                                                                <span class="badge bg-danger rounded-pill" style="font-size: 0.6rem;">LATE</span>
-                                                            {% endif %}
-                                                        </div>
-                                                        
-                                                        <div class="d-flex align-items-center gap-2 mb-3">
-                                                            {% if sub.grade is not None %}
-                                                                <span class="badge bg-soft text-main border rounded-pill shadow-sm">{{ sub.grade|floatformat:0 }}%</span>
-                                                            {% else %}
-                                                                <span class="badge bg-soft text-muted border-0 rounded-pill small">Pending</span>
-                                                            {% endif %}
-                                                            <small class="text-muted ms-auto" style="font-size: 0.65rem;">{{ sub.submitted_at|date:"M d" }}</small>
-                                                        </div>
+                                    {% for status in team.assignment_status %}
+                                        {% with assign=status.assignment sub=status.submission %}
+                                            <div class="p-3 rounded-4 bg-soft border-0 shadow-sm flex-shrink-0" style="min-width: 240px;">
+                                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                                    <div class="fw-bold small text-truncate text-main" style="max-width: 150px;">{{ assign.title }}</div>
+                                                    {% if sub and sub.is_late %}
+                                                        <span class="badge bg-danger rounded-pill" style="font-size: 0.6rem;">LATE</span>
+                                                    {% endif %}
+                                                </div>
+                                                
+                                                <div class="d-flex align-items-center gap-2 mb-3">
+                                                    {% if sub %}
+                                                        {% if sub.grade is not None %}
+                                                            <span class="badge bg-primary-red text-white border-0 rounded-pill shadow-sm">{{ sub.grade|floatformat:0 }}%</span>
+                                                        {% else %}
+                                                            <span class="badge bg-soft text-main border border-danger border-opacity-25 rounded-pill small">Pending</span>
+                                                        {% endif %}
+                                                        <small class="text-muted ms-auto" style="font-size: 0.65rem;">{{ sub.submitted_at|date:"M d" }}</small>
+                                                    {% else %}
+                                                        <span class="badge bg-soft text-muted border-0 rounded-pill small">Missing</span>
+                                                        <small class="text-muted ms-auto" style="font-size: 0.65rem;">Not Uploaded</small>
+                                                    {% endif %}
+                                                </div>
 
-                                                        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
-                                                            {% if sub.file %}
-                                                                <a href="{{ sub.file.url }}" target="_blank" class="btn btn-sm btn-link p-0 text-primary-red text-decoration-none fw-bold small">Download</a>
-                                                            {% else %}
-                                                                <span class="small text-muted italic">File missing</span>
-                                                            {% endif %}
-                                                            <button class="btn btn-primary-red btn-sm rounded-pill px-3" style="font-size: 0.65rem;" data-bs-toggle="modal" data-bs-target="#gradeModal{{ sub.id }}">
-                                                                {% if sub.grade is not None %}Update Grade{% else %}Grade{% endif %}
-                                                            </button>
+                                                <div class="d-flex justify-content-between align-items-center pt-2 border-top border-soft">
+                                                    {% if sub and sub.file %}
+                                                        <a href="{{ sub.file.url }}" target="_blank" class="btn btn-sm btn-link p-0 text-primary-red text-decoration-none fw-bold small">Download</a>
+                                                    {% else %}
+                                                        <span class="small text-muted italic">File missing</span>
+                                                    {% endif %}
+                                                    
+                                                    {% if sub %}
+                                                        <button class="btn btn-primary-red btn-sm rounded-pill px-3" style="font-size: 0.65rem;" data-bs-toggle="modal" data-bs-target="#gradeModal{{ sub.id }}">
+                                                            {% if sub.grade is not None %}Update Grade{% else %}Grade{% endif %}
+                                                        </button>
+                                                    {% else %}
+                                                        <button class="btn btn-primary-red btn-sm rounded-pill px-3 disabled opacity-50" style="font-size: 0.65rem;">
+                                                            Grade
+                                                        </button>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+
+                                            {% if sub %}
+                                                <!-- Grading Modal -->
+                                                <div class="modal fade" id="gradeModal{{ sub.id }}" tabindex="-1">
+                                                    <div class="modal-dialog modal-dialog-centered">
+                                                        <div class="modal-content border-0 rounded-5 shadow-lg bg-main">
+                                                            <form action="{% url 'grade_submission' sub.id %}" method="post">
+                                                                {% csrf_token %}
+                                                                <div class="modal-header border-0 bg-primary-red text-white py-4">
+                                                                    <div class="modal-title h5 fw-bold mb-0">Grade: {{ team.name }}</div>
+                                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                                </div>
+                                                                <div class="modal-body p-4 bg-main">
+                                                                    <p class="small text-muted mb-4 text-uppercase fw-bold ls-1">Assignment: <span class="text-main">{{ assign.title }}</span></p>
+                                                                    <div class="mb-4">
+                                                                        <label class="form-label small fw-bold text-muted text-uppercase">Grade Score (0-100)</label>
+                                                                        <input type="number" name="grade" class="form-control form-control-lg rounded-4 bg-soft text-main border-0 shadow-sm" value="{{ sub.grade|default:'' }}" min="0" max="100" required>
+                                                                    </div>
+                                                                    <div class="mb-0">
+                                                                        <label class="form-label small fw-bold text-muted text-uppercase">Feedback</label>
+                                                                        <textarea name="feedback" class="form-control rounded-4 bg-soft text-main border-0 shadow-sm" rows="5" placeholder="Enter evaluation comments here...">{{ sub.feedback }}</textarea>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="modal-footer border-0 p-4 bg-main">
+                                                                    <button type="submit" class="btn btn-primary-red w-100 py-3 rounded-pill shadow">Save Grade</button>
+                                                                </div>
+                                                            </form>
                                                         </div>
                                                     </div>
-
-                                                    <!-- Grading Modal -->
-                                                    <div class="modal fade" id="gradeModal{{ sub.id }}" tabindex="-1">
-                                                        <div class="modal-dialog modal-dialog-centered">
-                                                            <div class="modal-content border-0 rounded-5 shadow-lg">
-                                                                <form action="{% url 'grade_submission' sub.id %}" method="post">
-                                                                    {% csrf_token %}
-                                                                    <div class="modal-header border-0 bg-primary-red text-white py-4">
-                                                                        <h5 class="modal-title fw-bold">Grade Submission: {{ team.name }}</h5>
-                                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                                                    </div>
-                                                                    <div class="modal-body p-4 bg-main">
-                                                                        <p class="small text-muted mb-4 uppercase fw-bold ls-1">Assignment: <span class="text-main">{{ assign.title }}</span></p>
-                                                                        <div class="mb-4">
-                                                                            <label class="form-label small fw-bold text-muted text-uppercase">Grade Score (0-100)</label>
-                                                                            <input type="number" name="grade" class="form-control form-control-lg rounded-4" value="{{ sub.grade|default:'' }}" min="0" max="100" required>
-                                                                        </div>
-                                                                        <div class="mb-0">
-                                                                            <label class="form-label small fw-bold text-muted text-uppercase">Feedback</label>
-                                                                            <textarea name="feedback" class="form-control rounded-4" rows="5" placeholder="Enter evaluation comments here...">{{ sub.feedback }}</textarea>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="modal-footer border-0 p-4">
-                                                                        <button type="submit" class="btn btn-primary-red w-100 py-3 rounded-pill shadow">Save Grade</button>
-                                                                    </div>
-                                                                </form>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                {% endif %}
-                                            {% endfor %}
+                                                </div>
+                                            {% endif %}
                                         {% endwith %}
                                     {% endfor %}
                                 </div>
                             </td>
                         </tr>
                     {% empty %}
-                        <tr><td colspan="3" class="text-center py-5 text-muted">No teams have registered yet.</td></tr>
+                        <tr class="bg-transparent"><td colspan="3" class="text-center py-5 text-muted">No teams have registered yet.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -145,7 +155,7 @@
 
     <!-- Area: Assignment Management (Mid Bento) -->
     <div class="bento-card span-2 row-2">
-        <h5 class="mb-4 fw-bold"><i class="bi bi-calendar-event text-primary-red"></i> Course Assignments</h5>
+        <h5 class="mb-4 fw-bold text-main"><i class="bi bi-calendar-event text-primary-red"></i> Course Assignments</h5>
         <div class="mission-list scroll-hide" style="overflow-y: auto;">
             {% for assign in assignments %}
                 <div class="p-3 bg-soft rounded-4 border-0 mb-3 shadow-sm">
@@ -156,7 +166,7 @@
                         {% endif %}
                     </div>
                     <div class="small text-muted mb-3">Due: {{ assign.deadline|date:"M d, H:i" }}</div>
-                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top border-soft">
                         <a href="{% url 'release_grades' assign.id %}" class="btn btn-link p-0 text-primary-red text-decoration-none small fw-bold {% if assign.grades_released %}disabled opacity-50{% endif %}" onclick="return confirm('Release all grades for this assignment?')">Release Grades</a>
                         {% if assign.instruction_file %}
                              <a href="{{ assign.instruction_file.url }}" target="_blank" class="btn btn-sm btn-primary-red rounded-pill px-3" style="font-size: 0.65rem;">View File</a>
@@ -171,10 +181,10 @@
 
     <!-- Area: Class Documents (Small Bento) -->
     <div class="bento-card span-2">
-        <h5 class="mb-4 fw-bold"><i class="bi bi-folder2 text-primary-red"></i> Class Materials</h5>
+        <h5 class="mb-4 fw-bold text-main"><i class="bi bi-folder2 text-primary-red"></i> Class Materials</h5>
         <div class="repo-list" style="max-height: 200px; overflow-y: auto;">
             {% for doc in documents %}
-                <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded-3 bg-soft border">
+                <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded-3 bg-soft border-0 shadow-sm">
                     <div class="text-truncate me-2">
                         <div class="fw-bold small text-main text-truncate">{{ doc.title }}</div>
                     </div>
@@ -187,7 +197,7 @@
                 </div>
             {% endfor %}
         </div>
-        <div class="mt-4 pt-3 border-top">
+        <div class="mt-4 pt-3 border-top border-soft">
             <h6 class="small fw-bold text-uppercase text-muted mb-3">Upload Material</h6>
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
@@ -206,7 +216,7 @@
 <!-- New Assignment Modal -->
 <div class="modal fade" id="assignmentModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 rounded-5 shadow-lg">
+        <div class="modal-content border-0 rounded-5 shadow-lg bg-main">
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                 <input type="hidden" name="create_assignment" value="1">
@@ -214,7 +224,7 @@
                     <h5 class="modal-title fw-bold">Create New Assignment</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body p-4">
+                <div class="modal-body p-4 bg-main">
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-uppercase text-muted">Assignment Title</label>
                         {{ assign_form.title }}
@@ -232,7 +242,7 @@
                         {{ assign_form.instruction_file }}
                     </div>
                 </div>
-                <div class="modal-footer border-0 p-4">
+                <div class="modal-footer border-0 p-4 bg-main">
                     <button type="submit" class="btn btn-primary-red w-100 py-3 rounded-pill shadow">Create Assignment</button>
                 </div>
             </form>
@@ -243,3 +253,4 @@
     </div>
 </div>
 {% endblock %}
+
