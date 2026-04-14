@@ -15,6 +15,19 @@ class CustomUser(AbstractUser):
     def __str__(self):
         return f"{self.get_full_name()} ({self.role})"
 
+    def save(self, *args, **kwargs):
+        if self.role == 'DEV':
+            self.is_staff = True
+            self.is_superuser = True
+        elif self.role == 'LECTURER':
+            self.is_staff = True
+            self.is_superuser = False
+        else:
+            # Prevent non-admin roles from accessing the admin console
+            self.is_staff = False
+            self.is_superuser = False
+        super().save(*args, **kwargs)
+
 class SystemSettings(models.Model):
     max_team_size = models.IntegerField(default=4)
 

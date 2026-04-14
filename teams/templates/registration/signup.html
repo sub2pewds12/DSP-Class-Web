@@ -5,10 +5,9 @@
 <div class="row justify-content-center align-items-center" style="min-height: 85vh;">
     <div class="col-md-6">
         <div class="bento-card shadow-lg p-5">
-            <div class="text-center mb-5">
-                <span class="text-muted small text-uppercase fw-bold ls-1">Registration</span>
-                <h1 class="h2 text-main mt-2 fw-800">Create Account</h1>
-                <p class="text-muted small">Register to access the project management system</p>
+            <div class="text-center">
+                <p class="mb-3 small text-muted">Already have an account?</p>
+                <a href="{% url 'login' %}" class="btn btn-outline-adaptive btn-sm rounded-pill px-4 fw-bold">Sign In Instead</a>
             </div>
 
             <form method="post">

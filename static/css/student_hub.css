@@ -12,7 +12,7 @@
     --text-muted: #666666;
     --bg-main: #f8f9fa;
     --bg-soft: #f1f3f5;
-    --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+    --card-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
     --card-glow: none;
     --bento-gap: 1.5rem;
     
@@ -64,6 +64,12 @@ body {
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--glass-border);
     transition: all 0.4s ease;
+    padding: 0.75rem 0 !important;
+}
+
+[data-theme="dark"] .navbar-crimson {
+    background: rgba(15, 23, 42, 0.9) !important;
+    border-color: rgba(255, 255, 255, 0.1);
 }
 
 .navbar-crimson .navbar-brand {
@@ -108,13 +114,14 @@ body {
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
     border-radius: 24px;
-    padding: 1.5rem;
+    padding: 2rem;
     box-shadow: var(--card-shadow);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 .bento-card:hover {
@@ -143,9 +150,9 @@ body {
     color: white;
     border: none;
     border-radius: 12px;
-    padding: 10px 20px;
-    font-weight: 600;
-    transition: all 0.3s ease;
+    padding: 10px 24px;
+    font-weight: 700;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-primary-red:hover {
@@ -154,6 +161,28 @@ body {
 }
 
 .text-primary-red { color: var(--primary-red) !important; }
+
+/* --- Adaptive Outline Buttons --- */
+.btn-outline-adaptive {
+    border: 1.5px solid var(--text-main);
+    color: var(--text-main);
+    background: transparent;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-weight: 700;
+}
+
+.btn-outline-adaptive:hover {
+    background: var(--text-main);
+    color: var(--bg-main);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+[data-theme="dark"] .btn-outline-adaptive:hover {
+    background: var(--text-main);
+    color: var(--bg-main);
+    box-shadow: 0 4px 12px rgba(255,255,255,0.05);
+}
 
 /* --- Adaptive Utilities --- */
 .text-main { color: var(--text-main) !important; }

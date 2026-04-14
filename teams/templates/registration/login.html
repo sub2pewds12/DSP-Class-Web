@@ -4,7 +4,8 @@
 {% block extra_head %}
 <style>
     .login-gateway {
-        min-height: 90vh;
+        min-height: 100vh;
+        width: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -141,12 +142,8 @@
 
             <div class="text-center mt-5 pt-3 border-top border-secondary border-opacity-10">
                 <p class="mb-3 small text-muted fw-500">New researcher joining the team?</p>
-                <a href="{% url 'signup' %}" class="btn btn-outline-dark btn-sm rounded-pill px-4 fw-800" style="font-size: 0.75rem;">Create Account</a>
+                <a href="{% url 'signup' %}" class="btn btn-outline-adaptive btn-sm rounded-pill px-4" style="font-size: 0.75rem;">Create Account</a>
             </div>
-        </div>
-
-        <div class="mt-5 text-center text-muted opacity-50 small fw-500">
-            Digital Signal Processing Project Management &copy; 2024
         </div>
     </div>
 </div>
