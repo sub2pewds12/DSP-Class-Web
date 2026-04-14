@@ -1,0 +1,282 @@
+{% extends 'teams/base.html' %}
+{% load static %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    :root {
+        --dev-bg: #0f172a;
+        --dev-card: #1e293b;
+        --dev-accent: #f43f5e;
+        --dev-cyan: #06b6d4;
+    }
+
+    body[data-theme='dark'] {
+        background-color: var(--dev-bg);
+    }
+
+    .dev-hub {
+        color: #f8fafc;
+        padding-bottom: 5rem;
+    }
+
+    .stat-card {
+        background: var(--dev-card);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 1.5rem;
+        padding: 1.5rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .glass-card {
+        background: rgba(30, 41, 59, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: 800;
+        background: linear-gradient(45deg, var(--dev-accent), #fb7185);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 250px;
+        width: 100%;
+    }
+
+    .activity-feed-scroll {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .activity-feed-scroll::-webkit-scrollbar {
+        width: 5px;
+    }
+    .activity-feed-scroll::-webkit-scrollbar-thumb {
+        background: var(--dev-accent);
+        border-radius: 10px;
+    }
+
+    .badge-dev {
+        background: rgba(244, 63, 94, 0.1);
+        color: var(--dev-accent);
+        border: 1px solid var(--dev-accent);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dev-hub mt-4">
+    <div class="d-flex justify-content-between align-items-end mb-5">
+        <div>
+            <span class="badge badge-dev mb-2 px-3 py-1 rounded-pill">System Operator</span>
+            <h1 class="display-4 fw-bold">Developer <span class="text-primary-red">Control Center</span></h1>
+            <p class="text-muted">High-fidelity platform telemetry and system diagnostics.</p>
+        </div>
+        <div class="text-end">
+            <div class="small text-muted mb-1">System Pulse</div>
+            <div class="badge bg-success rounded-pill px-3">Operational</div>
+        </div>
+    </div>
+
+    <!-- Quick Metrics -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="text-muted small text-uppercase fw-bold mb-2">Total Teams</div>
+                <div class="metric-value">{{ sys_info.teams_count }}</div>
+                <div class="small text-muted">Active project clusters</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="text-muted small text-uppercase fw-bold mb-2">Student Force</div>
+                <div class="metric-value">{{ sys_info.students_count }}</div>
+                <div class="small text-muted">Connected researchers</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="text-muted small text-uppercase fw-bold mb-2">Artifacts</div>
+                <div class="metric-value">{{ sys_info.submissions_count }}</div>
+                <div class="small text-muted">Verified submissions</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="text-muted small text-uppercase fw-bold mb-2">Docs Cloud</div>
+                <div class="metric-value">{{ sys_info.docs_count }}</div>
+                <div class="small text-muted">Resource materials</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-8">
+            <div class="stat-card glass-card">
+                <h5 class="fw-bold mb-4"><i class="bi bi-graph-up me-2"></i>Submission Activity (14d)</h5>
+                <div class="chart-container">
+                    <canvas id="trendsChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card glass-card">
+                <h5 class="fw-bold mb-4"><i class="bi bi-pie-chart me-2"></i>Member Density</h5>
+                <div class="chart-container">
+                    <canvas id="sizeChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- System Diagnostics -->
+        <div class="col-md-4">
+            <div class="stat-card">
+                <h5 class="fw-bold mb-4"><i class="bi bi-cpu me-2"></i>Environment Pulse</h5>
+                <ul class="list-unstyled">
+                    <li class="mb-3 d-flex justify-content-between border-bottom pb-2 border-secondary border-opacity-25">
+                        <span class="text-muted">Operating System</span>
+                        <span class="fw-bold">{{ sys_info.os }} {{ sys_info.os_release }}</span>
+                    </li>
+                    <li class="mb-3 d-flex justify-content-between border-bottom pb-2 border-secondary border-opacity-25">
+                        <span class="text-muted">Python Core</span>
+                        <span class="fw-bold">{{ sys_info.python_version }}</span>
+                    </li>
+                    <li class="mb-3 d-flex justify-content-between border-bottom pb-2 border-secondary border-opacity-25">
+                        <span class="text-muted">Django Engine</span>
+                        <span class="fw-bold">{{ sys_info.django_version }}</span>
+                    </li>
+                    <li class="mb-3 d-flex justify-content-between">
+                        <span class="text-muted">Max Team Capacity</span>
+                        <span class="badge bg-primary-red rounded-pill">{{ settings.max_team_size }} Members</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Role Analytics -->
+        <div class="col-md-4">
+            <div class="stat-card glass-card">
+                <h5 class="fw-bold mb-4"><i class="bi bi-people me-2"></i>Role Balance</h5>
+                <div class="chart-container" style="height: 200px;">
+                    <canvas id="roleChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Traffic Feed -->
+        <div class="col-md-4">
+            <div class="stat-card">
+                <h5 class="fw-bold mb-4"><i class="bi bi-activity me-2"></i>Live Submission Feed</h5>
+                <div class="activity-feed-scroll">
+                    {% for sub in recent_activity %}
+                        <div class="d-flex align-items-center mb-3 p-2 rounded-3 hover-bg">
+                            <div class="flex-shrink-0">
+                                {% if sub.submitted_at > sub.assignment.deadline %}
+                                    <div class="rounded-circle bg-danger" style="width: 10px; height: 10px;"></div>
+                                {% else %}
+                                    <div class="rounded-circle bg-success" style="width: 10px; height: 10px;"></div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <div class="small fw-bold">{{ sub.team.name }}</div>
+                                <div class="text-muted" style="font-size: 0.7rem;">{{ sub.title }} • {{ sub.submitted_at|timesince }} ago</div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="text-center py-4 text-muted small">No traffic recorded</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Trends Chart
+    const trendsCtx = document.getElementById('trendsChart').getContext('2d');
+    new Chart(trendsCtx, {
+        type: 'line',
+        data: {
+            labels: {{ trend_labels|safe }},
+            datasets: [{
+                label: 'Submissions',
+                data: {{ trend_data|safe }},
+                borderColor: '#f43f5e',
+                backgroundColor: 'rgba(244, 63, 94, 0.1)',
+                fill: true,
+                tension: 0.4,
+                borderWidth: 3,
+                pointRadius: 4,
+                pointBackgroundColor: '#f43f5e'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+            }
+        }
+    });
+
+    // Team Size Chart
+    const sizeCtx = document.getElementById('sizeChart').getContext('2d');
+    new Chart(sizeCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ size_labels|safe }},
+            datasets: [{
+                data: {{ size_data|safe }},
+                backgroundColor: ['#f43f5e', '#06b6d4', '#8b5cf6', '#10b981'],
+                borderWidth: 0,
+                cutout: '70%'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { color: '#94a3b8', boxWidth: 10, padding: 15 } }
+            }
+        }
+    });
+
+    // Role Chart
+    const roleCtx = document.getElementById('roleChart').getContext('2d');
+    new Chart(roleCtx, {
+        type: 'polarArea',
+        data: {
+            labels: {{ role_labels|safe }},
+            datasets: [{
+                data: {{ role_data|safe }},
+                backgroundColor: ['rgba(244, 63, 94, 0.5)', 'rgba(6, 182, 212, 0.5)', 'rgba(139, 92, 246, 0.5)'],
+                borderColor: 'rgba(255,255,255,0.1)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                r: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { display: false } }
+            }
+        }
+    });
+</script>
+{% endblock %}

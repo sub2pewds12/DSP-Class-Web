@@ -7,6 +7,7 @@ class CustomUser(AbstractUser):
     ROLE_CHOICES = (
         ('STUDENT', 'Student'),
         ('LECTURER', 'Lecturer/Teacher'),
+        ('DEV', 'Developer/Admin'),
     )
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='STUDENT')
     email = models.EmailField(unique=True)
@@ -62,6 +63,13 @@ class Lecturer(models.Model):
 
     def __str__(self):
         return f"Lecturer: {self.user.get_full_name()}"
+
+class Developer(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='developer_profile')
+    access_level = models.IntegerField(default=1) # Can be used for tiered dev perms
+
+    def __str__(self):
+        return f"Developer: {self.user.get_full_name()}"
 
 class ClassDocument(models.Model):
     title = models.CharField(max_length=255)

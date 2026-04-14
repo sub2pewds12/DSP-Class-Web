@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
-from .models import Student, Team, Lecturer, CustomUser, ClassDocument, TeamSubmission, Assignment
+from .models import Student, Team, Lecturer, CustomUser, ClassDocument, TeamSubmission, Assignment, SystemSettings
 from .forms import (
     TeamRegistrationForm, UserRegistrationForm, DocumentUploadForm, 
     TeamProjectForm, StudentRoleForm, AssignmentForm, AssignmentSubmissionForm,
@@ -14,6 +14,8 @@ from .forms import (
 def dashboard_view(request):
     if request.user.role == 'LECTURER':
         return redirect('teacher_dashboard')
+    if request.user.role == 'DEV':
+        return redirect('dev_dashboard')
     
     student, created = Student.objects.get_or_create(user=request.user)
     documents = ClassDocument.objects.all().order_by('-uploaded_at')
@@ -217,6 +219,9 @@ def signup_view(request):
             role = form.cleaned_data.get('role')
             if role == 'STUDENT':
                 Student.objects.get_or_create(user=user)
+            elif role == 'DEV':
+                from .models import Developer
+                Developer.objects.get_or_create(user=user)
             else:
                 Lecturer.objects.get_or_create(user=user)
             
@@ -227,6 +232,73 @@ def signup_view(request):
     else:
         form = UserRegistrationForm()
     return render(request, 'registration/signup.html', {'form': form})
+
+@login_required
+def dev_dashboard(request):
+    if request.user.role != 'DEV':
+        return redirect('dashboard')
+    
+    from django.db.models import Count, Q
+    from django.db.models.functions import TruncDate
+    import platform
+    import sys
+    import django
+
+    # 1. Submission Activity Trends (Last 14 days)
+    last_14_days = timezone.now() - timezone.timedelta(days=14)
+    submission_trends = TeamSubmission.objects.filter(
+        submitted_at__gte=last_14_days
+    ).annotate(
+        date=TruncDate('submitted_at')
+    ).values('date').annotate(
+        count=Count('id')
+    ).order_by('date')
+
+    # Convert to JSON-friendly format for Chart.js
+    trend_labels = [s['date'].strftime('%b %d') for s in submission_trends]
+    trend_data = [s['count'] for s in submission_trends]
+
+    # 2. Team Size Distribution
+    team_sizes = Team.objects.annotate(
+        m_count=Count('members')
+    ).values('m_count').annotate(
+        t_count=Count('id')
+    ).order_by('m_count')
+    
+    size_labels = [f"{s['m_count']} Members" for s in team_sizes]
+    size_data = [s['t_count'] for s in team_sizes]
+
+    # 3. Role Breakdown
+    roles = CustomUser.objects.values('role').annotate(count=Count('id'))
+    role_labels = [r['role'] for r in roles]
+    role_data = [r['count'] for r in roles]
+
+    # 4. System & Platform Data
+    sys_info = {
+        'os': platform.system(),
+        'os_release': platform.release(),
+        'python_version': sys.version.split(' ')[0],
+        'django_version': django.get_version() if 'django' in sys.modules else 'Unknown',
+        'teams_count': Team.objects.count(),
+        'students_count': Student.objects.count(),
+        'submissions_count': TeamSubmission.objects.count(),
+        'docs_count': ClassDocument.objects.count(),
+    }
+
+    # 5. Recent Activity Feed
+    recent_activity = TeamSubmission.objects.select_related('team', 'submitted_by').all().order_by('-submitted_at')[:15]
+
+    return render(request, 'teams/dev_dashboard.html', {
+        'trend_labels': trend_labels,
+        'trend_data': trend_data,
+        'size_labels': size_labels,
+        'size_data': size_data,
+        'role_labels': role_labels,
+        'role_data': role_data,
+        'sys_info': sys_info,
+        'recent_activity': recent_activity,
+        'settings': SystemSettings.objects.first(),
+    })
 
 def gallery_view(request):
     teams = Team.objects.prefetch_related('members__user').all()
