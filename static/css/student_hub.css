@@ -165,24 +165,27 @@ body {
     background-color: var(--bg-soft);
 }
 
-/* --- Floating Theme Toggle --- */
-.theme-toggle-btn {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    width: 56px;
-    height: 56px;
-    border-radius: 28px;
-    background: var(--primary-red);
-    color: white;
-    border: none;
+/* --- Navbar Theme Toggle --- */
+.nav-theme-toggle {
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    color: var(--text-main);
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
+    font-size: 1.1rem;
     cursor: pointer;
-    z-index: 1000;
-    box-shadow: 0 8px 24px rgba(211, 47, 47, 0.3);
+    transition: all 0.3s ease;
+}
+
+.nav-theme-toggle:hover {
+    background: var(--bg-soft);
+    color: var(--primary-red);
+    border-color: var(--primary-red);
+    transform: scale(1.05);
 }
 
 /* Scrollbar */
