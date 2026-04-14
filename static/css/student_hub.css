@@ -11,19 +11,41 @@
     --text-main: #1A1A1A;
     --text-muted: #666666;
     --bg-main: #f8f9fa;
+    --bg-soft: #f1f3f5;
     --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+    --card-glow: none;
     --bento-gap: 1.5rem;
+    
+    /* Semantic Dashboard Tokens */
+    --dash-card-bg: #ffffff;
+    --dash-card-border: rgba(0, 0, 0, 0.05);
+    --dash-accent: var(--primary-red);
+    --dash-cyan: #0891b2;
+    --metric-gradient: linear-gradient(45deg, var(--primary-red), #ff7878);
+    --chart-grid: rgba(0, 0, 0, 0.05);
+    --chart-text: #666666;
 }
 
 [data-theme="dark"] {
     --primary-red: #FF5252;
     --primary-red-glow: rgba(255, 82, 82, 0.2);
-    --glass-bg: rgba(18, 18, 18, 0.85);
+    --glass-bg: rgba(15, 23, 42, 0.85);
     --glass-border: rgba(255, 255, 255, 0.1);
     --text-main: #F5F5F5;
-    --text-muted: #AAAAAA;
-    --bg-main: #0A0A0A;
-    --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    --text-muted: #94A3B8;
+    --bg-main: #0f172a;
+    --bg-soft: #1e293b;
+    --card-shadow: none;
+    --card-glow: 0 0 20px rgba(255, 82, 82, 0.1);
+    
+    /* Semantic Dark Dashboard */
+    --dash-card-bg: #1e293b;
+    --dash-card-border: rgba(255, 255, 255, 0.05);
+    --dash-accent: #f43f5e;
+    --dash-cyan: #06b6d4;
+    --metric-gradient: linear-gradient(45deg, #f43f5e, #fb7185);
+    --chart-grid: rgba(255, 255, 255, 0.05);
+    --chart-text: #94a3b8;
 }
 
 body {
@@ -132,6 +154,16 @@ body {
 }
 
 .text-primary-red { color: var(--primary-red) !important; }
+
+/* --- Adaptive Utilities --- */
+.text-main { color: var(--text-main) !important; }
+.text-muted { color: var(--text-muted) !important; }
+.bg-main { background-color: var(--bg-main) !important; }
+.bg-soft { background-color: var(--bg-soft) !important; }
+
+.hover-bg:hover {
+    background-color: var(--bg-soft);
+}
 
 /* --- Floating Theme Toggle --- */
 .theme-toggle-btn {

@@ -9,10 +9,10 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <span class="text-muted small text-uppercase fw-bold ls-1">Instruction Management</span>
-                <h1 class="h2 text-dark mt-1 fw-800">Lecturer Dashboard</h1>
+                <h1 class="h2 text-main mt-1 fw-800">Lecturer Dashboard</h1>
             </div>
             <div class="d-flex gap-3">
-                <div class="text-center p-3 bg-light rounded-4 border-0">
+                <div class="text-center p-3 bg-soft rounded-4 border-0">
                     <div class="h3 fw-800 text-primary-red mb-0">{{ teams|length }}</div>
                     <div class="small text-muted text-uppercase fw-bold" style="font-size: 0.6rem;">Teams</div>
                 </div>
@@ -32,8 +32,8 @@
             <button class="btn btn-primary-red w-100 py-2 rounded-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#assignmentModal">
                 <i class="bi bi-plus-lg me-2"></i> New Assignment
             </button>
-            <div class="p-2 bg-light rounded-3 text-center border-0 border-top mt-2">
-                <span class="badge text-dark fw-bold">Management Mode</span>
+            <div class="p-2 bg-soft rounded-3 text-center border-0 border-top mt-2">
+                <span class="badge text-main fw-bold">Management Mode</span>
             </div>
         </div>
     </div>
@@ -54,7 +54,7 @@
                     {% for team in teams %}
                         <tr class="border-bottom">
                             <td class="py-4">
-                                <div class="fw-800 text-dark">{{ team.name }}</div>
+                                <div class="fw-800 text-main">{{ team.name }}</div>
                                 <div class="small text-primary-red fw-600 text-truncate" style="max-width: 180px;">{{ team.project_name|default:"Project Name Unassigned" }}</div>
                             </td>
                             <td>
@@ -70,7 +70,7 @@
                                         {% with team_submissions=team.submissions.all %}
                                             {% for sub in team_submissions %}
                                                 {% if sub.assignment == assign %}
-                                                    <div class="p-3 rounded-4 bg-light border-0 shadow-sm flex-shrink-0" style="min-width: 240px;">
+                                                    <div class="p-3 rounded-4 bg-soft border-0 shadow-sm flex-shrink-0" style="min-width: 240px;">
                                                         <div class="d-flex justify-content-between align-items-start mb-2">
                                                             <div class="fw-bold small text-truncate" style="max-width: 150px;">{{ assign.title }}</div>
                                                             {% if sub.is_late %}
@@ -109,8 +109,8 @@
                                                                         <h5 class="modal-title fw-bold">Grade Submission: {{ team.name }}</h5>
                                                                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                                                     </div>
-                                                                    <div class="modal-body p-4">
-                                                                        <p class="small text-muted mb-4 uppercase fw-bold ls-1">Assignment: <span class="text-dark">{{ assign.title }}</span></p>
+                                                                    <div class="modal-body p-4 bg-main">
+                                                                        <p class="small text-muted mb-4 uppercase fw-bold ls-1">Assignment: <span class="text-main">{{ assign.title }}</span></p>
                                                                         <div class="mb-4">
                                                                             <label class="form-label small fw-bold text-muted text-uppercase">Grade Score (0-100)</label>
                                                                             <input type="number" name="grade" class="form-control form-control-lg rounded-4" value="{{ sub.grade|default:'' }}" min="0" max="100" required>
@@ -147,9 +147,9 @@
         <h5 class="mb-4 fw-bold"><i class="bi bi-calendar-event text-primary-red"></i> Course Assignments</h5>
         <div class="mission-list scroll-hide" style="overflow-y: auto;">
             {% for assign in assignments %}
-                <div class="p-3 bg-light rounded-4 border-0 mb-3 shadow-sm">
+                <div class="p-3 bg-soft rounded-4 border-0 mb-3 shadow-sm">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <div class="fw-bold text-dark">{{ assign.title }}</div>
+                        <div class="fw-bold text-main">{{ assign.title }}</div>
                         {% if assign.grades_released %}
                             <span class="status-badge bg-success text-white" style="font-size: 0.55rem;">RELEASED</span>
                         {% endif %}
@@ -173,9 +173,9 @@
         <h5 class="mb-4 fw-bold"><i class="bi bi-folder2 text-primary-red"></i> Class Materials</h5>
         <div class="repo-list" style="max-height: 200px; overflow-y: auto;">
             {% for doc in documents %}
-                <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded-3 bg-white border">
+                <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded-3 bg-soft border">
                     <div class="text-truncate me-2">
-                        <div class="fw-bold small text-truncate">{{ doc.title }}</div>
+                        <div class="fw-bold small text-main text-truncate">{{ doc.title }}</div>
                     </div>
                     <div class="d-flex gap-2">
                         {% if doc.file %}

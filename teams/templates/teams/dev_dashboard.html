@@ -4,46 +4,38 @@
 {% block extra_head %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-    :root {
-        --dev-bg: #0f172a;
-        --dev-card: #1e293b;
-        --dev-accent: #f43f5e;
-        --dev-cyan: #06b6d4;
-    }
-
-    body[data-theme='dark'] {
-        background-color: var(--dev-bg);
-    }
-
+<style>
     .dev-hub {
-        color: #f8fafc;
+        color: var(--text-main);
         padding-bottom: 5rem;
     }
 
     .stat-card {
-        background: var(--dev-card);
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        background: var(--dash-card-bg);
+        border: 1px solid var(--dash-card-border);
         border-radius: 1.5rem;
         padding: 1.5rem;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.4s ease;
         height: 100%;
+        box-shadow: var(--card-shadow);
     }
 
     .stat-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        border-color: var(--dash-accent);
     }
 
     .glass-card {
-        background: rgba(30, 41, 59, 0.7);
+        background: var(--glass-bg);
         backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--glass-border);
     }
 
     .metric-value {
         font-size: 2.5rem;
         font-weight: 800;
-        background: linear-gradient(45deg, var(--dev-accent), #fb7185);
+        background: var(--metric-gradient);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }
@@ -63,14 +55,18 @@
         width: 5px;
     }
     .activity-feed-scroll::-webkit-scrollbar-thumb {
-        background: var(--dev-accent);
+        background: var(--dash-accent);
         border-radius: 10px;
     }
 
     .badge-dev {
-        background: rgba(244, 63, 94, 0.1);
-        color: var(--dev-accent);
-        border: 1px solid var(--dev-accent);
+        background: var(--primary-red-glow);
+        color: var(--dash-accent);
+        border: 1px solid var(--dash-accent);
+    }
+
+    .hover-bg:hover {
+        background: rgba(var(--primary-red-rgb, 211, 47, 47), 0.05);
     }
 </style>
 {% endblock %}
@@ -206,77 +202,130 @@
 </div>
 
 <script>
-    // Trends Chart
-    const trendsCtx = document.getElementById('trendsChart').getContext('2d');
-    new Chart(trendsCtx, {
-        type: 'line',
-        data: {
-            labels: {{ trend_labels|safe }},
-            datasets: [{
-                label: 'Submissions',
-                data: {{ trend_data|safe }},
-                borderColor: '#f43f5e',
-                backgroundColor: 'rgba(244, 63, 94, 0.1)',
-                fill: true,
-                tension: 0.4,
-                borderWidth: 3,
-                pointRadius: 4,
-                pointBackgroundColor: '#f43f5e'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
-                x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
-            }
-        }
-    });
+    let trendsChart, sizeChart, roleChart;
 
-    // Team Size Chart
-    const sizeCtx = document.getElementById('sizeChart').getContext('2d');
-    new Chart(sizeCtx, {
-        type: 'doughnut',
-        data: {
-            labels: {{ size_labels|safe }},
-            datasets: [{
-                data: {{ size_data|safe }},
-                backgroundColor: ['#f43f5e', '#06b6d4', '#8b5cf6', '#10b981'],
-                borderWidth: 0,
-                cutout: '70%'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'bottom', labels: { color: '#94a3b8', boxWidth: 10, padding: 15 } }
-            }
-        }
-    });
+    function getThemeTokens() {
+        const style = getComputedStyle(document.documentElement);
+        return {
+            grid: style.getPropertyValue('--chart-grid').trim(),
+            text: style.getPropertyValue('--chart-text').trim(),
+            accent: style.getPropertyValue('--dash-accent').trim(),
+            cyan: style.getPropertyValue('--dash-cyan').trim()
+        };
+    }
 
-    // Role Chart
-    const roleCtx = document.getElementById('roleChart').getContext('2d');
-    new Chart(roleCtx, {
-        type: 'polarArea',
-        data: {
-            labels: {{ role_labels|safe }},
-            datasets: [{
-                data: {{ role_data|safe }},
-                backgroundColor: ['rgba(244, 63, 94, 0.5)', 'rgba(6, 182, 212, 0.5)', 'rgba(139, 92, 246, 0.5)'],
-                borderColor: 'rgba(255,255,255,0.1)'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                r: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { display: false } }
+    function initCharts() {
+        const tokens = getThemeTokens();
+        
+        // Trends Chart
+        const trendsCtx = document.getElementById('trendsChart').getContext('2d');
+        trendsChart = new Chart(trendsCtx, {
+            type: 'line',
+            data: {
+                labels: {{ trend_labels|safe }},
+                datasets: [{
+                    label: 'Submissions',
+                    data: {{ trend_data|safe }},
+                    borderColor: tokens.accent,
+                    backgroundColor: tokens.accent + '1A',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointRadius: 4,
+                    pointBackgroundColor: tokens.accent
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { grid: { color: tokens.grid }, ticks: { color: tokens.text } },
+                    x: { grid: { display: false }, ticks: { color: tokens.text } }
+                }
             }
+        });
+
+        // Team Size Chart
+        const sizeCtx = document.getElementById('sizeChart').getContext('2d');
+        sizeChart = new Chart(sizeCtx, {
+            type: 'doughnut',
+            data: {
+                labels: {{ size_labels|safe }},
+                datasets: [{
+                    data: {{ size_data|safe }},
+                    backgroundColor: [tokens.accent, tokens.cyan, '#8b5cf6', '#10b981'],
+                    borderWidth: 0,
+                    cutout: '70%'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: tokens.text, boxWidth: 10, padding: 15 } }
+                }
+            }
+        });
+
+        // Role Chart
+        const roleCtx = document.getElementById('roleChart').getContext('2d');
+        roleChart = new Chart(roleCtx, {
+            type: 'polarArea',
+            data: {
+                labels: {{ role_labels|safe }},
+                datasets: [{
+                    data: {{ role_data|safe }},
+                    backgroundColor: [tokens.accent + '80', tokens.cyan + '80', 'rgba(139, 92, 246, 0.5)'],
+                    borderColor: tokens.grid
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    r: { grid: { color: tokens.grid }, ticks: { display: false } }
+                }
+            }
+        });
+    }
+
+    function updateCharts() {
+        const tokens = getThemeTokens();
+        
+        if(trendsChart) {
+            trendsChart.data.datasets[0].borderColor = tokens.accent;
+            trendsChart.data.datasets[0].pointBackgroundColor = tokens.accent;
+            trendsChart.options.scales.y.grid.color = tokens.grid;
+            trendsChart.options.scales.y.ticks.color = tokens.text;
+            trendsChart.options.scales.x.ticks.color = tokens.text;
+            trendsChart.update();
         }
+
+        if(sizeChart) {
+            sizeChart.data.datasets[0].backgroundColor[0] = tokens.accent;
+            sizeChart.data.datasets[0].backgroundColor[1] = tokens.cyan;
+            sizeChart.options.plugins.legend.labels.color = tokens.text;
+            sizeChart.update();
+        }
+
+        if(roleChart) {
+            roleChart.data.datasets[0].backgroundColor[0] = tokens.accent + '80';
+            roleChart.data.datasets[0].backgroundColor[1] = tokens.cyan + '80';
+            roleChart.data.datasets[0].borderColor = tokens.grid;
+            roleChart.options.scales.r.grid.color = tokens.grid;
+            roleChart.update();
+        }
+    }
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', initCharts);
+
+    // Adapt on theme change
+    window.addEventListener('themeChanged', (e) => {
+        // Wait for CSS transition if any, then update
+        setTimeout(updateCharts, 50);
     });
 </script>
 {% endblock %}

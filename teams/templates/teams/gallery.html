@@ -9,7 +9,7 @@
         <div class="d-flex justify-content-between align-items-center">
             <div>
                 <span class="text-muted small text-uppercase fw-bold ls-1">Showcase</span>
-                <h1 class="h2 text-dark mt-1 fw-800">Project Gallery</h1>
+                <h1 class="h2 text-main mt-1 fw-800">Project Gallery</h1>
                 <p class="text-muted small mb-0 fw-500">View active research teams and project groups within the course.</p>
             </div>
             <div class="text-end">
@@ -24,17 +24,17 @@
         <div class="bento-card span-2">
             <div class="d-flex justify-content-between align-items-start mb-4">
                 <div>
-                    <h5 class="fw-bold text-dark mb-1">{{ team.name }}</h5>
+                    <h5 class="fw-bold text-main mb-1">{{ team.name }}</h5>
                     <div class="text-primary-red fw-600 small">{{ team.project_name|default:"Project Description Pending" }}</div>
                 </div>
-                <span class="badge bg-light text-dark border rounded-pill px-3">{{ team.members.count }} Members</span>
+                <span class="badge bg-soft text-main border rounded-pill px-3">{{ team.members.count }} Members</span>
             </div>
             
-            <div class="p-3 bg-light rounded-4 border-0 mb-4 h-100">
+            <div class="p-3 bg-soft rounded-4 border-0 mb-4 h-100">
                 <h6 class="small fw-bold text-uppercase text-muted mb-2 ls-1">Team Members</h6>
                 <div class="d-flex flex-wrap gap-2">
                     {% for member in team.members.all %}
-                        <div class="status-badge bg-white text-dark shadow-sm border small" style="font-size: 0.7rem;">
+                        <div class="status-badge bg-soft text-main shadow-sm border small" style="font-size: 0.7rem;">
                             <i class="bi bi-person me-1"></i> {{ member.user.get_full_name }}
                         </div>
                     {% empty %}
