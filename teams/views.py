@@ -14,6 +14,15 @@ from .forms import (
 def dashboard_view(request):
     if request.user.role == 'LECTURER':
         return redirect('teacher_dashboard')
+    
+    # Clear any stale modal error markers
+    if 'form_error_id' in request.session:
+        # We check if this was a refresh or a new visit.
+        # Actually, simpler: pop it so it only lasts one reload.
+        error_id = request.session.pop('form_error_id')
+        # We re-inject it into the context for the template, then it's gone from session.
+    else:
+        error_id = None
     # DEV can access student view directly, no auto-redirect to dev_dashboard
     
     student, created = Student.objects.get_or_create(user=request.user)
@@ -53,10 +62,13 @@ def dashboard_view(request):
                     sub.save()
                     
                     status = "on time"
-                    if sub.submitted_at > assignment.deadline:
+                    if sub.submitted_at and assignment.deadline and sub.submitted_at > assignment.deadline:
                         status = "LATE"
                     messages.success(request, f"Successfully submitted to '{assignment.title}' ({status}).")
                     return redirect('dashboard')
+                else:
+                    # Keep track of which assignment has errors
+                    request.session['form_error_id'] = assign_id
 
         # Annotate assignments with student's team submissions
         for a in assignments:
@@ -79,6 +91,7 @@ def dashboard_view(request):
             'project_form': project_form,
             'role_form': role_form,
             'assign_form': assign_form,
+            'error_id': error_id,
         })
 
     if request.method == 'POST':
@@ -159,7 +172,10 @@ def teacher_dashboard(request):
             if sub:
                 sub.is_late = False
                 if sub.submitted_at and a.deadline:
-                    sub.is_late = sub.submitted_at > a.deadline
+                    try:
+                        sub.is_late = sub.submitted_at > a.deadline
+                    except (TypeError, ValueError):
+                        sub.is_late = False
             t.assignment_status.append({'assignment': a, 'submission': sub})
 
     # Only initialize new forms if they weren't already created (and potentially failed) during POST
