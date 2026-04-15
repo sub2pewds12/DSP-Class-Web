@@ -21,10 +21,12 @@ urlpatterns = [
     path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('reset/done/', auth_views.PasswordResetCompleteView.as_view(), name='password_reset_complete'),
 
-    # Gallery actions
+    # Action endpoints
     path('submission/<int:pk>/', views.submission_detail, name='submission_detail'),
     path('assignment/<int:pk>/submit/', views.submit_assignment, name='submit_assignment'),
     path('assignment/<int:pk>/grades/', views.view_grades, name='view_grades'),
+    path('assignment/<int:pk>/release/', views.release_grades, name='release_grades'),
     path('grade/<int:pk>/', views.grade_submission, name='grade_submission'),
     path('document/<int:pk>/delete/', views.delete_document, name='delete_document'),
+    path('submission/<int:pk>/delete/', views.delete_submission, name='delete_submission'),
 ]

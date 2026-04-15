@@ -304,8 +304,8 @@ def dev_dashboard(request):
         'Lecturer': Lecturer.objects.count(),
         'ClassDocument': ClassDocument.objects.count(),
         'User': CustomUser.objects.count(),
-        'db_engine': settings.DATABASES['default']['ENGINE'].split('.')[-1],
-        'db_host': settings.DATABASES['default']['HOST'],
+        'db_engine': settings.DATABASES['default'].get('ENGINE', 'Unknown').split('.')[-1],
+        'db_host': settings.DATABASES['default'].get('HOST', 'localhost'),
         'db_status': 'Unknown'
     }
 
@@ -381,3 +381,33 @@ def gallery_view(request):
 
 def guide_view(request):
     return render(request, 'teams/guide.html')
+
+@login_required
+def submission_detail(request, pk):
+    submission = get_object_or_404(TeamSubmission, pk=pk)
+    # Security: Only team members or lecturers can see details
+    if request.user.role not in ['LECTURER', 'DEV']:
+        if not hasattr(request.user, 'student_profile') or request.user.student_profile.team != submission.team:
+            messages.error(request, "Access denied.")
+            return redirect('dashboard')
+    
+    return render(request, 'teams/submission_detail.html', {'submission': submission})
+
+@login_required
+def submit_assignment(request, pk):
+    # This URL is now handled via POST to dashboard, but kept as a redirect 
+    # to maintain compatibility with any old links.
+    return redirect('dashboard')
+
+@login_required
+def view_grades(request, pk):
+    assignment = get_object_or_404(Assignment, pk=pk)
+    if not assignment.grades_released:
+        messages.warning(request, "Grades have not been released yet.")
+        return redirect('dashboard')
+    
+    submission = None
+    if hasattr(request.user, 'student_profile') and request.user.student_profile.team:
+        submission = TeamSubmission.objects.filter(team=request.user.student_profile.team, assignment=assignment).first()
+    
+    return render(request, 'teams/view_grades.html', {'assignment': assignment, 'submission': submission})
