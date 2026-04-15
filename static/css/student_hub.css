@@ -20,6 +20,7 @@
     --dash-card-bg: #ffffff;
     --dash-card-border: rgba(0, 0, 0, 0.05);
     --dash-accent: var(--primary-red);
+    --label-high-contrast: #4A4A4A;
     --dash-cyan: #0891b2;
     --metric-gradient: linear-gradient(45deg, var(--primary-red), #ff7878);
     --chart-grid: rgba(0, 0, 0, 0.05);
@@ -42,6 +43,7 @@
     --dash-card-bg: #1e293b;
     --dash-card-border: rgba(255, 255, 255, 0.05);
     --dash-accent: #f43f5e;
+    --label-high-contrast: #E2E8F0;
     --dash-cyan: #06b6d4;
     --metric-gradient: linear-gradient(45deg, #f43f5e, #fb7185);
     --chart-grid: rgba(255, 255, 255, 0.05);
@@ -179,6 +181,30 @@ body {
 }
 
 /* --- Theme-Aware Form Controls --- */
+.form-control,
+.form-select {
+    background-color: var(--bg-soft);
+    color: var(--text-main);
+    border: 1.5px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-control::placeholder {
+    color: var(--text-muted);
+    opacity: 0.6;
+}
+
+.form-control:focus,
+.form-select:focus {
+    background-color: var(--bg-soft);
+    color: var(--text-main);
+    border-color: var(--primary-red);
+    box-shadow: 0 0 0 4px var(--primary-red-glow);
+    outline: none;
+}
+
 [data-theme="dark"] .form-control,
 [data-theme="dark"] .form-select {
     background-color: var(--bg-soft);
@@ -186,16 +212,20 @@ body {
     border-color: var(--glass-border);
 }
 
-[data-theme="dark"] .form-control::placeholder {
-    color: var(--text-muted);
-}
-
 [data-theme="dark"] .form-control:focus,
 [data-theme="dark"] .form-select:focus {
-    background-color: var(--bg-soft);
-    color: var(--text-main);
     border-color: var(--primary-red);
-    box-shadow: 0 0 0 0.2rem var(--primary-red-glow);
+}
+
+/* Specific Gateway Overrides */
+.form-control-gateway {
+    background-color: var(--bg-main) !important;
+    border-color: var(--glass-border) !important;
+    color: var(--text-main) !important;
+}
+
+[data-theme="light"] .form-control-gateway {
+    background-color: #ffffff !important;
 }
 
 /* --- Theme-Aware Modals --- */
