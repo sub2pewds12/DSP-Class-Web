@@ -30,7 +30,36 @@ If you need to access the Django Admin and don't have an account, create a main 
 Follow the prompts to set your email and password. Then visit `/admin/` to log in.
 
 ## 4. Key Project Files
-- **`teams/models.py`**: Where the database structure (Student, Teacher, Team) is defined.
-- **`teams/views.py`**: The logic that handles registration and dashboards.
-- **`teams/templates/`**: The HTML files that define how the website looks.
-- **`.env`**: Your local secret settings (Gmail, DEBUG mode).
+
+### Configuration
+| File | Purpose |
+| :--- | :--- |
+| `config/settings.py` | Django settings (database, email, Cloudinary, security) |
+| `config/urls.py` | Root URL configuration |
+| `.env` | Local secret settings (secret key, Gmail, Cloudinary, DEBUG) |
+| `requirements.txt` | Python package dependencies |
+
+### Application (`teams/`)
+| File | Purpose |
+| :--- | :--- |
+| `models.py` | Database models (CustomUser, Team, Student, Assignment, etc.) |
+| `views.py` | View logic for dashboards, signup, grading, and galleries |
+| `urls.py` | App-level URL routing |
+| `forms.py` | Django forms for registration, submissions, and grading |
+| `admin.py` | Django Admin configuration and custom actions |
+| `templates/` | HTML templates for all pages |
+| `static/` | CSS, JavaScript, and image assets |
+| `management/commands/` | Custom management commands (e.g., `seed_dsp`) |
+| `tests/` | Automated test suite |
+
+## 5. Environment Variables (`.env`)
+Your `.env` file should contain:
+```env
+SECRET_KEY=your-secret-key
+DEBUG=True
+EMAIL_HOST_USER=your-email@gmail.com
+EMAIL_HOST_PASSWORD=xxxx-xxxx-xxxx-xxxx
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_SECRET=your-api-secret
+```
