@@ -3,16 +3,15 @@ from django.contrib.auth import views as auth_views
 from . import views
 
 urlpatterns = [
-    path('', auth_views.LoginView.as_view(), name='login'),
+    path('', views.gallery_view, name='gallery'),
     path('hub/', views.dashboard_view, name='dashboard'),
     path('teacher/', views.teacher_dashboard, name='teacher_dashboard'),
-    path('gallery/', views.gallery_view, name='gallery'),
     path('guide/', views.guide_view, name='guide'),
     path('dev-dashboard/', views.dev_dashboard, name='dev_dashboard'),
     
     # Auth
     path('signup/', views.signup_view, name='signup'),
-    path('login/', auth_views.LoginView.as_view(), name='login'),
+    path('login/', auth_views.LoginView.as_view(redirect_authenticated_user=True), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     
     # Built-in Password Reset for the Gmail "Set Initial Password" flow

@@ -226,6 +226,9 @@ def delete_submission(request, pk):
     return redirect('dashboard' if request.user.role == 'STUDENT' else 'teacher_dashboard')
 
 def signup_view(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+        
     if request.method == 'POST':
         form = UserRegistrationForm(request.POST)
         if form.is_valid():
