@@ -142,7 +142,7 @@
                                     </div>
                                     <div class="modal-body p-4">
                                         <!-- Scoped Error Handling -->
-                                        {% if assign_form.errors and request.session.form_error_id == assign.id|stringformat:"s" %}
+                                        {% if assign_form.errors and error_id == assign.id|stringformat:"s" %}
                                             <div class="alert alert-danger rounded-4 border-0 small mb-4">
                                                 {{ assign_form.errors }}
                                             </div>
