@@ -101,6 +101,8 @@ class AssignmentForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['description'].required = False
+        self.fields['instruction_file'].required = False
         for name, field in self.fields.items():
             if name != 'deadline':
                 field.widget.attrs.update({'class': 'form-control'})

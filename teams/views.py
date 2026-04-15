@@ -66,14 +66,19 @@ def dashboard_view(request):
             else:
                 a.is_late = False
 
+        # Only initialize new forms if they weren't already created (and potentially failed) during POST
+        if 'project_form' not in locals(): project_form = TeamProjectForm(instance=team)
+        if 'role_form' not in locals(): role_form = StudentRoleForm(instance=student)
+        if 'assign_form' not in locals(): assign_form = AssignmentSubmissionForm()
+
         return render(request, 'teams/dashboard.html', {
             'student': student, 
             'team': team,
             'documents': documents,
             'assignments': assignments,
-            'project_form': TeamProjectForm(instance=team),
-            'role_form': StudentRoleForm(instance=student),
-            'assign_form': AssignmentSubmissionForm(),
+            'project_form': project_form,
+            'role_form': role_form,
+            'assign_form': assign_form,
         })
 
     if request.method == 'POST':
@@ -157,11 +162,15 @@ def teacher_dashboard(request):
                     sub.is_late = sub.submitted_at > a.deadline
             t.assignment_status.append({'assignment': a, 'submission': sub})
 
+    # Only initialize new forms if they weren't already created (and potentially failed) during POST
+    if 'doc_form' not in locals(): doc_form = DocumentUploadForm()
+    if 'assign_form' not in locals(): assign_form = AssignmentForm()
+
     return render(request, 'teams/teacher_dashboard.html', {
         'teams': teams, 
         'assignments': assignments,
-        'doc_form': DocumentUploadForm(),
-        'assign_form': AssignmentForm(),
+        'doc_form': doc_form,
+        'assign_form': assign_form,
         'grade_form': GradeSubmissionForm(),
         'documents': documents
     })
