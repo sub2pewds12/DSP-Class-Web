@@ -12,7 +12,7 @@
         position: relative;
         overflow: hidden;
         background-color: var(--bg-surface);
-        background-image: 
+        background-image:
             radial-gradient(circle at 90% 10%, rgba(211, 47, 47, 0.08) 0%, transparent 45%),
             radial-gradient(circle at 10% 90%, rgba(211, 47, 47, 0.08) 0%, transparent 45%);
         transition: background-color 0.4s ease;
@@ -24,7 +24,7 @@
         border: 1px solid var(--glass-border);
         border-radius: 2.5rem;
         padding: 3.5rem;
-        box-shadow: 
+        box-shadow:
             0 20px 50px -12px rgba(0, 0, 0, 0.1),
             0 10px 30px -10px rgba(0, 0, 0, 0.05);
         max-width: 800px;
@@ -76,8 +76,10 @@
 
 {% block content %}
 <div class="signup-gateway">
-    <div class="floating-shape" style="width: 500px; height: 500px; background: var(--primary-red); top: -200px; right: -200px;"></div>
-    <div class="floating-shape" style="width: 400px; height: 400px; background: #6366f1; bottom: -150px; left: -150px;"></div>
+    <div class="floating-shape"
+        style="width: 500px; height: 500px; background: var(--primary-red); top: -200px; right: -200px;"></div>
+    <div class="floating-shape" style="width: 400px; height: 400px; background: #6366f1; bottom: -150px; left: -150px;">
+    </div>
 
     <div class="container d-flex flex-column align-items-center py-5">
         <div class="gateway-card animate__animated animate__fadeInUp">
@@ -91,53 +93,48 @@
                 {% csrf_token %}
                 <div class="row g-4">
                     {% for field in form %}
-                        <div class="{% if field.name == 'role' %}col-12{% else %}col-md-6{% endif %}">
-                            <label class="small fw-800 text-uppercase ls-1 mb-2 d-block" style="font-size: 0.65rem; color: var(--label-high-contrast);">{{ field.label }}</label>
-                            
-                            {% if field.name == 'role' %}
-                                <div class="d-flex gap-3 justify-content-center">
-                                    {% for radio in field %}
-                                        <div class="form-check custom-radio d-flex align-items-center mb-0">
-                                            {{ radio.tag }}
-                                            <label class="form-check-label ms-2 fw-bold small text-main" for="{{ radio.id_for_label }}">
-                                                {{ radio.choice_label }}
-                                            </label>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            {% else %}
-                                {% if field.name == 'password' or field.name == 'password_confirm' %}
-                                    <div class="position-relative">
-                                        <input 
-                                            type="password" 
-                                            name="{{ field.name }}" 
-                                            id="{{ field.id_for_label }}"
-                                            class="form-control form-control-gateway rounded-4 {% if field.errors %}is-invalid{% endif %}" 
-                                            placeholder="{{ field.label }}"
-                                            style="padding-right: 3rem;"
-                                            required
-                                        >
-                                        <button type="button" class="btn position-absolute end-0 top-50 translate-middle-y border-0 bg-transparent pe-3 text-muted opacity-75 hover-opacity-100 toggle-password" data-target="{{ field.id_for_label }}" style="z-index: 10;">
-                                            <i class="bi bi-eye-fill h5 mb-0"></i>
-                                        </button>
-                                    </div>
-                                {% else %}
-                                    <input 
-                                        type="{{ field.field.widget.input_type|default:'text' }}" 
-                                        name="{{ field.name }}" 
-                                        id="{{ field.id_for_label }}"
-                                        class="form-control form-control-gateway rounded-4 {% if field.errors %}is-invalid{% endif %}" 
-                                        placeholder="{{ field.label }}"
-                                        {% if field.value %}value="{{ field.value }}"{% endif %}
-                                        required
-                                    >
-                                {% endif %}
-                            {% endif %}
-                            
-                            {% if field.errors %}
-                                <div class="text-danger small mt-1 fw-bold" style="font-size: 0.65rem;">{{ field.errors.0 }}</div>
-                            {% endif %}
+                    <div class="{% if field.name == 'role' %}col-12{% else %}col-md-6{% endif %}">
+                        <label class="small fw-800 text-uppercase ls-1 mb-2 d-block"
+                            style="font-size: 0.65rem; color: var(--label-high-contrast);">{{ field.label }}</label>
+
+                        {% if field.name == 'role' %}
+                        <div class="d-flex gap-3 justify-content-center">
+                            {% for radio in field %}
+                            <div class="form-check custom-radio d-flex align-items-center mb-0">
+                                {{ radio.tag }}
+                                <label class="form-check-label ms-2 fw-bold small text-main"
+                                    for="{{ radio.id_for_label }}">
+                                    {{ radio.choice_label }}
+                                </label>
+                            </div>
+                            {% endfor %}
                         </div>
+                        {% else %}
+                        {% if field.name == 'password' or field.name == 'password_confirm' %}
+                        <div class="position-relative">
+                            <input type="password" name="{{ field.name }}" id="{{ field.id_for_label }}"
+                                class="form-control form-control-gateway rounded-4 {% if field.errors %}is-invalid{% endif %}"
+                                placeholder="{{ field.label }}" style="padding-right: 3rem;" required>
+                            <button type="button"
+                                class="btn position-absolute end-0 top-50 translate-middle-y border-0 bg-transparent pe-3 text-muted opacity-75 hover-opacity-100 toggle-password"
+                                data-target="{{ field.id_for_label }}" style="z-index: 10;">
+                                <i class="bi bi-eye-fill h5 mb-0"></i>
+                            </button>
+                        </div>
+                        {% else %}
+                        <input type="{{ field.field.widget.input_type|default:'text' }}" name="{{ field.name }}"
+                            id="{{ field.id_for_label }}"
+                            class="form-control form-control-gateway rounded-4 {% if field.errors %}is-invalid{% endif %}"
+                            placeholder="{{ field.label }}" {% if field.value %}value="{{ field.value }}" {% endif %}
+                            required>
+                        {% endif %}
+                        {% endif %}
+
+                        {% if field.errors %}
+                        <div class="text-danger small mt-1 fw-bold" style="font-size: 0.65rem;">{{ field.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
                     {% endfor %}
                 </div>
 
@@ -145,17 +142,19 @@
                     <button type="submit" class="btn btn-primary-red w-100 py-3 rounded-pill shadow-sm fw-bold">
                         Sign Up <i class="bi bi-person-plus ms-2"></i>
                     </button>
-                    <p class="text-muted small mt-4">Already part of the team? <a href="{% url 'login' %}" class="text-primary-red fw-bold text-decoration-none border-bottom border-danger border-opacity-25 pb-1">Sign In</a></p>
+                    <p class="text-muted small mt-4">Already part of the team? <a href="{% url 'login' %}"
+                            class="text-primary-red fw-bold text-decoration-none border-bottom border-danger border-opacity-25 pb-1">Sign
+                            In</a></p>
                 </div>
             </form>
 
             <script>
                 document.querySelectorAll('.toggle-password').forEach(button => {
-                    button.addEventListener('click', function() {
+                    button.addEventListener('click', function () {
                         const targetId = this.getAttribute('data-target');
                         const input = document.getElementById(targetId);
                         const icon = this.querySelector('i');
-                        
+
                         if (input.type === 'password') {
                             input.type = 'text';
                             icon.classList.replace('bi-eye-fill', 'bi-eye-slash-fill');
@@ -175,6 +174,7 @@
         margin-top: 0;
         cursor: pointer;
     }
+
     .custom-radio .form-check-input:checked {
         background-color: var(--primary-red);
         border-color: var(--primary-red);

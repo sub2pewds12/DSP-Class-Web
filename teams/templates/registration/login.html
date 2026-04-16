@@ -86,6 +86,19 @@
         transform: scale(1.02);
         box-shadow: 0 10px 20px rgba(211, 47, 47, 0.2);
     }
+
+    /* Hide browser's native reveal password button */
+    input::-ms-reveal,
+    input::-ms-clear {
+        display: none;
+    }
+    input::-webkit-contacts-auto-fill-button {
+        visibility: hidden;
+        display: none !important;
+        pointer-events: none;
+        position: absolute;
+        right: 0;
+    }
 </style>
 {% endblock %}
 

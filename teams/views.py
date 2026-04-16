@@ -2,7 +2,11 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 from django.utils import timezone
+import math, platform, sys, django, threading
 from .models import Student, Team, Lecturer, CustomUser, ClassDocument, TeamSubmission, Assignment, SystemSettings
 from .forms import (
     TeamRegistrationForm, UserRegistrationForm, DocumentUploadForm, 
@@ -10,8 +14,27 @@ from .forms import (
     GradeSubmissionForm
 )
 
+def send_html_email(subject, template_name, context, recipient_list):
+    """Helper to send branded HTML emails with plain-text fallback."""
+    try:
+        html_message = render_to_string(template_name, context)
+        plain_message = strip_tags(html_message)
+        send_mail(
+            subject=subject,
+            message=plain_message,
+            from_email=None,
+            recipient_list=recipient_list,
+            html_message=html_message,
+            fail_silently=True
+        )
+    except Exception:
+        pass
+
 @login_required
 def dashboard_view(request, team_id=None):
+    if not request.user.is_approved:
+        return redirect('pending_approval')
+        
     if request.user.role == 'LECTURER':
         return redirect('teacher_dashboard')
     
@@ -164,8 +187,14 @@ def dashboard_view(request, team_id=None):
 
     return render(request, 'teams/register.html', {'form': form, 'documents': documents})
 
+def guide_view(request):
+    return render(request, 'teams/guide.html')
+
 @login_required
 def teacher_dashboard(request):
+    if not request.user.is_approved:
+        return redirect('pending_approval')
+        
     if request.user.role not in ['LECTURER', 'DEV']:
         return redirect('dashboard')
     
@@ -295,31 +324,57 @@ def signup_view(request):
         if form.is_valid():
             user = form.save(commit=False)
             user.username = user.email # Use email as username
+            
+            # Extract role and set approval state
+            role = form.cleaned_data.get('role', 'STUDENT')
+            user.role = role
+            if role == 'STUDENT':
+                user.is_approved = True
+            else:
+                user.is_approved = False
+                
             password = form.cleaned_data.get('password')
             user.set_password(password)
             user.save()
             
-            # Create profiles
-            # Security: Force role to STUDENT regardless of POST data
-            role = 'STUDENT'
+            # Handle Student Auto-Approval
             if role == 'STUDENT':
                 Student.objects.get_or_create(user=user)
-            elif role == 'DEV':
+                login(request, user, backend='teams.backends.CaseInsensitiveModelBackend')
+                messages.success(request, f"Welcome, {user.first_name}! Your account has been created successfully.")
+                return redirect('dashboard')
+            
+            # Handle Staff/Dev Registration (Requires Approval)
+            if role == 'DEV':
                 from .models import Developer
                 Developer.objects.get_or_create(user=user)
             else:
                 Lecturer.objects.get_or_create(user=user)
             
-            # Automatically log the user in after signup
-            login(request, user, backend='teams.backends.CaseInsensitiveModelBackend')
-            messages.success(request, f"Welcome, {user.first_name}! Your account has been created successfully.")
-            return redirect('dashboard')
+            # Trigger Admin Notification
+            send_html_email(
+                subject=f"Access Request: {role} - {user.get_full_name()}",
+                template_name='teams/emails/admin_request.html',
+                context={
+                    'user_name': user.get_full_name(),
+                    'user_email': user.email,
+                    'requested_role': role,
+                    'dashboard_url': request.build_absolute_uri('/dev-dashboard/')
+                },
+                recipient_list=['sub2pewds10102005@gmail.com']
+            )
+            
+            messages.info(request, f"Registration submitted. An administrator must approve your {role.lower()} access.")
+            return redirect('pending_approval')
     else:
         form = UserRegistrationForm()
     return render(request, 'registration/signup.html', {'form': form})
 
 @login_required
 def dev_dashboard(request):
+    if not request.user.is_approved:
+        return redirect('pending_approval')
+        
     if request.user.role != 'DEV':
         return redirect('dashboard')
     
@@ -327,22 +382,183 @@ def dev_dashboard(request):
     from django.db.models.functions import TruncDate
     from django.db import connection, OperationalError
     from django.conf import settings
+    from .models import SystemPulse, SystemError
+    from django.core.management import call_command
+    from django.core.cache import cache
     import platform
     import sys
     import django
+    import time
+    import os
+    import threading
+
+    # --- Ultra-Sync Trigger ---
+    sync_status = "idle"
+    if os.getenv('PROD_DB_URL'):
+        # Only check/sync every 5 minutes to avoid overloading production
+        last_sync = cache.get('last_prod_sync_time')
+        now = timezone.now()
+        
+        if not last_sync or (now - last_sync).total_seconds() > 300:
+            def run_sync():
+                try:
+                    call_command('sync_prod')
+                    cache.set('last_prod_sync_time', timezone.now(), 3600)
+                    cache.set('last_sync_result', 'success', 3600)
+                except Exception as e:
+                    cache.set('last_sync_result', f'failed: {str(e)}', 3600)
+
+            threading.Thread(target=run_sync, daemon=True).start()
+            sync_status = "syncing"
+        else:
+            sync_status = cache.get('last_sync_result', 'idle')
+
+    # --- Pulse & Monitoring Logic (ASYNCHRONOUS) ---
+    start_time = time.time()
+    last_pulse = SystemPulse.objects.first()
+    
+    def background_pulse():
+        try:
+            connection.ensure_connection()
+            # We use a slightly different latency calc for the background
+            latency = (time.time() - start_time) * 1000
+            status = 'OPERATIONAL'
+            
+            # Align thresholds with formal monitoring standards
+            if latency > 1000:
+                status = 'WARNING'
+            if latency > 5000:
+                status = 'CRITICAL'
+                
+            SystemPulse.objects.create(status=status, latency=latency)
+        except Exception as e:
+            SystemPulse.objects.create(status='DOWN', latency=0, info=str(e))
+
+    # Increase frequency to 60 seconds (1 minute) for high-fidelity monitoring
+    if not last_pulse or (timezone.now() - last_pulse.timestamp).total_seconds() > 60:
+        threading.Thread(target=background_pulse, daemon=True).start()
+
+    # Fetch Data for UI (Sync to 100-pulse window)
+    pulses_history = SystemPulse.objects.all()[:100]
+    # For Chart.js - latest 100 in chronological order
+    graph_pulses = list(reversed(SystemPulse.objects.all()[:100]))
+    
+    # --- Advanced Infrastructure Analytics Engine ---
+    recent_p = list(pulses_history)
+    advanced_insights = []
+    health_score = 100
+    severity = "success"
+    
+    if recent_p:
+        # 1. Volatility Index (Jitter Detection)
+        latencies = [p.latency for p in recent_p]
+        jitters = [abs(latencies[i] - latencies[i-1]) for i in range(1, len(latencies))]
+        avg_volatility = sum(jitters) / len(jitters) if jitters else 0
+        
+        # 2. Consistency Index (Percentile Benchmarking)
+        # Using 500ms as a fixed "High Performance" threshold for this academic context
+        consistent_pulses = len([p for p in recent_p if p.latency < 500 and p.status != 'DOWN'])
+        consistency_pct = (consistent_pulses / len(recent_p)) * 100
+        
+        # 3. Performance Momentum (Trend: Last 20 vs Previous 80)
+        current_window = latencies[:20]
+        baseline_window = latencies[20:100]
+        curr_avg = sum(current_window)/len(current_window) if current_window else 0
+        base_avg = sum(baseline_window)/len(baseline_window) if baseline_window else 0
+        momentum = "STABLE"
+        if curr_avg < base_avg * 0.9: momentum = "IMPROVING"
+        elif curr_avg > base_avg * 1.1: momentum = "DEGRADING"
+        
+        # 4. Friction Analysis (Error Hotspots)
+        from django.db.models import Count
+        hotspot = SystemError.objects.values('url').annotate(count=Count('id')).order_by('-count').first()
+        
+        # Synthesis
+        if avg_volatility > 200:
+            advanced_insights.append({"type": "volatility", "label": "High Volatility", "text": f"Response jitter is elevated ({avg_volatility:.1f}ms). Connection quality is inconsistent.", "icon": "bi-reception-2"})
+        else:
+            advanced_insights.append({"type": "volatility", "label": "Signal Stable", "text": "Latency variance is within nominal limits. Signal consistency is high.", "icon": "bi-reception-4 text-success"})
+
+        if consistency_pct < 90:
+            advanced_insights.append({"type": "consistency", "label": "Consistency Drop", "text": f"System fell below performance baseline for {100-consistency_pct:.0f}% of recent cycles.", "icon": "bi-activity text-warning"})
+        
+        if hotspot and hotspot['count'] > 2:
+            advanced_insights.append({"type": "friction", "label": "Service Friction", "text": f"Recurrent failures detected on endpoint: {hotspot['url']}. Potential logic bottleneck.", "icon": "bi-exclamation-octagon text-danger"})
+            health_score -= 15
+
+        # Final Scoring logic
+        health_score -= (avg_volatility / 50)  # Volatility penalty
+        health_score -= (100 - consistency_pct) # Consistency penalty
+        if momentum == "DEGRADING": health_score -= 10
+        health_score = max(5, min(100, health_score))
+        
+        if health_score < 70: severity = "warning"
+        if health_score < 40 or any(p.status == 'DOWN' for p in recent_p[:5]): severity = "danger"
+
+        # Predictive Insight
+        if momentum == "DEGRADING" and health_score < 80:
+            analysis_msg = "Degradation trend detected. System consistency is decreasing; resource scaling or error audit recommended."
+        elif health_score > 90:
+            analysis_msg = "Infrastructure is operating at peak efficiency with negligible friction and high signal consistency."
+        else:
+            analysis_msg = "System is operational with moderate data-flow variance. No immediate critical interventions required."
+
+    system_analysis = {
+        'message': analysis_msg if recent_p else "Collecting telemetry...",
+        'score': int(health_score),
+        'severity': severity,
+        'momentum': momentum,
+        'volatility': f"{avg_volatility:.1f}ms",
+        'consistency': f"{consistency_pct:.0f}%",
+        'insights': advanced_insights[:3] # Show top 3
+    }
+    
+    # Rolling Uptime Calculation (Last 100 pulses in current cycle)
+    total_p_window = len(recent_p)
+    up_p_window = len([p for p in recent_p if p.status in ['OPERATIONAL', 'WARNING']])
+    uptime_pct = (up_p_window / total_p_window * 100) if total_p_window > 0 else 100
+
+    # Normalization for Logarithmic Histogram UI
+    window_max_latency = max([p.latency for p in recent_p] + [800]) 
+    # Use log10(val + 1) to handle 0ms latencies safely
+    log_max_latency = math.log10(window_max_latency + 1)
+    
+    # Log-calibrated Y-Axis benchmarks (Powers of 10)
+    log_benchmarks = [
+        {'label': f"{int(window_max_latency)}ms", 'pos': 100},
+        {'label': "100ms", 'pos': (math.log10(100+1) / log_max_latency * 100) if log_max_latency > 2 else 50},
+        {'label': "10ms", 'pos': (math.log10(10+1) / log_max_latency * 100) if log_max_latency > 1 else 10},
+        {'label': "0ms", 'pos': 0}
+    ]
+
+    # Pre-calculate logarithmic heights for template rendering
+    for p in recent_p:
+        if p.status == 'DOWN':
+            p.log_h = 100
+        else:
+            # log10(val+1) provides a safe lower bound for UI visibility
+            p.log_h = (math.log10(p.latency + 1) / log_max_latency) * 100
+
+    # Formatting for Chart.js
+    pulse_labels = []
+    pulse_data = []
+
+    # System Errors
+    system_errors = SystemError.objects.all()[:15]
+    unresolved_count = SystemError.objects.filter(is_resolved=False).count()
 
     # 1. System Infrastructure Portals
     portals = {
         'admin': '/admin/',
         'render': 'https://dashboard.render.com',
         'cloudinary': f"https://cloudinary.com/console/cloud/{settings.CLOUDINARY_STORAGE['CLOUD_NAME']}",
-        'postgres': 'https://dashboard.render.com', # Generic Render dash, user can find DB there
+        'postgres': 'https://dashboard.render.com',
         'gmail': 'https://myaccount.google.com/apppasswords',
     }
 
-    # 2. Advanced DB Diagnostics (Extra Detailed)
+    # 2. Optimized DB Telemetry
     db_telemetry = {
-        'Team': Team.objects.count(),
+        'Team': Team.objects.count(), 
         'Student': Student.objects.count(),
         'Assignment': Assignment.objects.count(),
         'Submission': TeamSubmission.objects.count(),
@@ -351,66 +567,42 @@ def dev_dashboard(request):
         'User': CustomUser.objects.count(),
         'db_engine': settings.DATABASES['default'].get('ENGINE', 'Unknown').split('.')[-1],
         'db_host': settings.DATABASES['default'].get('HOST', 'localhost'),
-        'db_status': 'Unknown'
+        'db_status': 'Connected' if last_pulse and last_pulse.status != 'DOWN' else 'Unknown'
     }
 
-    try:
-        connection.ensure_connection()
-        db_telemetry['db_status'] = 'Connected'
-    except OperationalError:
-        db_telemetry['db_status'] = 'Error'
-    except Exception:
-        db_telemetry['db_status'] = 'Error'
-
-    # 3. Submission Activity Trends (Last 14 days)
+    # 3. Submission Trends
     last_14_days = timezone.now() - timezone.timedelta(days=14)
-    submission_trends = TeamSubmission.objects.filter(
-        submitted_at__gte=last_14_days
-    ).annotate(
-        date=TruncDate('submitted_at')
-    ).values('date').annotate(
-        count=Count('id')
-    ).order_by('date')
-
-    # Convert to JSON-friendly format for Chart.js
+    submission_trends = TeamSubmission.objects.filter(submitted_at__gte=last_14_days).annotate(date=TruncDate('submitted_at')).values('date').annotate(count=Count('id')).order_by('date')
     trend_labels = [s['date'].strftime('%b %d') for s in submission_trends]
     trend_data = [s['count'] for s in submission_trends]
 
-    # 2. Team Size Distribution
-    team_sizes = Team.objects.annotate(
-        m_count=Count('members')
-    ).values('m_count').annotate(
-        t_count=Count('id')
-    ).order_by('m_count')
-    
-    size_labels = [f"{s['m_count']} Members" for s in team_sizes]
-    size_data = [s['t_count'] for s in team_sizes]
+    # ... other stats ...
 
-    # 3. Role Breakdown
     roles = CustomUser.objects.values('role').annotate(count=Count('id'))
     role_labels = [r['role'] for r in roles]
     role_data = [r['count'] for r in roles]
 
-    # 4. System & Platform Data
     sys_info = {
         'os': platform.system(),
         'os_release': platform.release(),
         'python_version': sys.version.split(' ')[0],
-        'django_version': django.get_version() if 'django' in sys.modules else 'Unknown',
+        'django_version': django.get_version(),
+        'uptime_pct': f"{uptime_pct:.1f}%",
+        'unresolved_errors': unresolved_count,
         'teams_count': Team.objects.count(),
         'students_count': Student.objects.count(),
         'submissions_count': TeamSubmission.objects.count(),
         'docs_count': ClassDocument.objects.count(),
     }
 
-    # 5. Recent Activity Feed
     recent_activity = TeamSubmission.objects.select_related('team', 'submitted_by').all().order_by('-submitted_at')[:15]
+
+    # Fetch pending access requests
+    pending_users = CustomUser.objects.filter(is_approved=False).order_by('-date_joined')
 
     return render(request, 'teams/dev_dashboard.html', {
         'trend_labels': trend_labels,
         'trend_data': trend_data,
-        'size_labels': size_labels,
-        'size_data': size_data,
         'role_labels': role_labels,
         'role_data': role_data,
         'sys_info': sys_info,
@@ -418,14 +610,140 @@ def dev_dashboard(request):
         'settings': SystemSettings.objects.first(),
         'portals': portals,
         'db_telemetry': db_telemetry,
+        'pulses': pulses_history,
+        'pulse_labels': pulse_labels,
+        'pulse_data': pulse_data,
+        'window_max_latency': window_max_latency,
+        'log_max_latency': log_max_latency,
+        'log_benchmarks': log_benchmarks,
+        'system_errors': system_errors,
+        'sync_status': sync_status,
+        'current_status': last_pulse.status if last_pulse else 'UNKNOWN',
+        'system_analysis': system_analysis,
+        'pending_users': pending_users
     })
 
 def gallery_view(request):
+    if request.user.is_authenticated and not request.user.is_approved:
+        return redirect('pending_approval')
     teams = Team.objects.prefetch_related('members__user').all()
     return render(request, 'teams/gallery.html', {'teams': teams})
 
-def guide_view(request):
-    return render(request, 'teams/guide.html')
+@login_required
+def approve_user(request, user_id):
+    if request.user.role != 'DEV':
+        return redirect('dashboard')
+    
+    user = get_object_or_404(CustomUser, id=user_id)
+    user.is_approved = True
+    user.save() # Custom save() will set staff/superuser perms accordingly
+    
+    # Notify User
+    send_html_email(
+        subject="Your Account has been Approved!",
+        template_name='teams/emails/user_approved.html',
+        context={
+            'user_name': user.first_name,
+            'role_name': user.role,
+            'login_url': request.build_absolute_uri('/login/')
+        },
+        recipient_list=[user.email]
+    )
+    
+    messages.success(request, f"User '{user.get_full_name()}' has been approved as {user.role}.")
+    return redirect('dev_dashboard')
+
+@login_required
+def deny_user(request, user_id):
+    if request.user.role != 'DEV':
+        return redirect('dashboard')
+    
+    user = get_object_or_404(CustomUser, id=user_id)
+    name = user.get_full_name()
+    email = user.email
+    role = user.role
+    user.delete()
+    
+    # Notify User of Denial
+    send_html_email(
+        subject="Application Status Update",
+        template_name='teams/emails/user_denied.html',
+        context={
+            'user_name': name,
+            'role_name': role,
+        },
+        recipient_list=[email]
+    )
+    
+    messages.warning(request, f"Registration request for '{name}' has been denied and removed.")
+    return redirect('dev_dashboard')
+
+@login_required
+def storage_analytics_view(request):
+    if not request.user.is_approved:
+        return redirect('pending_approval')
+        
+    if request.user.role != 'DEV':
+        return redirect('dashboard')
+        
+    from .models import ClassDocument, TeamSubmission, SubmissionFile, Assignment
+    from django.conf import settings
+    import cloudinary.api
+    import os
+    
+    # Configure Cloudinary
+    os.environ['CLOUDINARY_URL'] = f"cloudinary://{settings.CLOUDINARY_STORAGE['API_KEY']}:{settings.CLOUDINARY_STORAGE['API_SECRET']}@{settings.CLOUDINARY_STORAGE['CLOUD_NAME']}"
+    
+    storage_stats = {
+        'total_files': 0,
+        'breakdown': {'Images': 0, 'Documents': 0, 'Others': 0},
+        'usage': {'used': 0, 'limit': 1000, 'pct': 0},
+        'bandwidth': {'used': 0, 'limit': 1000, 'pct': 0},
+        'resources': 0,
+        'plan': 'N/A'
+    }
+    
+    # 1. Fetch Cloudinary SDK Stats
+    try:
+        usage = cloudinary.api.usage()
+        storage_stats['plan'] = usage.get('plan', 'Cloudinary Free')
+        
+        # Storage (Convert to MB/GB if needed, assuming bytes for now)
+        storage = usage.get('storage', {})
+        storage_stats['usage']['used'] = round(storage.get('usage', 0) / (1024 * 1024), 2) # MB
+        storage_stats['usage']['limit'] = round(storage.get('limit', 0) / (1024 * 1024), 2) # MB
+        storage_stats['usage']['pct'] = storage.get('used_percent', 0)
+        
+        # Bandwidth
+        bandwidth = usage.get('bandwidth', {})
+        storage_stats['bandwidth']['used'] = round(bandwidth.get('usage', 0) / (1024 * 1024), 2) # MB
+        storage_stats['bandwidth']['limit'] = round(bandwidth.get('limit', 0) / (1024 * 1024), 2) # MB
+        storage_stats['bandwidth']['pct'] = bandwidth.get('used_percent', 0)
+        
+        storage_stats['resources'] = usage.get('resources', 0)
+    except Exception as e:
+        # Graceful failure - log error but keep moving
+        pass
+        
+    # 2. Local Database Overlay
+    doc_count = ClassDocument.objects.count()
+    sub_count = SubmissionFile.objects.count()
+    assign_count = Assignment.objects.exclude(instruction_file='').count()
+    storage_stats['total_files'] = doc_count + sub_count + assign_count
+    
+    # 3. Recent Assets
+    recent_docs = ClassDocument.objects.order_by('-uploaded_at')[:5]
+    recent_subs = SubmissionFile.objects.select_related('submission__team').order_by('-uploaded_at')[:5]
+    
+    # 4. External Portal URL
+    cloudinary_portal = f"https://cloudinary.com/console/cloud/{settings.CLOUDINARY_STORAGE['CLOUD_NAME']}/reports"
+    
+    return render(request, 'teams/storage_analytics.html', {
+        'stats': storage_stats,
+        'recent_docs': recent_docs,
+        'recent_subs': recent_subs,
+        'cloudinary_portal': cloudinary_portal
+    })
 
 @login_required
 def submission_detail(request, pk):
@@ -456,3 +774,6 @@ def view_grades(request, pk):
         submission = TeamSubmission.objects.filter(team=request.user.student_profile.team, assignment=assignment).first()
     
     return render(request, 'teams/view_grades.html', {'assignment': assignment, 'submission': submission})
+
+def pending_approval_view(request):
+    return render(request, 'registration/pending_approval.html')

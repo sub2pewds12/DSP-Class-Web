@@ -79,6 +79,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'teams.middleware.ErrorMonitoringMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -113,6 +114,14 @@ DATABASES = {
     )
 }
 
+# 1-Way Sync Portal: Production-Read source
+if os.getenv('PROD_DB_URL'):
+    DATABASES['production'] = dj_database_url.parse(
+        os.getenv('PROD_DB_URL'),
+        conn_max_age=600,
+        ssl_require=True
+    )
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -138,7 +147,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Ho_Chi_Minh'
 
 # Internationalization
 USE_I18N = True

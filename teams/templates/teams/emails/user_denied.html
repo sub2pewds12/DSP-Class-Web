@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0d0d0d;
+            margin: 0;
+            padding: 0;
+            color: #e0e0e0;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #1a1a1a;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid #333;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+        .header {
+            background: #212121;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            color: #ffffff;
+            margin: 0;
+            font-size: 24px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .content {
+            padding: 40px;
+            line-height: 1.6;
+        }
+        .notice-box {
+            background-color: rgba(211, 47, 47, 0.05);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 20px 0;
+            border: 1px solid rgba(211, 47, 47, 0.1);
+            text-align: center;
+        }
+        .footer {
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            background-color: #141414;
+        }
+        .contact-link {
+            color: #d32f2f;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Application Status</h1>
+        </div>
+        <div class="content">
+            <p>Hello {{ user_name }},</p>
+            <p>Thank you for your interest in the DSP Class Platform. After reviewing your request for <strong>{{ role_name }}</strong> access, we are unable to approve your application at this time.</p>
+            
+            <div class="notice-box">
+                <p style="margin:0; color: #888;">This decision may be due to incomplete information or lack of current eligibility status.</p>
+            </div>
+
+            <p>If you believe this is an error or would like more information, please contact the platform administrator directly.</p>
+            
+            <p style="text-align: center; margin-top: 30px;">
+                <a href="mailto:sub2pewds10102005@gmail.com" class="contact-link">Contact Support</a>
+            </p>
+        </div>
+        <div class="footer">
+            &copy; 2026 DSP Class Platform. Sent with focus on security and excellence.
+        </div>
+    </div>
+</body>
+</html>

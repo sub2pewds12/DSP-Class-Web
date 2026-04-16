@@ -1,0 +1,1869 @@
+[
+{
+    "model": "sessions.session",
+    "pk": "0d6a06wt1qc298vdxquvvkmcnm071ftf",
+    "fields": {
+        "session_data": ".eJxVjEEOgjAQRe_StWmYlg7FpXvP0ExnpoIaSCisjHdXEha6_e-9_zKJtnVIW9UljWLOxpnT75aJHzrtQO403WbL87QuY7a7Yg9a7XUWfV4O9-9goDp864jUdi0EbBSCQM-OsRQPBRHIt6gN5BKUY0c9k7joxcfAsWAv4AjM-wPPkDem:1wD1UF:iqwlFAqUUgEAxpOSbKXIDvMZSUCMLfJm_oNQEAHOLH0",
+        "expire_date": "2026-04-15T15:45:03.514Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "2kgaqxe8cj5xcjh2ngay86pdjx9kwno4",
+    "fields": {
+        "session_data": ".eJxVjDsOwjAQRO_iGkVZfzYOJVQUnMHa2Gs5AhyJdWgQdwekFFDOvHnzVIHWVsIqfA9zUnul1e63myheuH5BY7pJt2XpjiR8qsJV5jY_-Lwkvh628d9DISkf3SPZwYLDnsElGKOOmLOBjAhkLHIPU3Yc_UBjpKS9Sca76DOOCTSBer0BLxA4Ww:1wDHbi:APq8bv8NZhZ5Gnqz6MshXQPNeXPx_-J-1i-TGF8-oWc",
+        "expire_date": "2026-04-16T08:57:50.253Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "2vwd496ft4shx4djwp3rzi1jtbquc2qv",
+    "fields": {
+        "session_data": ".eJxVjDsOwjAQBe_iGkX-xHaWEioKzmBt7LVsAY7EOjSIu6NIKaCcN0_zFgHXXsLK9Aw1iaNQ4vC7zRhv1DbRCR887MzDGZkujalx7fVF1yXR_bSf_woFuWzdmZyXo7eOwEEGb1T0aCZFJksnlclJg42Y5qiNduAySJSTtGZUHjCJzxcgyjeg:1wD57D:rs4nHcCBMKHreb78f6jJS2CZB_75hNzv9Z27r2SDOdA",
+        "expire_date": "2026-04-15T19:37:31.998Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "3xzcsj0g5h9sijxsbqxjva5t8mrm11ik",
+    "fields": {
+        "session_data": ".eJxVjDsOwjAQRO_iGkVZfzYOJVQUnMHa2Gs5AhyJdWgQdwekFFDOvHnzVIHWVsIqfA9zUnul1e63myheuH5BY7pJt2XpjiR8qsJV5jY_-Lwkvh628d9DISkf3SPZwYLDnsElGKOOmLOBjAhkLHIPU3Yc_UBjpKS9Sca76DOOCTSBer0BLxA4Ww:1wDGh5:wO9QbH1ycIjN8Vo-nd4UcKeCXKj2vwY4m8WJuK6SkYk",
+        "expire_date": "2026-04-16T07:59:19.884Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "49j557mp03tn1gmoi40jlx2odsxwd3v2",
+    "fields": {
+        "session_data": ".eJxVjEEOwiAQRe_C2hBGCoJL956BzDBTqRpISrsy3l2bdKHb_977L5VwXUpau8xpYnVWg1eH35EwP6RuhO9Yb03nVpd5Ir0peqddXxvL87K7fwcFe_nW4g1l44J1EgwM4BlHIHECQiEGC3awhsEaOkaInpl8BCCi8YTMkNX7A_xEOCA:1wBtpA:70ATHCRshqASFrVfhTnXaQ9NVWMaolycH2Ir4P7Z0iA",
+        "expire_date": "2026-04-26T12:22:00.954Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "6ja32j35yxoogf5l06619rdz6cp12hju",
+    "fields": {
+        "session_data": ".eJxVjDsOwjAQRO_iGkVZfzYOJVQUnMHa2Gs5AhyJdWgQdwekFFDOvHnzVIHWVsIqfA9zUnul1e63myheuH5BY7pJt2XpjiR8qsJV5jY_-Lwkvh628d9DISkf3SPZwYLDnsElGKOOmLOBjAhkLHIPU3Yc_UBjpKS9Sca76DOOCTSBer0BLxA4Ww:1wDGBZ:-iWoVTSGXyUI6zay-f-duq4qSF7QRbG-BLAaKBOtfAk",
+        "expire_date": "2026-04-16T07:26:45.960Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "6pbp8n8zs4pj6m05s9xbh5m4d3iey1pq",
+    "fields": {
+        "session_data": ".eJxVjDsOwjAQBe_iGlnrT-w1JT1nsNY_HEC2FCcV4u4QKQW0b2bei3na1uq3kRc_J3ZmBtjpdwwUH7ntJN2p3TqPva3LHPiu8IMOfu0pPy-H-3dQadRvrVUGtFgKSkugCwodBWgHWJSSJAjllEuxKRrrQJocQJJyUxQkkGRg7w_ogTdu:1wCqVD:6RhB0PV1-6XQlolDRiLpLpXBz6LWaqGSaoSsMUXbEFo",
+        "expire_date": "2026-04-29T03:01:19.190Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "8gmsv7mbb0tak72cvr6cdc1l34fdkzc8",
+    "fields": {
+        "session_data": "e30:1wDAKG:kob0H1D1Kcg6IOkNUMXJP5oBpZgP_4LfMCxC5ibFg-A",
+        "expire_date": "2026-04-16T01:11:20.651Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "bc7p29xif0hokdpdn5buqvgdakd9sd9z",
+    "fields": {
+        "session_data": ".eJxVjDsOwjAQBe_iGlnGzmKHkp4zRPsLDiBbipMKcXeIlALaNzPvZQZclzysTedhEnM2oTOH35GQH1o2Incst2q5lmWeyG6K3Wmz1yr6vOzu30HGlr81UnLAMrJ3UcmhJOWE3B8JQgydD6coii55AAL0EjE5pjRCz-ojg3l_ACsLOL4:1wCxEX:4GIJ4T5-ERlVJX3E5uwDpfMlkvlP2gHB5J4FfzurazQ",
+        "expire_date": "2026-04-29T10:12:33.223Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "bqxjntsbtk33qeokl0ge4khk8p3h3y77",
+    "fields": {
+        "session_data": "e30:1wD2ry:9inSok8x9WgYh5FDautLXtikbd15aaZP6Jxo45rzz0Q",
+        "expire_date": "2026-04-15T17:13:38.663Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "d84ulvkc3g05pq3l4hn9tliiwf1nl5bh",
+    "fields": {
+        "session_data": ".eJxVjEEOwiAQRe_C2pBSZgq4dO8ZyAxDpWpoUtqV8e7apAvd_vfef6lI21ri1vISJ1FnhU6dfkem9Mh1J3Knept1muu6TKx3RR-06ess-Xk53L-DQq186wxg0dkRrROPXQ6jCwERPFkA5gEIwfqEyQ9dj5kNGzIJgumFxBOr9wfjvjeD:1wD1TM:Gf_3o3ZRiPcX4I65WiYG9Vukex9tbXe2k3IoEJVDvTs",
+        "expire_date": "2026-04-15T15:44:08.798Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "dgcj85zouz07jtf2kvsegya0ub2do5kb",
+    "fields": {
+        "session_data": ".eJxVjEEOgjAQRe_StWmYlg7FpXvP0ExnpoIaSCisjHdXEha6_e-9_zKJtnVIW9UljWLOxpnT75aJHzrtQO403WbL87QuY7a7Yg9a7XUWfV4O9-9goDp864jUdi0EbBSCQM-OsRQPBRHIt6gN5BKUY0c9k7joxcfAsWAv4AjM-wPPkDem:1wCyak:VNLQ0lmGKI-wvO-ANYiCg_JHMspZzbFFTfuSaDzhrGQ",
+        "expire_date": "2026-04-15T12:39:34.481Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "e9m2kt5fytjbo301izyb536w37i0gmzw",
+    "fields": {
+        "session_data": ".eJxVjDsOwjAQBe_iGln-fyjpOYO1a69xADlSnFSIu0OkFNC-mXkvlmBbW9oGLWkq7MxsZKffESE_qO-k3KHfZp7nvi4T8l3hBx38Ohd6Xg7376DBaN8alEbyIYNGF4C8B4GGBDoM0ZYQZVDVWxeV0SZaAb4qEEUC6SrJOMveHxNIN-M:1wCqUq:vikFiOLcWVs0G_JEuvyhogC0MJY6pr7LJEj-eAJsrlI",
+        "expire_date": "2026-04-29T03:00:56.286Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "ek8n1c333vn0ulpb80f50sid3qlfgyge",
+    "fields": {
+        "session_data": ".eJxVjDsOwyAQBe9CHSE-xrAp0_sMaIElOIlAMnYV5e6xJRdJOzPvvZnHbS1-67T4ObErM45dfmHA-KR6mPTAem88trouc-BHwk_b-dQSvW5n-3dQsJd9bXUMQgAZpZSVNmgLMimRrQMKtGMtlJLgBiCJWQw4GpQ5pGTIZDcC-3wB5wQ3gw:1wCqTN:kzbb6wuIXLtgSWxz_skbDA8_5z_MUafeSNETn3BOQ6g",
+        "expire_date": "2026-04-29T02:59:25.186Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "hn7zjobshwrvtficv151h9aj7wn15qpd",
+    "fields": {
+        "session_data": ".eJxVjDsOwjAQRO_iGkX-fyihouAM1treyBbgSKxDg7g7IKWAcubNmyeLsI4aV8J7bIXtmfVs91smyBfsXzIQbjRtmaYjEJ46Yac22gPPS8HrYRv_PVSg-tG154YXzE6oAiF4y5XLGEI2bhYyg5YKrEYplE7cJAnace289ELIWaTCXm9NlTfE:1wD2aJ:tRotszC79LMUCUFfchwjYnABXUCsJpzL6xEhgJMJY9s",
+        "expire_date": "2026-04-15T16:55:23.291Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "hwsrl18jklha4juj6tnnrka27zxdtn7s",
+    "fields": {
+        "session_data": ".eJxVjUsOwjAMRO-SNYrKJ67Dkn3PENmxQwookZp2hbg7rdQFbOe9mXmbQMucw9J0CqOYq3FgDr8hU3xq2Yg8qNyrjbXM08h2U-xOmx2q6Ou2u38DmVpe24TiyQP3dAFl9R0j4glJPMfedS6d2WFSzwSaEiUGEHEJxRGuL0fz-QI6Xznd:1wD0cx:s4OP23_Sxgpns6WwXp3RtexJu7X4hWZYDbWI26yF_C0",
+        "expire_date": "2026-04-15T14:49:59.633Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "nskweyjkhitcgo5ocr8b29970jnda96r",
+    "fields": {
+        "session_data": ".eJxVjDsOwjAQRO_iGkVZfzYOJVQUnMHa2Gs5AhyJdWgQdwekFFDOvHnzVIHWVsIqfA9zUnul1e63myheuH5BY7pJt2XpjiR8qsJV5jY_-Lwkvh628d9DISkf3SPZwYLDnsElGKOOmLOBjAhkLHIPU3Yc_UBjpKS9Sca76DOOCTSBer0BLxA4Ww:1wDHbi:APq8bv8NZhZ5Gnqz6MshXQPNeXPx_-J-1i-TGF8-oWc",
+        "expire_date": "2026-04-16T08:57:50.252Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "pafhueozawv51yocdo0mvvv78kmseaz2",
+    "fields": {
+        "session_data": "e30:1wD2Bb:EQOpJpp4HZFSbp1GyuLfQdCqozfUY91hhoFcyEOkdvM",
+        "expire_date": "2026-04-15T16:29:51.567Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "pjgpg4sb0jxeydrwva2mpso1vg6pbrim",
+    "fields": {
+        "session_data": ".eJxVjMsOwiAQRf-FtSE8ZACX7vsNhBlAqgaS0q6M_65NutDtPefcFwtxW2vYRl7CnNiFgWan3xEjPXLbSbrHduuceluXGfmu8IMOPvWUn9fD_TuocdRvbQEEGasKKu8AbTSEUMgXZZLQXgpndSRIzgjnECAbX5wEiepcMoFn7w_38jed:1wD1RZ:okeS4GqafdQsSO8b5CGusrWFravQjV0co1jsAosDa20",
+        "expire_date": "2026-04-15T15:42:17.790Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "pu5xh29t417qw22lky04qrof0966yurj",
+    "fields": {
+        "session_data": ".eJxVjDsOwjAQBe_iGll24s8uJT1nsNa7Ng6gRMqnQtwdIqWA9s3Me6lE29rStpQ5DaLOynt1-h0z8aOMO5E7jbdJ8zSu85D1ruiDLvo6SXleDvfvoNHSvrWpLNgJMrnqARyBr1m8Q-z7DgpFyI7RIgekGLIJETwVYezBOiNWvT8XKTf_:1wCqIe:Zg6Zanc8huvR25wwDiT0eMT1b4CVsOQaJ0ADuqXHPVQ",
+        "expire_date": "2026-04-29T02:48:20.773Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "px45rwbg8vls4lau3bb2g8z6vy76xs3q",
+    "fields": {
+        "session_data": ".eJxVjDsOwjAQRO_iGkVZfzYOJVQUnMHa2Gs5AhyJdWgQdwekFFDOvHnzVIHWVsIqfA9zUnul1e63myheuH5BY7pJt2XpjiR8qsJV5jY_-Lwkvh628d9DISkf3SPZwYLDnsElGKOOmLOBjAhkLHIPU3Yc_UBjpKS9Sca76DOOCTSBer0BLxA4Ww:1wD2da:Hm4JMBu-tLGzuGKuV8yesWJL-QMQvIgysc2IV4s1LM4",
+        "expire_date": "2026-04-15T16:58:46.011Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "r3ozvejn8h214z2umex5sy1t4dw1a1xl",
+    "fields": {
+        "session_data": ".eJxVjLEOwjAMRP8lM6oS4yaBESYGviFyYketgCLhlAXx7xSpA4z37t29TKK5DWlWeaSRzd4Eaza_MFO5yPRtmtBNuzVrdySV06Qy6djGp5zvLNfDKv89DKTDMsddZMoRQ0Xf2xhyRRcjQihknUOu2VcAICyweL3zvOXgxUUCi9wX8_4AV_w4gw:1wD2cM:Hgz9zRxpQj-4vsqw68XtC1ZlG_LhrTeZd8zzV6Dbf3Q",
+        "expire_date": "2026-04-15T16:57:30.408Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "tlk8nn825v7o3qvciagh0xfb60hu3yjr",
+    "fields": {
+        "session_data": ".eJxVjDsOwjAQRO_iGkVZfzYOJVQUnMHa2Gs5AhyJdWgQdwekFFDOvHnzVIHWVsIqfA9zUnul1e63myheuH5BY7pJt2XpjiR8qsJV5jY_-Lwkvh628d9DISkf3SPZwYLDnsElGKOOmLOBjAhkLHIPU3Yc_UBjpKS9Sca76DOOCTSBer0BLxA4Ww:1wDHNZ:PicutFEQ5fDYKqLQg91_Uo7vCHSXMGd-7Tdvp2BEcS0",
+        "expire_date": "2026-04-16T08:43:13.993Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "vwljv2fqesmwv4uwkerz25cupq0zqwl1",
+    "fields": {
+        "session_data": ".eJxVjDsOwyAQBe9CHSE-xrAp0_sMaIElOIlAMnYV5e6xJRdJOzPvvZnHbS1-67T4ObErM45dfmHA-KR6mPTAem88trouc-BHwk_b-dQSvW5n-3dQsJd9bXUMQgAZpZSVNmgLMimRrQMKtGMtlJLgBiCJWQw4GpQ5pGTIZDcC-3wB5wQ3gw:1wCqT0:7Pd_elY9jxgB1qqqLSuuGhrBik709gmFoMTOHuIO3Z4",
+        "expire_date": "2026-04-29T02:59:02.882Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "wrdx7qbqc7yzidc3akx0jj7rhk5p24u6",
+    "fields": {
+        "session_data": ".eJxVjEsOwiAUAO_C2hDgFehz6b5nII-fVA0kpV0Z725IutDtzGTezNGxF3f0tLk1siuT7PLLPIVnqkPEB9V746HVfVs9Hwk_bedLi-l1O9u_QaFextYnY8VktUloMKMFGSzBLBNkYYSEHBXqQNEHBcqgyShIzELDJC1SZJ8vwUs26w:1wBWdZ:KEPnjGIhXG9VutnlmZnB-d6fbr9zEx88dO9I2n1YO34",
+        "expire_date": "2026-04-25T11:36:29.595Z"
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$u8hBU1JVJaiuoYCI7yY3lf$TDj9BeC/gSkrSjqFAZg9i4FWNEOaMZRlKSjHx5LsIL4=",
+        "last_login": "2026-04-15T18:37:28.413Z",
+        "is_superuser": false,
+        "username": "sub2pewds10102005@gmail.com",
+        "first_name": "sub2",
+        "last_name": "pewds12",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-11T11:36:28.348Z",
+        "role": "LECTURER",
+        "email": "sub2pewds10102005@gmail.com",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$xX5vUJhUl1O9VleWQqVIaV$4A+GCbqimSMPs/uMv8Xgoueha09KVP+IJC5kgR5PZOk=",
+        "last_login": "2026-04-16T07:57:50.072Z",
+        "is_superuser": true,
+        "username": "sub2pewds10102005@gmail.com",
+        "first_name": "sub2",
+        "last_name": "pewds12",
+        "is_staff": true,
+        "is_active": true,
+        "date_joined": "2026-04-11T11:38:49.849Z",
+        "role": "DEV",
+        "email": "sub2pewds10102005@gmail.com",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$elt1H43dJy7OuTsywYeStF$z37yGm4626mAefhnrjIsstSsgTQg/jCBFpJ1KtOu0qY=",
+        "last_login": "2026-04-15T10:07:25.411Z",
+        "is_superuser": false,
+        "username": "teacher_test",
+        "first_name": "Dr.",
+        "last_name": "Professor",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-11T16:00:49.836Z",
+        "role": "LECTURER",
+        "email": "teacher@test.com",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$0p63r5G1JWCBDwWfLzoTbK$SU4mwb6ymtvd1jmhzWx84N5sY31U8qMyQEeCBBKKgJI=",
+        "last_login": "2026-04-15T10:12:33.215Z",
+        "is_superuser": false,
+        "username": "student_1",
+        "first_name": "Student",
+        "last_name": "Number 1",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-11T16:00:57.930Z",
+        "role": "STUDENT",
+        "email": "student1@uni.edu",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$dRA7nSLn3RoM28gB0Jhi4N$SihJGMoNQjNxbNHjQFNyMpRaov8J4jwx0SvG+n4d6Ps=",
+        "last_login": null,
+        "is_superuser": false,
+        "username": "student_2",
+        "first_name": "Student",
+        "last_name": "Number 2",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-11T16:01:00.192Z",
+        "role": "STUDENT",
+        "email": "student2@uni.edu",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$nmTWyvdX0dZWMWRaffWjmE$Uw6567/KatRPCooFpnCLW7GqnrCED1GpDp+zerV5GEo=",
+        "last_login": null,
+        "is_superuser": false,
+        "username": "student_3",
+        "first_name": "Student",
+        "last_name": "Number 3",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-11T16:01:02.345Z",
+        "role": "STUDENT",
+        "email": "student3@uni.edu",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$YEuxdpioKjXKEt6KOY70Rb$hImFk+WYpB7jMf8DbNTFW6QdzaTz2jM5OOsXc9QPGw8=",
+        "last_login": null,
+        "is_superuser": false,
+        "username": "student_4",
+        "first_name": "Student",
+        "last_name": "Number 4",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-11T16:01:04.589Z",
+        "role": "STUDENT",
+        "email": "student4@uni.edu",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$6wB0yo0HDH67WaUm13dNJG$P1QaoqpoXLFhkPlKFO7CBUXmSYlJa6dV3qK2ZFdIjXo=",
+        "last_login": null,
+        "is_superuser": false,
+        "username": "student_5",
+        "first_name": "Student",
+        "last_name": "Number 5",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-11T16:01:09.618Z",
+        "role": "STUDENT",
+        "email": "student5@uni.edu",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$58L0lwtHHB2DiG4XwJqSnI$+3n73JiKObKsB+0NHFUWLC47zA0mNz8RLMHCHSJ3u6g=",
+        "last_login": null,
+        "is_superuser": false,
+        "username": "student_6",
+        "first_name": "Student",
+        "last_name": "Number 6",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-11T16:01:12.130Z",
+        "role": "STUDENT",
+        "email": "student6@uni.edu",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$spKdy5XbG4F4NkDPY6f39q$S13BGshnFWV4kdQS7K+oMrInN9Ir8E4BpDwh+hZyONM=",
+        "last_login": null,
+        "is_superuser": false,
+        "username": "student_7",
+        "first_name": "Student",
+        "last_name": "Number 7",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-11T16:01:14.390Z",
+        "role": "STUDENT",
+        "email": "student7@uni.edu",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$dbRxZ1ikZcJsSKRm0H29l5$MN/+SQy2et2kRUV+ZLglPNApciEFpIpXdOrE9+uPolA=",
+        "last_login": null,
+        "is_superuser": false,
+        "username": "student_8",
+        "first_name": "Student",
+        "last_name": "Number 8",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-11T16:01:16.629Z",
+        "role": "STUDENT",
+        "email": "student8@uni.edu",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$AYajoy5EQuRXrPZN6gcbkN$zoUzZmU7WOBuKP41cHXUtHK5OS/LNcc2pqscNuXxUdo=",
+        "last_login": null,
+        "is_superuser": false,
+        "username": "student_9",
+        "first_name": "Student",
+        "last_name": "Number 9",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-11T16:01:21.788Z",
+        "role": "STUDENT",
+        "email": "student9@uni.edu",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$MqJMI4n9Wz3RE5CtYOa3Ip$htRtaDVvvdWBTa/jFRRSwfzSVCqugXH1emoHT8N0jiE=",
+        "last_login": null,
+        "is_superuser": false,
+        "username": "student_10",
+        "first_name": "Student",
+        "last_name": "Number 10",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-11T16:01:24.252Z",
+        "role": "STUDENT",
+        "email": "student10@uni.edu",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$BwdwUtN8ql4JG1iY0xycnP$crbGuRo0ih2CsFYaoiSUJ1X0sqWRKqaL6tfWu/O2ZDo=",
+        "last_login": null,
+        "is_superuser": false,
+        "username": "student_11",
+        "first_name": "Student",
+        "last_name": "Number 11",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-11T16:01:26.573Z",
+        "role": "STUDENT",
+        "email": "student11@uni.edu",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$FvXEZXot6r6PhSIOXoM1F1$dLpOpFP42LEXM9CRQAHFav5ISRh4YrnVctU/LzQ5i+g=",
+        "last_login": null,
+        "is_superuser": false,
+        "username": "student_12",
+        "first_name": "Student",
+        "last_name": "Number 12",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-11T16:01:28.843Z",
+        "role": "STUDENT",
+        "email": "student12@uni.edu",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$Zv8AMqxHgMjhmoUGiCKmhH$R/2kIqE/G4kiKKpZUc54eT6McBi88if5eEf3BML7WuI=",
+        "last_login": "2026-04-15T02:41:18.226Z",
+        "is_superuser": false,
+        "username": "lebanhatnguyen@gmail.com",
+        "first_name": "Nguyen",
+        "last_name": "Le",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-12T12:21:59.964Z",
+        "role": "STUDENT",
+        "email": "lebanhatnguyen@gmail.com",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$KxXadaUqISdWcVInMQdI0h$/Odk54n/uj1VYnZAJRBsb8BGN/cytK6vKsULo/NHQsk=",
+        "last_login": "2026-04-12T12:40:53.773Z",
+        "is_superuser": false,
+        "username": "testtest@gmail.com",
+        "first_name": "test",
+        "last_name": "test",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-12T12:40:52.780Z",
+        "role": "STUDENT",
+        "email": "testtest@gmail.com",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$j1FvzlrXovON15npOzNHdQ$IMTfiUmpJ0YF19HtwPsLrkdG+1rHVvcyhliLg9SrGtE=",
+        "last_login": "2026-04-12T15:54:19.006Z",
+        "is_superuser": false,
+        "username": "test_audit@example.com",
+        "first_name": "Test",
+        "last_name": "User",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-12T15:54:16.883Z",
+        "role": "STUDENT",
+        "email": "test_audit@example.com",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$jfHhuSixbHC4wpmpx7Lz8P$7MzMmf/f6HK1uy/5jaGqquVR3MJLCZmLVe360Wn8xn8=",
+        "last_login": "2026-04-13T02:44:54.220Z",
+        "is_superuser": false,
+        "username": "tung@gmail.com",
+        "first_name": "skirk",
+        "last_name": "eual",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-13T02:43:54.066Z",
+        "role": "STUDENT",
+        "email": "tung@gmail.com",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$5vwhZXkk5IFZhxv8ubgagy$soFlvCUItwYICaADG6wploXjo3pRtycHOPbR2TktyeQ=",
+        "last_login": "2026-04-14T10:54:13.433Z",
+        "is_superuser": false,
+        "username": "dev_test@gmail.com",
+        "first_name": "dev_test",
+        "last_name": "dev_test",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-14T10:54:12.296Z",
+        "role": "DEV",
+        "email": "dev_test@gmail.com",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$wRkIb2xVp0ThAlCqeZOi22$8+UaPXp4MxGW5qGBC2Xaa1yPr6J/Ks1Dzw9wY2fTlB0=",
+        "last_login": "2026-04-14T11:53:40.943Z",
+        "is_superuser": false,
+        "username": "audit@example.com",
+        "first_name": "Audit",
+        "last_name": "Admin",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-14T11:53:38.863Z",
+        "role": "DEV",
+        "email": "audit@example.com",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$vQTB5HDlSCQZpWcBy8XoGN$z12r55koo5K92oeBhUjBTZe48MJmgEfZrBMu8tQfbII=",
+        "last_login": "2026-04-14T11:57:23.205Z",
+        "is_superuser": false,
+        "username": "student_audit@example.com",
+        "first_name": "Student",
+        "last_name": "Audit",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-14T11:57:21.140Z",
+        "role": "STUDENT",
+        "email": "student_audit@example.com",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$by56rRsPyRj2WJAvUpRghY$Y0agYVOqi6WX2BQMyG7yQHDHdBAZDljHWzjvczdi5eQ=",
+        "last_login": "2026-04-14T12:04:59.084Z",
+        "is_superuser": false,
+        "username": "audit2@example.com",
+        "first_name": "Audit",
+        "last_name": "Two",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-14T12:04:57.014Z",
+        "role": "DEV",
+        "email": "audit2@example.com",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$K27Q3MsQ9XZYHicxJFINea$1oZ6os8xqtt5iK40ouO+ryMlottPRVD5K0hIXk+jkGM=",
+        "last_login": "2026-04-14T13:52:25.269Z",
+        "is_superuser": false,
+        "username": "spiderman352005@gmail.com",
+        "first_name": "WASSUPPPPPPPPPPPPP",
+        "last_name": "BOIIIIIIIIIIII",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-14T13:51:39.627Z",
+        "role": "DEV",
+        "email": "spiderman352005@gmail.com",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$r4shu9SUr5FLYs5eGXe0mi$teNQ2Hve9SBBSvfKIO8obiOg4kV2N+RWG7nJ3l/u1yU=",
+        "last_login": "2026-04-15T02:48:20.769Z",
+        "is_superuser": false,
+        "username": "tungngu@gmail.com",
+        "first_name": "Tùng",
+        "last_name": "Ngu",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-15T02:33:32.960Z",
+        "role": "STUDENT",
+        "email": "tungngu@gmail.com",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$a5daCgIwWSGy7K6Ll7x5X3$TzLF2D19YCHbIclquV+2os3xJhLsKmLaeVja6csamRM=",
+        "last_login": "2026-04-15T02:42:11.050Z",
+        "is_superuser": false,
+        "username": "memaybeo@gmail.com",
+        "first_name": "dcuj",
+        "last_name": "may",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-15T02:42:10.200Z",
+        "role": "STUDENT",
+        "email": "memaybeo@gmail.com",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$5GMqVfEuQcG44Rfw3Mg0A7$+8gv33mjHEw0UMHOf1ptrSZ+Pim1DcdSO35UaT6Ip0k=",
+        "last_login": "2026-04-15T02:53:57.080Z",
+        "is_superuser": false,
+        "username": "hiijhie@gmail.com",
+        "first_name": "Hej",
+        "last_name": "Hj",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-15T02:53:56.144Z",
+        "role": "STUDENT",
+        "email": "hiijhie@gmail.com",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$bpiee8Xjfl3A8GjNQJIjAa$NOkrGDTqprQagDXAVSG7FfRKZw4mWKxRs8n9suzjVnI=",
+        "last_login": "2026-04-15T02:59:25.181Z",
+        "is_superuser": false,
+        "username": "qhh@gmail.com",
+        "first_name": "Y",
+        "last_name": "T",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-15T02:59:01.783Z",
+        "role": "STUDENT",
+        "email": "qhh@gmail.com",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$IPj9f96VTZeKFFewcFFk7S$jzVBu6Hjtl7rjsLVtCXen5EpOp82aKLBfpW5eezLQpM=",
+        "last_login": "2026-04-15T03:00:56.283Z",
+        "is_superuser": false,
+        "username": "mshan1024@gmail.com",
+        "first_name": "민석",
+        "last_name": "한",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-15T03:00:55.317Z",
+        "role": "STUDENT",
+        "email": "mshan1024@gmail.com",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$hNfFp7RajiMijr6zcS5r6y$RHN4eu+kGY2hBa+En6VDWWX8QxbgVnejtJZLkx3U9ek=",
+        "last_login": "2026-04-15T03:01:19.185Z",
+        "is_superuser": false,
+        "username": "di553361@gmail.com",
+        "first_name": "T",
+        "last_name": "D",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-15T03:01:18.169Z",
+        "role": "STUDENT",
+        "email": "di553361@gmail.com",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$RldH5C6p5wqqTnohrLprJP$XA/VnB3HStdeA317ocH/9HhV/fWcKlpU684KTgI1W3I=",
+        "last_login": "2026-04-15T09:04:46.722Z",
+        "is_superuser": false,
+        "username": "teststudent123@example.com",
+        "first_name": "Test",
+        "last_name": "Student",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-15T09:04:45.466Z",
+        "role": "STUDENT",
+        "email": "teststudent123@example.com",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$p97PHF0d7ANDcmTmzvEvtP$YerG2RLf3VhOJM5lvq4T+k1rJulQ0cWzZyPm7Fh28q4=",
+        "last_login": "2026-04-15T14:38:46.918Z",
+        "is_superuser": false,
+        "username": "testuser123@gmail.com",
+        "first_name": "Test",
+        "last_name": "User",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-15T14:37:35.387Z",
+        "role": "STUDENT",
+        "email": "testuser123@gmail.com",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$nAY8d5jo21N7mhZsdJoZd6$FI56nr/DWYaFeMQK5I5sLlRIqXXveP1Mm6biPduahAk=",
+        "last_login": "2026-04-15T14:38:34.666Z",
+        "is_superuser": false,
+        "username": "yuhiubquang@gmail.com",
+        "first_name": "Anne",
+        "last_name": "Rose",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-15T14:38:33.486Z",
+        "role": "STUDENT",
+        "email": "yuhiubquang@gmail.com",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$SiD3OEU62k5HXnYjeiJHnD$tJeV7bqS6W2FXMZ/qem9HPjhn7FxU/QMsUAqWNRquLg=",
+        "last_login": "2026-04-15T15:08:07.845Z",
+        "is_superuser": false,
+        "username": "student@test.com",
+        "first_name": "Test",
+        "last_name": "Student",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-15T15:04:52.492Z",
+        "role": "STUDENT",
+        "email": "student@test.com",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$XOyCxoOLk9BR3tMP1PMznq$OrMivUersQXJts5uorqINFeGr3U3JLm6UMHZJrTa6cA=",
+        "last_login": "2026-04-15T15:30:48.532Z",
+        "is_superuser": false,
+        "username": "testuser@example.com",
+        "first_name": "Test",
+        "last_name": "User",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-15T15:29:48.877Z",
+        "role": "STUDENT",
+        "email": "testuser@example.com",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$0CRTzOuECln4P5gi2aciz8$AMM2n1kOkPm1ad5MioUvQEQFpWnvqyxu3v0HwBT4Wew=",
+        "last_login": "2026-04-15T18:07:58.542Z",
+        "is_superuser": false,
+        "username": "leanh@test.com",
+        "first_name": "Le",
+        "last_name": "Anh",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-15T18:05:54.252Z",
+        "role": "STUDENT",
+        "email": "leanh@test.com",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$RlkedXF7Q3srvH3O8fJcx4$JFqjIO/u4LlA+mDrDseBgjKjaSRTz/RylEC9YlAYIdk=",
+        "last_login": "2026-04-15T18:10:56.368Z",
+        "is_superuser": false,
+        "username": "leanh@example.com",
+        "first_name": "Le",
+        "last_name": "Anh",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-15T18:09:34.079Z",
+        "role": "STUDENT",
+        "email": "leanh@example.com",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$RK26gCZPHmNHigpZTtz7zz$d8ggNKzcnIv8DycShJXVpmWo8VfNXgUm1AxfHVuEf+M=",
+        "last_login": "2026-04-15T18:26:27.204Z",
+        "is_superuser": false,
+        "username": "leanh@example.org",
+        "first_name": "Le",
+        "last_name": "Anh",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-15T18:13:32.071Z",
+        "role": "STUDENT",
+        "email": "leanh@example.org",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$0JpISnYjFDRiDm5miVyTkn$v6JdqIvjJMyPmVIsQ8HGEElXftq7KdScqvSlluwrx7k=",
+        "last_login": "2026-04-16T06:48:04.498Z",
+        "is_superuser": false,
+        "username": "admin@localhost.com",
+        "first_name": "Admin",
+        "last_name": "User",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-16T06:48:02.503Z",
+        "role": "STUDENT",
+        "email": "admin@localhost.com",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.customuser",
+    "fields": {
+        "password": "pbkdf2_sha256$720000$63VODvdztVPQ2IxoKxyW82$rj3KNjkDjBlMItQQxdmnU2fkHFARHsqX0nFbfc2E31E=",
+        "last_login": "2026-04-16T06:51:30.295Z",
+        "is_superuser": false,
+        "username": "admin@example.com",
+        "first_name": "Test",
+        "last_name": "User",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-04-16T06:51:28.300Z",
+        "role": "STUDENT",
+        "email": "admin@example.com",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "teams.team",
+    "pk": 7,
+    "fields": {
+        "name": "Cyber Shadows",
+        "project_name": "Real-time Encryption Algorithm",
+        "project_description": "Developing a high-speed DSP based encryption",
+        "leader": 26,
+        "created_at": "2026-04-11T16:00:57.222Z"
+    }
+},
+{
+    "model": "teams.team",
+    "pk": 8,
+    "fields": {
+        "name": "Robo Pulse",
+        "project_name": "Autonomous Drone Navigation",
+        "project_description": "Using Fourier transforms for signal processing in drone sensors",
+        "leader": 30,
+        "created_at": "2026-04-11T16:01:08.874Z"
+    }
+},
+{
+    "model": "teams.team",
+    "pk": 9,
+    "fields": {
+        "name": "Signal Sentinels",
+        "project_name": "Weather Forecast Radar",
+        "project_description": "Filtering noise from satellite weather data",
+        "leader": 34,
+        "created_at": "2026-04-11T16:01:21.048Z"
+    }
+},
+{
+    "model": "teams.team",
+    "pk": 10,
+    "fields": {
+        "name": "ultimate dsp",
+        "project_name": "automatic A+",
+        "project_description": "heheboi",
+        "leader": 38,
+        "created_at": "2026-04-12T12:48:05.486Z"
+    }
+},
+{
+    "model": "teams.team",
+    "pk": 12,
+    "fields": {
+        "name": "CallingAPI",
+        "project_name": "update new AI CHAT BOT",
+        "project_description": "ran out of token",
+        "leader": 43,
+        "created_at": "2026-04-15T02:34:10.329Z"
+    }
+},
+{
+    "model": "teams.team",
+    "pk": 13,
+    "fields": {
+        "name": "hehe",
+        "project_name": "update doc",
+        "project_description": "Test.1",
+        "leader": 44,
+        "created_at": "2026-04-15T02:42:29.386Z"
+    }
+},
+{
+    "model": "teams.team",
+    "pk": 14,
+    "fields": {
+        "name": "Republic of Korean Navy",
+        "project_name": "",
+        "project_description": "",
+        "leader": 45,
+        "created_at": "2026-04-15T02:55:33.713Z"
+    }
+},
+{
+    "model": "teams.team",
+    "pk": 15,
+    "fields": {
+        "name": "Test Team 123",
+        "project_name": "",
+        "project_description": "",
+        "leader": 50,
+        "created_at": "2026-04-15T14:40:10.275Z"
+    }
+},
+{
+    "model": "teams.team",
+    "pk": 16,
+    "fields": {
+        "name": "Test Team",
+        "project_name": "",
+        "project_description": "",
+        "leader": 52,
+        "created_at": "2026-04-15T15:08:29.222Z"
+    }
+},
+{
+    "model": "teams.team",
+    "pk": 21,
+    "fields": {
+        "name": "Verification Team",
+        "project_name": "DSP Verification Project",
+        "project_description": "Verifying multi-file upload functionality.",
+        "leader": 60,
+        "created_at": "2026-04-15T18:13:56.230Z"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 1,
+    "fields": {
+        "user": [
+            "sub2pewds10102005@gmail.com"
+        ],
+        "team": 10,
+        "role": "Member"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 26,
+    "fields": {
+        "user": [
+            "student_1"
+        ],
+        "team": 7,
+        "role": "Team Leader"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 27,
+    "fields": {
+        "user": [
+            "student_2"
+        ],
+        "team": 7,
+        "role": "Software Engineer"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 28,
+    "fields": {
+        "user": [
+            "student_3"
+        ],
+        "team": 7,
+        "role": "Systems Architect"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 29,
+    "fields": {
+        "user": [
+            "student_4"
+        ],
+        "team": 7,
+        "role": "Documentation Lead"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 30,
+    "fields": {
+        "user": [
+            "student_5"
+        ],
+        "team": 8,
+        "role": "Team Leader"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 31,
+    "fields": {
+        "user": [
+            "student_6"
+        ],
+        "team": 8,
+        "role": "Software Engineer"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 32,
+    "fields": {
+        "user": [
+            "student_7"
+        ],
+        "team": 8,
+        "role": "Systems Architect"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 33,
+    "fields": {
+        "user": [
+            "student_8"
+        ],
+        "team": 8,
+        "role": "Documentation Lead"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 34,
+    "fields": {
+        "user": [
+            "student_9"
+        ],
+        "team": 9,
+        "role": "Team Leader"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 35,
+    "fields": {
+        "user": [
+            "student_10"
+        ],
+        "team": 9,
+        "role": "Software Engineer"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 36,
+    "fields": {
+        "user": [
+            "student_11"
+        ],
+        "team": 9,
+        "role": "Systems Architect"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 37,
+    "fields": {
+        "user": [
+            "student_12"
+        ],
+        "team": 9,
+        "role": "Documentation Lead"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 38,
+    "fields": {
+        "user": [
+            "lebanhatnguyen@gmail.com"
+        ],
+        "team": 10,
+        "role": "hảo hán"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 39,
+    "fields": {
+        "user": [
+            "testtest@gmail.com"
+        ],
+        "team": 10,
+        "role": "Member"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 40,
+    "fields": {
+        "user": [
+            "test_audit@example.com"
+        ],
+        "team": 10,
+        "role": "Member"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 41,
+    "fields": {
+        "user": [
+            "tung@gmail.com"
+        ],
+        "team": null,
+        "role": "Member"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 42,
+    "fields": {
+        "user": [
+            "student_audit@example.com"
+        ],
+        "team": null,
+        "role": "Member"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 43,
+    "fields": {
+        "user": [
+            "tungngu@gmail.com"
+        ],
+        "team": 12,
+        "role": "Endministrator"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 44,
+    "fields": {
+        "user": [
+            "memaybeo@gmail.com"
+        ],
+        "team": 13,
+        "role": "Coder"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 45,
+    "fields": {
+        "user": [
+            "hiijhie@gmail.com"
+        ],
+        "team": 14,
+        "role": "Member"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 46,
+    "fields": {
+        "user": [
+            "qhh@gmail.com"
+        ],
+        "team": null,
+        "role": "Member"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 47,
+    "fields": {
+        "user": [
+            "mshan1024@gmail.com"
+        ],
+        "team": null,
+        "role": "Member"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 48,
+    "fields": {
+        "user": [
+            "di553361@gmail.com"
+        ],
+        "team": 14,
+        "role": "Member"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 49,
+    "fields": {
+        "user": [
+            "teststudent123@example.com"
+        ],
+        "team": null,
+        "role": "Member"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 50,
+    "fields": {
+        "user": [
+            "testuser123@gmail.com"
+        ],
+        "team": 15,
+        "role": "Member"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 51,
+    "fields": {
+        "user": [
+            "yuhiubquang@gmail.com"
+        ],
+        "team": null,
+        "role": "Member"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 52,
+    "fields": {
+        "user": [
+            "student@test.com"
+        ],
+        "team": 16,
+        "role": "Member"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 53,
+    "fields": {
+        "user": [
+            "testuser@example.com"
+        ],
+        "team": 16,
+        "role": "Member"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 58,
+    "fields": {
+        "user": [
+            "leanh@test.com"
+        ],
+        "team": null,
+        "role": "Member"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 59,
+    "fields": {
+        "user": [
+            "leanh@example.com"
+        ],
+        "team": null,
+        "role": "Member"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 60,
+    "fields": {
+        "user": [
+            "leanh@example.org"
+        ],
+        "team": 21,
+        "role": "Member"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 61,
+    "fields": {
+        "user": [
+            "admin@localhost.com"
+        ],
+        "team": null,
+        "role": "Member"
+    }
+},
+{
+    "model": "teams.student",
+    "pk": 62,
+    "fields": {
+        "user": [
+            "admin@example.com"
+        ],
+        "team": null,
+        "role": "Member"
+    }
+},
+{
+    "model": "teams.lecturer",
+    "pk": 1,
+    "fields": {
+        "user": [
+            "sub2pewds10102005@gmail.com"
+        ],
+        "department": ""
+    }
+},
+{
+    "model": "teams.lecturer",
+    "pk": 8,
+    "fields": {
+        "user": [
+            "teacher_test"
+        ],
+        "department": "DSP Engineering"
+    }
+},
+{
+    "model": "teams.lecturer",
+    "pk": 9,
+    "fields": {
+        "user": [
+            "sub2pewds10102005@gmail.com"
+        ],
+        "department": ""
+    }
+},
+{
+    "model": "teams.developer",
+    "pk": 1,
+    "fields": {
+        "user": [
+            "dev_test@gmail.com"
+        ],
+        "access_level": 1
+    }
+},
+{
+    "model": "teams.developer",
+    "pk": 2,
+    "fields": {
+        "user": [
+            "audit@example.com"
+        ],
+        "access_level": 1
+    }
+},
+{
+    "model": "teams.developer",
+    "pk": 3,
+    "fields": {
+        "user": [
+            "audit2@example.com"
+        ],
+        "access_level": 1
+    }
+},
+{
+    "model": "teams.developer",
+    "pk": 4,
+    "fields": {
+        "user": [
+            "spiderman352005@gmail.com"
+        ],
+        "access_level": 1
+    }
+},
+{
+    "model": "teams.classdocument",
+    "pk": 1,
+    "fields": {
+        "title": "test document",
+        "file": "class_docs/test_document_uhbule.docx",
+        "uploaded_at": "2026-04-11T12:15:15.461Z",
+        "uploaded_by": [
+            "sub2pewds10102005@gmail.com"
+        ]
+    }
+},
+{
+    "model": "teams.assignment",
+    "pk": 7,
+    "fields": {
+        "title": "Basics of DSP",
+        "description": "Exercise on signal convolution.",
+        "instruction_file": "",
+        "deadline": "2026-04-04T16:00:51.674Z",
+        "created_at": "2026-04-11T16:00:52.269Z",
+        "created_by": [
+            "teacher_test"
+        ],
+        "grades_released": true
+    }
+},
+{
+    "model": "teams.assignment",
+    "pk": 8,
+    "fields": {
+        "title": "Midterm Report",
+        "description": "Analysis of real-time signals.",
+        "instruction_file": "",
+        "deadline": "2026-04-11T18:00:51.674Z",
+        "created_at": "2026-04-11T16:00:54.665Z",
+        "created_by": [
+            "teacher_test"
+        ],
+        "grades_released": false
+    }
+},
+{
+    "model": "teams.assignment",
+    "pk": 9,
+    "fields": {
+        "title": "Final Prototype",
+        "description": "Working hardware demonstration.",
+        "instruction_file": "",
+        "deadline": "2026-06-10T16:00:51.674Z",
+        "created_at": "2026-04-11T16:00:56.208Z",
+        "created_by": [
+            "teacher_test"
+        ],
+        "grades_released": false
+    }
+},
+{
+    "model": "teams.teamsubmission",
+    "pk": 1,
+    "fields": {
+        "team": 7,
+        "assignment": 7,
+        "title": "Module 1 Submission",
+        "file": "",
+        "submitted_at": "2026-04-11T16:01:06.829Z",
+        "submitted_by": [
+            "student_1"
+        ],
+        "grade": 98,
+        "feedback": "QA Verification - Score Updated"
+    }
+},
+{
+    "model": "teams.teamsubmission",
+    "pk": 2,
+    "fields": {
+        "team": 7,
+        "assignment": 8,
+        "title": "Midterm Draft",
+        "file": "",
+        "submitted_at": "2026-04-11T16:01:07.857Z",
+        "submitted_by": [
+            "student_1"
+        ],
+        "grade": null,
+        "feedback": ""
+    }
+},
+{
+    "model": "teams.teamsubmission",
+    "pk": 3,
+    "fields": {
+        "team": 8,
+        "assignment": 7,
+        "title": "Module 1 Submission",
+        "file": "",
+        "submitted_at": "2026-04-11T16:01:18.982Z",
+        "submitted_by": [
+            "student_5"
+        ],
+        "grade": 95,
+        "feedback": "Perfect signal filtering logic. Well documented."
+    }
+},
+{
+    "model": "teams.teamsubmission",
+    "pk": 4,
+    "fields": {
+        "team": 8,
+        "assignment": 8,
+        "title": "Midterm Draft",
+        "file": "",
+        "submitted_at": "2026-04-11T16:01:19.992Z",
+        "submitted_by": [
+            "student_5"
+        ],
+        "grade": null,
+        "feedback": ""
+    }
+},
+{
+    "model": "teams.teamsubmission",
+    "pk": 5,
+    "fields": {
+        "team": 9,
+        "assignment": 7,
+        "title": "Module 1 Submission",
+        "file": "",
+        "submitted_at": "2026-04-11T16:01:31.182Z",
+        "submitted_by": [
+            "student_9"
+        ],
+        "grade": 95,
+        "feedback": "Perfect signal filtering logic. Well documented."
+    }
+},
+{
+    "model": "teams.teamsubmission",
+    "pk": 6,
+    "fields": {
+        "team": 9,
+        "assignment": 8,
+        "title": "Midterm Draft",
+        "file": "",
+        "submitted_at": "2026-04-11T16:01:32.254Z",
+        "submitted_by": [
+            "student_9"
+        ],
+        "grade": null,
+        "feedback": ""
+    }
+},
+{
+    "model": "teams.systempulse",
+    "pk": 1,
+    "fields": {
+        "timestamp": "2026-04-16T06:39:58.296Z",
+        "status": "WARNING",
+        "latency": 1800.4212379455566,
+        "info": ""
+    }
+},
+{
+    "model": "teams.systempulse",
+    "pk": 2,
+    "fields": {
+        "timestamp": "2026-04-16T06:40:00.319Z",
+        "status": "WARNING",
+        "latency": 1168.49684715271,
+        "info": ""
+    }
+},
+{
+    "model": "teams.systempulse",
+    "pk": 3,
+    "fields": {
+        "timestamp": "2026-04-16T06:40:02.777Z",
+        "status": "WARNING",
+        "latency": 1610.7454299926758,
+        "info": ""
+    }
+},
+{
+    "model": "teams.systempulse",
+    "pk": 4,
+    "fields": {
+        "timestamp": "2026-04-16T06:59:15.307Z",
+        "status": "OPERATIONAL",
+        "latency": 187.4527931213379,
+        "info": ""
+    }
+},
+{
+    "model": "teams.systempulse",
+    "pk": 5,
+    "fields": {
+        "timestamp": "2026-04-16T07:42:07.959Z",
+        "status": "WARNING",
+        "latency": 1134.3655586242676,
+        "info": ""
+    }
+},
+{
+    "model": "teams.systempulse",
+    "pk": 6,
+    "fields": {
+        "timestamp": "2026-04-16T07:57:52.239Z",
+        "status": "OPERATIONAL",
+        "latency": 1119.0121173858643,
+        "info": ""
+    }
+},
+{
+    "model": "teams.systemerror",
+    "pk": 1,
+    "fields": {
+        "timestamp": "2026-04-16T06:40:49.108Z",
+        "message": "“D:\\DSP Class Web\\gallery” does not exist",
+        "stack_trace": "Traceback (most recent call last):\n  File \"D:\\DSP Class Web\\.venv\\lib\\site-packages\\django\\core\\handlers\\base.py\", line 197, in _get_response\n    response = wrapped_callback(request, *callback_args, **callback_kwargs)\n  File \"D:\\DSP Class Web\\.venv\\lib\\site-packages\\django\\views\\static.py\", line 51, in serve\n    raise Http404(_(\"“%(path)s” does not exist\") % {\"path\": fullpath})\ndjango.http.response.Http404: “D:\\DSP Class Web\\gallery” does not exist\n",
+        "url": "/gallery/",
+        "user": null,
+        "is_resolved": false
+    }
+},
+{
+    "model": "teams.systemerror",
+    "pk": 2,
+    "fields": {
+        "timestamp": "2026-04-16T06:40:54.102Z",
+        "message": "“D:\\DSP Class Web\\favicon.ico” does not exist",
+        "stack_trace": "Traceback (most recent call last):\n  File \"D:\\DSP Class Web\\.venv\\lib\\site-packages\\django\\core\\handlers\\base.py\", line 197, in _get_response\n    response = wrapped_callback(request, *callback_args, **callback_kwargs)\n  File \"D:\\DSP Class Web\\.venv\\lib\\site-packages\\django\\views\\static.py\", line 51, in serve\n    raise Http404(_(\"“%(path)s” does not exist\") % {\"path\": fullpath})\ndjango.http.response.Http404: “D:\\DSP Class Web\\favicon.ico” does not exist\n",
+        "url": "/favicon.ico",
+        "user": null,
+        "is_resolved": false
+    }
+},
+{
+    "model": "teams.systemerror",
+    "pk": 3,
+    "fields": {
+        "timestamp": "2026-04-16T06:41:04.118Z",
+        "message": "division by zero",
+        "stack_trace": "Traceback (most recent call last):\n  File \"D:\\DSP Class Web\\.venv\\lib\\site-packages\\django\\core\\handlers\\base.py\", line 197, in _get_response\n    response = wrapped_callback(request, *callback_args, **callback_kwargs)\n  File \"D:\\DSP Class Web\\teams\\views.py\", line 436, in gallery_view\n    x = 1 / 0\nZeroDivisionError: division by zero\n",
+        "url": "/",
+        "user": null,
+        "is_resolved": false
+    }
+},
+{
+    "model": "teams.systemerror",
+    "pk": 4,
+    "fields": {
+        "timestamp": "2026-04-16T06:41:14.773Z",
+        "message": "“D:\\DSP Class Web\\dev\\dashboard” does not exist",
+        "stack_trace": "Traceback (most recent call last):\n  File \"D:\\DSP Class Web\\.venv\\lib\\site-packages\\django\\core\\handlers\\base.py\", line 197, in _get_response\n    response = wrapped_callback(request, *callback_args, **callback_kwargs)\n  File \"D:\\DSP Class Web\\.venv\\lib\\site-packages\\django\\views\\static.py\", line 51, in serve\n    raise Http404(_(\"“%(path)s” does not exist\") % {\"path\": fullpath})\ndjango.http.response.Http404: “D:\\DSP Class Web\\dev\\dashboard” does not exist\n",
+        "url": "/dev/dashboard/",
+        "user": null,
+        "is_resolved": false
+    }
+},
+{
+    "model": "teams.systemerror",
+    "pk": 5,
+    "fields": {
+        "timestamp": "2026-04-16T06:56:11.996Z",
+        "message": "“D:\\DSP Class Web\\gallery” does not exist",
+        "stack_trace": "Traceback (most recent call last):\n  File \"D:\\DSP Class Web\\.venv\\lib\\site-packages\\django\\core\\handlers\\base.py\", line 197, in _get_response\n    response = wrapped_callback(request, *callback_args, **callback_kwargs)\n  File \"D:\\DSP Class Web\\.venv\\lib\\site-packages\\django\\views\\static.py\", line 51, in serve\n    raise Http404(_(\"“%(path)s” does not exist\") % {\"path\": fullpath})\ndjango.http.response.Http404: “D:\\DSP Class Web\\gallery” does not exist\n",
+        "url": "/gallery/",
+        "user": null,
+        "is_resolved": false
+    }
+},
+{
+    "model": "teams.systemerror",
+    "pk": 6,
+    "fields": {
+        "timestamp": "2026-04-16T06:56:42.105Z",
+        "message": "division by zero",
+        "stack_trace": "Traceback (most recent call last):\n  File \"D:\\DSP Class Web\\.venv\\lib\\site-packages\\django\\core\\handlers\\base.py\", line 197, in _get_response\n    response = wrapped_callback(request, *callback_args, **callback_kwargs)\n  File \"D:\\DSP Class Web\\teams\\views.py\", line 436, in gallery_view\n    x = 1 / 0\nZeroDivisionError: division by zero\n",
+        "url": "/",
+        "user": null,
+        "is_resolved": false
+    }
+},
+{
+    "model": "teams.systemerror",
+    "pk": 7,
+    "fields": {
+        "timestamp": "2026-04-16T06:56:51.571Z",
+        "message": "“D:\\DSP Class Web\\dev\\dashboard” does not exist",
+        "stack_trace": "Traceback (most recent call last):\n  File \"D:\\DSP Class Web\\.venv\\lib\\site-packages\\django\\core\\handlers\\base.py\", line 197, in _get_response\n    response = wrapped_callback(request, *callback_args, **callback_kwargs)\n  File \"D:\\DSP Class Web\\.venv\\lib\\site-packages\\django\\views\\static.py\", line 51, in serve\n    raise Http404(_(\"“%(path)s” does not exist\") % {\"path\": fullpath})\ndjango.http.response.Http404: “D:\\DSP Class Web\\dev\\dashboard” does not exist\n",
+        "url": "/dev/dashboard/",
+        "user": null,
+        "is_resolved": false
+    }
+},
+{
+    "model": "teams.systemerror",
+    "pk": 8,
+    "fields": {
+        "timestamp": "2026-04-16T06:57:13.959Z",
+        "message": "division by zero",
+        "stack_trace": "Traceback (most recent call last):\n  File \"D:\\DSP Class Web\\.venv\\lib\\site-packages\\django\\core\\handlers\\base.py\", line 197, in _get_response\n    response = wrapped_callback(request, *callback_args, **callback_kwargs)\n  File \"D:\\DSP Class Web\\teams\\views.py\", line 436, in gallery_view\n    x = 1 / 0\nZeroDivisionError: division by zero\n",
+        "url": "/",
+        "user": null,
+        "is_resolved": false
+    }
+},
+{
+    "model": "teams.systemerror",
+    "pk": 9,
+    "fields": {
+        "timestamp": "2026-04-16T06:57:32.872Z",
+        "message": "division by zero",
+        "stack_trace": "Traceback (most recent call last):\n  File \"D:\\DSP Class Web\\.venv\\lib\\site-packages\\django\\core\\handlers\\base.py\", line 197, in _get_response\n    response = wrapped_callback(request, *callback_args, **callback_kwargs)\n  File \"D:\\DSP Class Web\\teams\\views.py\", line 436, in gallery_view\n    x = 1 / 0\nZeroDivisionError: division by zero\n",
+        "url": "/",
+        "user": null,
+        "is_resolved": false
+    }
+},
+{
+    "model": "teams.systemerror",
+    "pk": 10,
+    "fields": {
+        "timestamp": "2026-04-16T06:57:49.040Z",
+        "message": "division by zero",
+        "stack_trace": "Traceback (most recent call last):\n  File \"D:\\DSP Class Web\\.venv\\lib\\site-packages\\django\\core\\handlers\\base.py\", line 197, in _get_response\n    response = wrapped_callback(request, *callback_args, **callback_kwargs)\n  File \"D:\\DSP Class Web\\teams\\views.py\", line 436, in gallery_view\n    x = 1 / 0\nZeroDivisionError: division by zero\n",
+        "url": "/",
+        "user": null,
+        "is_resolved": false
+    }
+},
+{
+    "model": "teams.systemerror",
+    "pk": 11,
+    "fields": {
+        "timestamp": "2026-04-16T07:42:14.663Z",
+        "message": "“D:\\DSP Class Web\\favicon.ico” does not exist",
+        "stack_trace": "Traceback (most recent call last):\n  File \"D:\\DSP Class Web\\.venv\\lib\\site-packages\\django\\core\\handlers\\base.py\", line 197, in _get_response\n    response = wrapped_callback(request, *callback_args, **callback_kwargs)\n  File \"D:\\DSP Class Web\\.venv\\lib\\site-packages\\django\\views\\static.py\", line 51, in serve\n    raise Http404(_(\"“%(path)s” does not exist\") % {\"path\": fullpath})\ndjango.http.response.Http404: “D:\\DSP Class Web\\favicon.ico” does not exist\n",
+        "url": "/favicon.ico",
+        "user": null,
+        "is_resolved": false
+    }
+},
+{
+    "model": "teams.systemerror",
+    "pk": 12,
+    "fields": {
+        "timestamp": "2026-04-16T07:57:43.951Z",
+        "message": "“D:\\DSP Class Web\\favicon.ico” does not exist",
+        "stack_trace": "Traceback (most recent call last):\n  File \"D:\\DSP Class Web\\.venv\\lib\\site-packages\\django\\core\\handlers\\base.py\", line 197, in _get_response\n    response = wrapped_callback(request, *callback_args, **callback_kwargs)\n  File \"D:\\DSP Class Web\\.venv\\lib\\site-packages\\django\\views\\static.py\", line 51, in serve\n    raise Http404(_(\"“%(path)s” does not exist\") % {\"path\": fullpath})\ndjango.http.response.Http404: “D:\\DSP Class Web\\favicon.ico” does not exist\n",
+        "url": "/favicon.ico",
+        "user": null,
+        "is_resolved": false
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 1,
+    "fields": {
+        "action_time": "2026-04-14T18:23:57.851Z",
+        "user": [
+            "sub2pewds10102005@gmail.com"
+        ],
+        "content_type": [
+            "teams",
+            "team"
+        ],
+        "object_id": "11",
+        "object_repr": "niga",
+        "action_flag": 3,
+        "change_message": ""
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 2,
+    "fields": {
+        "action_time": "2026-04-14T18:25:03.636Z",
+        "user": [
+            "sub2pewds10102005@gmail.com"
+        ],
+        "content_type": [
+            "teams",
+            "team"
+        ],
+        "object_id": "10",
+        "object_repr": "ultimate dsp",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"Name\", \"Project name\"]}}]"
+    }
+}
+]

@@ -11,21 +11,28 @@ class CustomUser(AbstractUser):
     )
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='STUDENT')
     email = models.EmailField(unique=True)
+    is_approved = models.BooleanField(default=True) # Default True for existing users
 
     def __str__(self):
         return f"{self.get_full_name()} ({self.role})"
 
     def save(self, *args, **kwargs):
-        if self.role == 'DEV':
-            self.is_staff = True
-            self.is_superuser = True
-        elif self.role == 'LECTURER':
-            self.is_staff = True
-            self.is_superuser = False
+        # Administrative privileges are only granted to APPROVED users
+        if self.is_approved:
+            if self.role == 'DEV':
+                self.is_staff = True
+                self.is_superuser = True
+            elif self.role == 'LECTURER':
+                self.is_staff = True
+                self.is_superuser = False
+            else:
+                self.is_staff = False
+                self.is_superuser = False
         else:
-            # Prevent non-admin roles from accessing the admin console
+            # Unapproved users strictly have NO staff/admin access
             self.is_staff = False
             self.is_superuser = False
+            
         super().save(*args, **kwargs)
 
 class SystemSettings(models.Model):
@@ -125,3 +132,29 @@ class SubmissionFile(models.Model):
 
     def __str__(self):
         return f"File for {self.submission.title}"
+
+class SystemPulse(models.Model):
+    STATUS_CHOICES = (
+        ('OPERATIONAL', 'Operational'),
+        ('WARNING', 'Warning'),
+        ('CRITICAL', 'Critical'),
+        ('DOWN', 'Down'),
+    )
+    timestamp = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='OPERATIONAL')
+    latency = models.FloatField(help_text="Response time in ms")
+    info = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+
+class SystemError(models.Model):
+    timestamp = models.DateTimeField(auto_now_add=True)
+    message = models.CharField(max_length=255)
+    stack_trace = models.TextField()
+    url = models.CharField(max_length=255, blank=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    is_resolved = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-timestamp']

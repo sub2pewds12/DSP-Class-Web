@@ -1,0 +1,80 @@
+{% extends 'teams/base.html' %}
+{% load static %}
+
+{% block extra_head %}
+<style>
+    .pending-gateway {
+        min-height: 100vh;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        background-color: var(--bg-surface);
+        background-image: 
+            radial-gradient(circle at 90% 10%, rgba(211, 47, 47, 0.08) 0%, transparent 45%),
+            radial-gradient(circle at 10% 90%, rgba(211, 47, 47, 0.08) 0%, transparent 45%);
+    }
+
+    .info-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px) saturate(180%);
+        border: 1px solid var(--glass-border);
+        border-radius: 2.5rem;
+        padding: 4rem;
+        box-shadow: var(--shadow-xl);
+        max-width: 600px;
+        width: 100%;
+        text-align: center;
+    }
+
+    .status-icon {
+        width: 100px;
+        height: 100px;
+        background: rgba(211, 47, 47, 0.1);
+        color: var(--primary-red);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        margin: 0 auto 2rem;
+        animation: pulse-red 2s infinite;
+    }
+
+    @keyframes pulse-red {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.4); }
+        70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(211, 47, 47, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(211, 47, 47, 0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pending-gateway">
+    <div class="info-card animate__animated animate__zoomIn">
+        <div class="status-icon">
+            <i class="bi bi-shield-lock-fill"></i>
+        </div>
+        
+        <h2 class="fw-900 text-main mb-3">Verification Pending</h2>
+        <p class="text-muted fw-500 mb-5">
+            Thank you for registering! Your request for elevated access (Lecturer/Admin) has been submitted to the system administrator for manual verification.
+        </p>
+
+        <div class="p-3 bg-secondary-soft rounded-4 border border-light border-opacity-10 mb-5 text-start">
+            <div class="d-flex gap-3 align-items-center">
+                <i class="bi bi-info-circle-fill text-primary-red h4 mb-0"></i>
+                <div class="small text-main">
+                    Approval typically takes <strong>12-24 hours</strong>. You will receive access once your credentials have been verified.
+                </div>
+            </div>
+        </div>
+
+        <a href="{% url 'login' %}" class="btn btn-primary-red px-5 py-3 rounded-pill fw-bold shadow-sm">
+            Back to Sign In <i class="bi bi-arrow-right ms-2"></i>
+        </a>
+    </div>
+</div>
+{% endblock %}

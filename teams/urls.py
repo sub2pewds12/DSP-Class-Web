@@ -9,6 +9,10 @@ urlpatterns = [
     path('teacher/', views.teacher_dashboard, name='teacher_dashboard'),
     path('guide/', views.guide_view, name='guide'),
     path('dev-dashboard/', views.dev_dashboard, name='dev_dashboard'),
+    path('storage-analytics/', views.storage_analytics_view, name='storage_analytics'),
+    path('pending-approval/', views.pending_approval_view, name='pending_approval'),
+    path('user/<int:user_id>/approve/', views.approve_user, name='approve_user'),
+    path('user/<int:user_id>/deny/', views.deny_user, name='deny_user'),
     
     # Auth
     path('signup/', views.signup_view, name='signup'),

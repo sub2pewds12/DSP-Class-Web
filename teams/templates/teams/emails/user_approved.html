@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0d0d0d;
+            margin: 0;
+            padding: 0;
+            color: #e0e0e0;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #1a1a1a;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid #333;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+        .header {
+            background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            color: #ffffff;
+            margin: 0;
+            font-size: 24px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .content {
+            padding: 40px;
+            line-height: 1.6;
+        }
+        .success-box {
+            background-color: rgba(46, 125, 50, 0.1);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 20px 0;
+            border: 1px solid rgba(46, 125, 50, 0.2);
+            text-align: center;
+        }
+        .footer {
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            background-color: #141414;
+        }
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background-color: #d32f2f;
+            color: #ffffff !important;
+            text-decoration: none;
+            border-radius: 100px;
+            font-weight: bold;
+            margin-top: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(211, 47, 47, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Application Approved</h1>
+        </div>
+        <div class="content">
+            <p>Hello {{ user_name }},</p>
+            <p>Welcome to the DSP Class Platform! We are pleased to inform you that your registration as a <strong>{{ role_name }}</strong> has been verified and approved.</p>
+            
+            <div class="success-box">
+                <p style="margin:0; color: #4caf50; font-weight: bold;">Your workspace is now ready.</p>
+            </div>
+
+            <p>You can now log in to access your modules, team details, and platform tools.</p>
+            
+            <div style="text-align: center;">
+                <a href="{{ login_url }}" class="btn">Get Started</a>
+            </div>
+        </div>
+        <div class="footer">
+            &copy; 2026 DSP Class Platform. Sent with focus on security and excellence.
+        </div>
+    </div>
+</body>
+</html>
