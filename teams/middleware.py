@@ -39,7 +39,7 @@ Timestamp: {error_log.timestamp}
 {stack}
 
 Log ID: {error_log.id}
-Resolve here: http://localhost:8000/dev/dashboard/ (Local)
+Resolve here: {request.build_absolute_uri('/dev-dashboard/')}
 """
             recipient = getattr(settings, 'EMAIL_HOST_USER', 'sub2pewds10102005@gmail.com')
             

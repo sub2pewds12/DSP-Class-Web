@@ -89,6 +89,15 @@
         background: rgba(var(--primary-red-rgb, 211, 47, 47), 0.05);
     }
 
+    .error-resolved {
+        opacity: 0.4;
+        filter: grayscale(0.5);
+        transition: all 0.6s ease;
+    }
+    .error-row {
+        transition: all 0.6s ease;
+    }
+
     /* Monitoring Styles - Reimagined as High-Altitude Histogram */
     .histogram-layout {
         display: flex;
@@ -437,28 +446,43 @@
                     <h5 class="fw-800 mb-0">System Infrastructure</h5>
                 </div>
                 <div class="row g-3">
-                    <div class="col-6">
+                    <!-- Row 1: Primary Control -->
+                    <div class="col-4">
                         <a href="{{ portals.admin }}" target="_blank" class="portal-tile">
                             <i class="bi bi-shield-lock-fill h4 mb-0 text-primary-red"></i>
-                            <span class="small fw-bold">Django Admin</span>
+                            <span class="small fw-bold">Site Admin</span>
                         </a>
                     </div>
-                    <div class="col-6">
+                    <div class="col-4">
                         <a href="{{ portals.render }}" target="_blank" class="portal-tile">
                             <i class="bi bi-clouds-fill h4 mb-0 text-primary-red"></i>
                             <span class="small fw-bold">Render Dash</span>
                         </a>
                     </div>
-                    <div class="col-6">
-                        <a href="{% url 'storage_analytics' %}" class="portal-tile">
-                            <i class="bi bi-cloud-check-fill h4 mb-0 text-primary-red"></i>
-                            <span class="small fw-bold">Cloud Command</span>
-                        </a>
-                    </div>
-                    <div class="col-6">
+                    <div class="col-4">
                         <a href="{{ portals.gmail }}" target="_blank" class="portal-tile">
                             <i class="bi bi-envelope-check-fill h4 mb-0 text-primary-red"></i>
                             <span class="small fw-bold">Gmail Auth</span>
+                        </a>
+                    </div>
+
+                    <!-- Row 2: Infrastructure & Monitoring -->
+                    <div class="col-4">
+                        <a href="{% url 'storage_analytics' %}" class="portal-tile">
+                            <i class="bi bi-cloud-check-fill h4 mb-0 text-primary-red"></i>
+                            <span class="small fw-bold">Cloud Stat</span>
+                        </a>
+                    </div>
+                    <div class="col-4">
+                        <a href="{{ portals.uptime_status }}" target="_blank" class="portal-tile">
+                            <i class="bi bi-activity h4 mb-0 text-primary-red"></i>
+                            <span class="small fw-bold">Public Health</span>
+                        </a>
+                    </div>
+                    <div class="col-4">
+                        <a href="{{ portals.uptime_dashboard }}" target="_blank" class="portal-tile">
+                            <i class="bi bi-speedometer2 h4 mb-0 text-primary-red"></i>
+                            <span class="small fw-bold">Monitor Config</span>
                         </a>
                     </div>
                 </div>
@@ -531,8 +555,13 @@
         <div class="col-12">
             <div class="stat-card glass-card">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="fw-bold mb-0"><i class="bi bi-exclamation-triangle-fill text-primary-red me-2"></i>Fatal Error & Incident Log</h5>
-                    <span class="badge bg-danger rounded-pill">{{ sys_info.unresolved_errors }} Unresolved</span>
+                    <div class="d-flex align-items-center gap-3">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-exclamation-triangle-fill text-primary-red me-2"></i>Fatal Error & Incident Log</h5>
+                        <button class="btn btn-sm btn-outline-success rounded-pill px-3" id="sanitizeBtn" onclick="sanitizeLogs()">
+                            <i class="bi bi-shield-check me-1"></i>Verify & Sanitize
+                        </button>
+                    </div>
+                    <span class="badge bg-danger rounded-pill" id="unresolvedBadge">{{ sys_info.unresolved_errors }} Unresolved</span>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle">
@@ -555,8 +584,17 @@
                                 <td><code>{{ error.url }}</code></td>
                                 <td><span class="badge bg-secondary-soft text-main">{{ error.user.username|default:"Guest" }}</span></td>
                                 <td>
-                                    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" 
-                                            onclick="alert('Traceback (Log ID: {{ error.id }}):\n\n{{ error.stack_trace|escapejs|truncatechars:2000 }}')">View Stack</button>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" 
+                                                onclick="alert('Traceback (Log ID: {{ error.id }}):\n\n{{ error.stack_trace|escapejs|truncatechars:2000 }}')">View Stack</button>
+                                        {% if not error.is_resolved %}
+                                        <button class="btn btn-sm btn-success rounded-pill px-3" 
+                                                onclick="resolveError({{ error.id }})">Resolve</button>
+                                        <button class="btn btn-sm btn-outline-primary rounded-pill px-2" 
+                                                data-bs-toggle="tooltip" title="Resolve all similar"
+                                                onclick="bulkResolve('{{ error.message|escapejs }}')"><i class="bi bi-stack"></i></button>
+                                        {% endif %}
+                                    </div>
                                 </td>
                             </tr>
                             {% empty %}
@@ -797,6 +835,66 @@
             roleChart.data.datasets[0].backgroundColor[1] = tokens.cyan;
             roleChart.options.plugins.legend.labels.color = tokens.text;
             roleChart.update();
+        }
+    }
+
+    async function resolveError(errorId) {
+        const row = document.getElementById(`error-${errorId}`);
+        try {
+            const resp = await fetch(`/incident/${errorId}/resolve/`);
+            const data = await resp.json();
+            if (data.status === 'success') {
+                row.classList.add('error-resolved');
+                // Remove buttons
+                const btnContainer = row.querySelector('td:last-child .d-flex');
+                if (btnContainer) btnContainer.innerHTML = '<span class="badge bg-success-soft text-success rounded-pill px-3">Resolved</span>';
+                updateUnresolvedCount(-1);
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    async function bulkResolve(message) {
+        if (!confirm(`Resolve ALL incidents with message: "${message}"?`)) return;
+        
+        const formData = new FormData();
+        formData.append('message', message);
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+        try {
+            const resp = await fetch('/incident/bulk-resolve/', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await resp.json();
+            if (data.status === 'success') {
+                location.reload(); // Hard refresh to update everything for bulk
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    async function sanitizeLogs() {
+        const btn = document.getElementById('sanitizeBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Verifying...';
+        
+        try {
+            const resp = await fetch('/incident/sanitize/');
+            const data = await resp.json();
+            alert(data.message);
+            location.reload();
+        } catch (e) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-shield-check me-1"></i>Verify & Sanitize';
+        }
+    }
+
+    function updateUnresolvedCount(delta) {
+        const badge = document.getElementById('unresolvedBadge');
+        if (badge) {
+            let count = parseInt(badge.textContent) || 0;
+            count += delta;
+            badge.textContent = `${count} Unresolved`;
+            if (count === 0) badge.className = 'badge bg-success rounded-pill';
         }
     }
 

@@ -13,6 +13,7 @@ urlpatterns = [
     path('pending-approval/', views.pending_approval_view, name='pending_approval'),
     path('user/<int:user_id>/approve/', views.approve_user, name='approve_user'),
     path('user/<int:user_id>/deny/', views.deny_user, name='deny_user'),
+    path('health-check/', views.health_check, name='health_check'),
     
     # Auth
     path('signup/', views.signup_view, name='signup'),
@@ -34,4 +35,9 @@ urlpatterns = [
     path('grade/<int:pk>/', views.grade_submission, name='grade_submission'),
     path('document/<int:pk>/delete/', views.delete_document, name='delete_document'),
     path('submission/<int:pk>/delete/', views.delete_submission, name='delete_submission'),
+    
+    # Incident Logic
+    path('incident/<int:pk>/resolve/', views.resolve_error, name='resolve_error'),
+    path('incident/bulk-resolve/', views.bulk_resolve_errors, name='bulk_resolve_errors'),
+    path('incident/sanitize/', views.sanitize_logs, name='sanitize_logs'),
 ]

@@ -2,6 +2,12 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse, JsonResponse
+import requests
+
+def health_check(request):
+    """Lighweight endpoint for external monitoring services."""
+    return HttpResponse("SYSTEM_OPERATIONAL", status=200)
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
@@ -18,7 +24,7 @@ from .forms import (
 
 @login_required
 def dashboard_view(request, team_id=None):
-    if not request.user.is_approved:
+    if not getattr(request.user, 'is_approved', False):
         return redirect('pending_approval')
         
     if request.user.role == 'LECTURER':
@@ -178,7 +184,7 @@ def guide_view(request):
 
 @login_required
 def teacher_dashboard(request):
-    if not request.user.is_approved:
+    if not getattr(request.user, 'is_approved', False):
         return redirect('pending_approval')
         
     if request.user.role not in ['LECTURER', 'DEV']:
@@ -358,7 +364,7 @@ def signup_view(request):
 
 @login_required
 def dev_dashboard(request):
-    if not request.user.is_approved:
+    if not getattr(request.user, 'is_approved', False):
         return redirect('pending_approval')
         
     if request.user.role != 'DEV':
@@ -538,8 +544,9 @@ def dev_dashboard(request):
         'admin': '/admin/',
         'render': 'https://dashboard.render.com',
         'cloudinary': f"https://cloudinary.com/console/cloud/{settings.CLOUDINARY_STORAGE['CLOUD_NAME']}",
-        'postgres': 'https://dashboard.render.com',
         'gmail': 'https://myaccount.google.com/apppasswords',
+        'uptime_status': 'https://stats.uptimerobot.com/eX7GdUhav0',
+        'uptime_dashboard': 'https://dashboard.uptimerobot.com/monitors',
     }
 
     # 2. Optimized DB Telemetry
@@ -610,7 +617,7 @@ def dev_dashboard(request):
     })
 
 def gallery_view(request):
-    if request.user.is_authenticated and not request.user.is_approved:
+    if request.user.is_authenticated and not getattr(request.user, 'is_approved', False):
         return redirect('pending_approval')
     teams = Team.objects.prefetch_related('members__user').all()
     return render(request, 'teams/gallery.html', {'teams': teams})
@@ -666,7 +673,7 @@ def deny_user(request, user_id):
 
 @login_required
 def storage_analytics_view(request):
-    if not request.user.is_approved:
+    if not getattr(request.user, 'is_approved', False):
         return redirect('pending_approval')
         
     if request.user.role != 'DEV':
@@ -763,3 +770,86 @@ def view_grades(request, pk):
 
 def pending_approval_view(request):
     return render(request, 'registration/pending_approval.html')
+
+@login_required
+def resolve_error(request, pk):
+    if getattr(request.user, 'role', '') != 'DEV':
+        return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
+    
+    from .models import SystemError
+    error = get_object_or_404(SystemError, pk=pk)
+    error.is_resolved = True
+    error.save()
+    
+    return JsonResponse({'status': 'success', 'message': f'Incident {pk} resolved.'})
+
+@login_required
+def bulk_resolve_errors(request):
+    if getattr(request.user, 'role', '') != 'DEV':
+        return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
+    
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'POST required'}, status=405)
+        
+    message = request.POST.get('message')
+    if not message:
+        return JsonResponse({'status': 'error', 'message': 'No message provided'}, status=400)
+    
+    from .models import SystemError
+    count = SystemError.objects.filter(message=message, is_resolved=False).update(is_resolved=True)
+    
+    return JsonResponse({'status': 'success', 'message': f'Resolved {count} similar incidents.'})
+
+@login_required
+def sanitize_logs(request):
+    if getattr(request.user, 'role', '') != 'DEV':
+        return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
+    
+    from .models import SystemError
+    from concurrent.futures import ThreadPoolExecutor
+    
+    # Limit to top 100 most recent unresolved incidents to keep it fast
+    unresolved = list(SystemError.objects.filter(is_resolved=False).order_by('-timestamp')[:100])
+    
+    # Map URLs to errors to avoid redundant probes
+    url_to_errors = {}
+    for err in unresolved:
+        if err.url:
+            if err.url not in url_to_errors:
+                url_to_errors[err.url] = []
+            url_to_errors[err.url].append(err)
+            
+    if not url_to_errors:
+        return JsonResponse({'status': 'success', 'message': 'No unique URLs found in the recent log backlog.'})
+        
+    resolved_ids = []
+    
+    def check_url(url):
+        try:
+            abs_url = request.build_absolute_uri(url)
+            # Parallel verification with a tight timeout
+            resp = requests.get(abs_url, timeout=1.5, verify=False)
+            if resp.status_code < 400:
+                return url
+        except Exception:
+            pass
+        return None
+
+    # Process unique URLs in parallel (max 10 workers)
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        results = list(executor.map(check_url, url_to_errors.keys()))
+        
+    # Map fixed URLs back to error IDs
+    for url in results:
+        if url:
+            for err in url_to_errors[url]:
+                resolved_ids.append(err.id)
+                
+    # Batch resolve the identified incidents
+    if resolved_ids:
+        SystemError.objects.filter(id__in=resolved_ids).update(is_resolved=True)
+                
+    return JsonResponse({
+        'status': 'success', 
+        'message': f'Optimization complete. Processed top 100 incidents. {len(resolved_ids)} fixed incidents auto-resolved.'
+    })
