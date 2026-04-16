@@ -109,7 +109,7 @@ class TeamSubmission(models.Model):
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='submissions')
     assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE, related_name='submissions', null=True, blank=True)
     title = models.CharField(max_length=255)
-    file = models.FileField(upload_to='team_submissions/')
+    file = models.FileField(upload_to='team_submissions/', null=True, blank=True) # Deprecated, moving to SubmissionFile
     submitted_at = models.DateTimeField(auto_now_add=True)
     submitted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     grade = models.IntegerField(null=True, blank=True)
@@ -117,3 +117,11 @@ class TeamSubmission(models.Model):
 
     def __str__(self):
         return f"{self.team.name} - {self.title}"
+
+class SubmissionFile(models.Model):
+    submission = models.ForeignKey(TeamSubmission, on_delete=models.CASCADE, related_name='files')
+    file = models.FileField(upload_to='team_submissions/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"File for {self.submission.title}"

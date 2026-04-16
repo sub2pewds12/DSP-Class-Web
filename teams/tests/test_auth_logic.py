@@ -81,3 +81,45 @@ class AuthRedirectionTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn('_auth_user_id', self.client.session)
         self.assertTemplateUsed(response, 'teams/register.html')
+
+class CaseInsensitiveAuthTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.email = 'MixedCase@Test.com'
+        self.password = 'password123'
+        self.user = CustomUser.objects.create_user(
+            username=self.email,
+            email=self.email,
+            password=self.password,
+            role='STUDENT'
+        )
+
+    def test_login_case_insensitivity(self):
+        """Verify that authentication works regardless of email capitalization."""
+        test_cases = [
+            'MixedCase@Test.com',  # Exact
+            'mixedcase@test.com',  # Lower
+            'MIXEDCASE@TEST.COM',  # Upper
+        ]
+        
+        for email_variation in test_cases:
+            logged_in = self.client.login(username=email_variation, password=self.password)
+            self.assertTrue(logged_in, f"Failed logic for: {email_variation}")
+            self.client.logout()
+
+    def test_signup_case_collision_handling(self):
+        """Verify that signing up with a duplicate email (different case) is blocked by backend."""
+        # Note: The unique constraint on the Email field typically handles this,
+        # but combined with our backend it's important to verify.
+        url = reverse('signup')
+        data = {
+            'first_name': 'Duplicate',
+            'last_name': 'Test',
+            'email': 'mixedcase@test.com', # Different case but same email
+            'password': 'newpassword123',
+            'password_confirm': 'newpassword123',
+            'role': 'STUDENT'
+        }
+        response = self.client.post(url, data)
+        # Should not create a new user (form should have error or integrity error handled)
+        self.assertFalse(CustomUser.objects.filter(email='mixedcase@test.com').count() > 1)

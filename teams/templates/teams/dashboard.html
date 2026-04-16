@@ -3,6 +3,15 @@
 
 {% block content %}
 <div class="container mt-4 pb-5">
+    {% if is_read_only %}
+        <div class="alert alert-info border-0 rounded-4 shadow-sm mb-4 d-flex align-items-center">
+            <i class="bi bi-shield-check h4 mb-0 me-3"></i>
+            <div>
+                <div class="fw-bold">Read-Only System Operator Mode</div>
+                <div class="small opacity-75">You are currently inspecting **{{ team.name }}** as a Developer. Administrative actions are disabled.</div>
+            </div>
+        </div>
+    {% endif %}
     
     <div class="bento-container">
         
@@ -28,7 +37,7 @@
                 <p class="text-muted small mb-0 fw-500" style="line-height: 1.6;">{{ team.project_description|default:"Your team hasn't defined their project objectives yet. Project leaders can update this description below." }}</p>
             </div>
 
-            {% if team.leader == student %}
+            {% if team.leader == student and not is_read_only %}
                 <div class="border-top pt-4 mt-auto">
                     <h6 class="small fw-bold text-uppercase mb-3">Project Settings</h6>
                     <form method="post" class="row g-2">
@@ -53,9 +62,11 @@
 
         <!-- Area: Team Members (Small Bento) -->
         <div class="bento-card row-2">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h5 class="mb-0 fw-bold">Team Members</h5>
-                <button class="btn btn-sm btn-outline-danger rounded-pill px-3" style="font-size: 0.7rem;" data-bs-toggle="modal" data-bs-target="#roleModal">Edit Role</button>
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <h5 class="fw-bold text-main mb-0">Team Members</h5>
+                {% if not is_read_only %}
+                    <button class="btn btn-sm btn-outline-danger rounded-pill px-3" style="font-size: 0.7rem;" data-bs-toggle="modal" data-bs-target="#roleModal">Edit Role</button>
+                {% endif %}
             </div>
             <div class="member-list scroll-hide" style="overflow-y: auto;">
                 {% for member in team.members.all %}
@@ -119,53 +130,18 @@
                                             <i class="bi bi-clock-history me-1"></i> Awaiting Grade
                                         </div>
                                     {% endif %}
-                                {% if assign.team_submission %}
-                                    <button class="btn btn-primary-red btn-sm w-100 rounded-pill mt-2 py-2" style="font-size: 0.75rem" data-bs-toggle="modal" data-bs-target="#submitModal{{ assign.id }}">Update Submission</button>
+                                    {% if not is_read_only %}
+                                        <button class="btn btn-primary-red btn-sm w-100 rounded-pill mt-2 py-2" style="font-size: 0.75rem" data-bs-toggle="modal" data-bs-target="#submitModal{{ assign.id }}">Update Submission</button>
+                                    {% endif %}
                                 {% else %}
-                                    <button class="btn btn-primary-red btn-sm w-100 rounded-pill mt-2 py-2" style="font-size: 0.75rem" data-bs-toggle="modal" data-bs-target="#submitModal{{ assign.id }}">Submit Work</button>
+                                    {% if not is_read_only %}
+                                        <button class="btn btn-primary-red btn-sm w-100 rounded-pill mt-2 py-2" style="font-size: 0.75rem" data-bs-toggle="modal" data-bs-target="#submitModal{{ assign.id }}">Submit Work</button>
+                                    {% endif %}
                                 {% endif %}
                             </div>
                         </div>
                     </div>
 
-                    <!-- Assignment Submission Modal -->
-                    <div class="modal fade" id="submitModal{{ assign.id }}" tabindex="-1">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content border-0 shadow-lg rounded-5 overflow-hidden">
-                                <form method="post" enctype="multipart/form-data">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="upload_assignment" value="1">
-                                    <input type="hidden" name="assignment_id" value="{{ assign.id }}">
-                                    <div class="modal-header border-0 bg-dark text-white py-4">
-                                        <h5 class="modal-title fw-bold">Submit Assignment: {{ assign.title }}</h5>
-                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                    </div>
-                                    <div class="modal-body p-4">
-                                        <!-- Scoped Error Handling -->
-                                        {% if assign_form.errors and error_id == assign.id|stringformat:"s" %}
-                                            <div class="alert alert-danger rounded-4 border-0 small mb-4">
-                                                {{ assign_form.errors }}
-                                            </div>
-                                        {% endif %}
-                                        <div class="mb-4">
-                                            <label class="form-label small fw-bold text-uppercase text-muted">Submission Title</label>
-                                            {{ assign_form.title }}
-                                        </div>
-                                        <div class="mb-4">
-                                            <label class="form-label small fw-bold text-uppercase text-muted">File Attachment (PDF/ZIP)</label>
-                                            {{ assign_form.file }}
-                                        </div>
-                                        <div class="p-3 bg-red-soft rounded-4 small text-danger">
-                                            <i class="bi bi-info-circle-fill me-2"></i> Note: New uploads will replace any previous files for this assignment.
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer border-0 p-4">
-                                        <button type="submit" class="btn btn-primary-red w-100 py-3 rounded-pill shadow submit-btn-loading">Upload Project File</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
                 {% endfor %}
             </div>
         </div>
@@ -224,7 +200,7 @@
                         </div>
                     </div>
                     <div class="modal-footer border-0 p-4">
-                        <button type="submit" class="btn btn-primary-red w-100 py-3 rounded-pill">Save Profile</button>
+                        <button type="submit" class="btn btn-primary-red w-100 py-3 rounded-pill">Confirm Team Role</button>
                     </div>
                 </form>
             </div>
@@ -232,6 +208,47 @@
     </div>
 
     </div>
+
+    <!-- Assignment Submission Modals (Global Level to avoid backdrop issues) -->
+    {% for assign in assignments %}
+    <div class="modal fade" id="submitModal{{ assign.id }}" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-5 overflow-hidden">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="upload_assignment" value="1">
+                    <input type="hidden" name="assignment_id" value="{{ assign.id }}">
+                    <div class="modal-header border-0 bg-dark text-white py-4">
+                        <h5 class="modal-title fw-bold">Submit Assignment: {{ assign.title }}</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        {% if assign_form.errors and error_id == assign.id|stringformat:"s" %}
+                            <div class="alert alert-danger rounded-4 border-0 small mb-4">
+                                {{ assign_form.errors }}
+                            </div>
+                        {% endif %}
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold text-uppercase text-muted">Submission Title</label>
+                            {{ assign_form.title }}
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold text-uppercase text-muted">Attachments (Docs, Images, PNG, ZIP...)</label>
+                            {{ assign_form.files }}
+                            <div class="form-text small opacity-75">You can select up to 10 files at once. Each file must be a document or image.</div>
+                        </div>
+                        <div class="p-3 bg-red-soft rounded-4 small text-danger">
+                            <i class="bi bi-info-circle-fill me-2"></i> Note: New uploads will replace **all** previously submitted files for this assignment.
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 p-4">
+                        <button type="submit" class="btn btn-primary-red w-100 py-3 rounded-pill shadow submit-btn-loading">Upload Project File</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
 </div>
 
 <script>

@@ -11,66 +11,109 @@ from .forms import (
 )
 
 @login_required
-def dashboard_view(request):
+def dashboard_view(request, team_id=None):
     if request.user.role == 'LECTURER':
         return redirect('teacher_dashboard')
     
     # Clear any stale modal error markers
     if 'form_error_id' in request.session:
-        # We check if this was a refresh or a new visit.
-        # Actually, simpler: pop it so it only lasts one reload.
         error_id = request.session.pop('form_error_id')
-        # We re-inject it into the context for the template, then it's gone from session.
     else:
         error_id = None
-    # DEV can access student view directly, no auto-redirect to dev_dashboard
-    
+
     student, created = Student.objects.get_or_create(user=request.user)
     documents = ClassDocument.objects.all().order_by('-uploaded_at')
     assignments = Assignment.objects.all().order_by('-deadline')
     
-    if student.team:
+    # Determine the target team and access mode
+    is_read_only = False
+    if team_id:
+        team = get_object_or_404(Team, id=team_id)
+        # Developers can see any team; others must be members
+        if request.user.role == 'DEV':
+            if not team.members.filter(user=request.user).exists():
+                is_read_only = True
+        else:
+            if not team.members.filter(user=request.user).exists():
+                messages.error(request, "Access restricted. You can only view dashboards for teams you belong to.")
+                return redirect('dashboard')
+    else:
         team = student.team
-        if not team.leader:
-            team.leader = student
+
+    if team:
+        if not team.leader and team.members.exists():
+            # Auto-assign first member as leader if missing (legacy or dev-created)
+            team.leader = team.members.first()
             team.save()
 
-        if request.method == 'POST':
+        # Disable POST processing if in read-only mode
+        if request.method == 'POST' and not is_read_only:
             if 'update_project' in request.POST and student == team.leader:
                 project_form = TeamProjectForm(request.POST, instance=team)
                 if project_form.is_valid():
                     project_form.save()
                     messages.success(request, "Project details updated successfully.")
-                    return redirect('dashboard')
+                    return redirect('dashboard_with_team', team_id=team.id) if team_id else redirect('dashboard')
             
             elif 'update_role' in request.POST:
                 role_form = StudentRoleForm(request.POST, instance=student)
                 if role_form.is_valid():
                     role_form.save()
                     messages.success(request, "Your role has been updated.")
-                    return redirect('dashboard')
+                    return redirect('dashboard_with_team', team_id=team.id) if team_id else redirect('dashboard')
 
             elif 'upload_assignment' in request.POST:
                 assign_id = request.POST.get('assignment_id')
                 assignment = get_object_or_404(Assignment, id=assign_id)
                 assign_form = AssignmentSubmissionForm(request.POST, request.FILES)
+                
                 if assign_form.is_valid():
+                    files = request.FILES.getlist('files')
+                    
+                    # 1. Validate File Count
+                    if len(files) > 10:
+                        messages.error(request, "Maximum of 10 files allowed.")
+                        request.session['form_error_id'] = assign_id
+                        return redirect('dashboard_with_team', team_id=team.id) if team_id else redirect('dashboard')
+                    
+                    # 2. Validate Total Size (50MB)
+                    total_size = sum(f.size for f in files)
+                    if total_size > 50 * 1024 * 1024:
+                        messages.error(request, "Total file size exceeds 50MB limit.")
+                        request.session['form_error_id'] = assign_id
+                        return redirect('dashboard_with_team', team_id=team.id) if team_id else redirect('dashboard')
+                    
+                    # 3. Validate File Types (No executables)
+                    allowed_exts = ['.pdf', '.zip', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.png', '.jpg', '.jpeg', '.gif']
+                    import os
+                    for f in files:
+                        ext = os.path.splitext(f.name)[1].lower()
+                        if ext not in allowed_exts:
+                            messages.error(request, f"File type '{ext}' not allowed. Only documents and images are permitted.")
+                            request.session['form_error_id'] = assign_id
+                            return redirect('dashboard_with_team', team_id=team.id) if team_id else redirect('dashboard')
+
+                    # All validations passed
                     sub = assign_form.save(commit=False)
                     sub.team = team
                     sub.assignment = assignment
                     sub.submitted_by = request.user
                     sub.save()
                     
+                    # Create SubmissionFile objects
+                    from .models import SubmissionFile
+                    for f in files:
+                        SubmissionFile.objects.create(submission=sub, file=f)
+                    
                     status = "on time"
                     if sub.submitted_at and assignment.deadline and sub.submitted_at > assignment.deadline:
                         status = "LATE"
-                    messages.success(request, f"Successfully submitted to '{assignment.title}' ({status}).")
-                    return redirect('dashboard')
+                    messages.success(request, f"Successfully submitted {len(files)} files to '{assignment.title}' ({status}).")
+                    return redirect('dashboard_with_team', team_id=team.id) if team_id else redirect('dashboard')
                 else:
-                    # Keep track of which assignment has errors
                     request.session['form_error_id'] = assign_id
 
-        # Annotate assignments with student's team submissions
+        # Annotate assignments
         for a in assignments:
             a.team_submission = team.submissions.filter(assignment=a).order_by('-submitted_at').first()
             if a.team_submission and a.team_submission.submitted_at and a.deadline:
@@ -78,10 +121,10 @@ def dashboard_view(request):
             else:
                 a.is_late = False
 
-        # Only initialize new forms if they weren't already created (and potentially failed) during POST
-        if 'project_form' not in locals(): project_form = TeamProjectForm(instance=team)
-        if 'role_form' not in locals(): role_form = StudentRoleForm(instance=student)
-        if 'assign_form' not in locals(): assign_form = AssignmentSubmissionForm()
+        # Forms (only for members with appropriate permissions)
+        project_form = TeamProjectForm(instance=team)
+        role_form = StudentRoleForm(instance=student)
+        assign_form = AssignmentSubmissionForm()
 
         return render(request, 'teams/dashboard.html', {
             'student': student, 
@@ -92,6 +135,7 @@ def dashboard_view(request):
             'role_form': role_form,
             'assign_form': assign_form,
             'error_id': error_id,
+            'is_read_only': is_read_only,
         })
 
     if request.method == 'POST':
@@ -150,7 +194,8 @@ def teacher_dashboard(request):
     # Prefetch with safer logic
     teams = Team.objects.prefetch_related(
         'members__user', 
-        'submissions__assignment'
+        'submissions__assignment',
+        'submissions__files'
     ).all().order_by('name')
     
     documents = ClassDocument.objects.all().order_by('-uploaded_at')
@@ -266,7 +311,7 @@ def signup_view(request):
                 Lecturer.objects.get_or_create(user=user)
             
             # Automatically log the user in after signup
-            login(request, user)
+            login(request, user, backend='teams.backends.CaseInsensitiveModelBackend')
             messages.success(request, f"Welcome, {user.first_name}! Your account has been created successfully.")
             return redirect('dashboard')
     else:

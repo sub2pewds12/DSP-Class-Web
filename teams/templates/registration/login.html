@@ -64,8 +64,6 @@
     }
 
     .form-control-gateway {
-        background: rgba(255, 255, 255, 0.8) !important;
-        border: 1px solid rgba(0,0,0,0.05);
         padding: 1rem 1.25rem;
         font-weight: 500;
         transition: all 0.3s ease;
@@ -73,8 +71,7 @@
 
     .form-control-gateway:focus {
         border-color: var(--primary-red);
-        box-shadow: 0 0 0 4px rgba(211, 47, 47, 0.1);
-        background: #fff !important;
+        box-shadow: 0 0 0 4px var(--primary-red-glow);
     }
 
     .btn-gateway {
@@ -126,14 +123,32 @@
                                 <a href="{% url 'password_reset' %}" class="small text-decoration-none text-primary-red fw-bold" style="font-size: 0.65rem;">Recovery?</a>
                             {% endif %}
                         </div>
-                        <input 
-                            type="{{ field.field.widget.input_type }}" 
-                            name="{{ field.name }}" 
-                            id="{{ field.id_for_label }}"
-                            class="form-control form-control-gateway rounded-4 {% if field.errors %}is-invalid{% endif %}" 
-                            placeholder="{% if field.name == 'username' %}name@example.com{% else %}••••••••{% endif %}" 
-                            required
-                        >
+                        {% if field.name == 'password' %}
+                            <div class="position-relative">
+                                <input 
+                                    type="password" 
+                                    name="{{ field.name }}" 
+                                    id="{{ field.id_for_label }}"
+                                    class="form-control form-control-gateway rounded-4 {% if field.errors %}is-invalid{% endif %}" 
+                                    placeholder="••••••••" 
+                                    required
+                                    style="padding-right: 3rem;"
+                                >
+                                <button type="button" class="btn position-absolute end-0 top-50 translate-middle-y border-0 bg-transparent pe-3 text-muted opacity-75 hover-opacity-100" id="togglePassword" style="z-index: 10;">
+                                    <i class="bi bi-eye-fill h5 mb-0" id="eyeIcon"></i>
+                                </button>
+                            </div>
+                        {% else %}
+                            <input 
+                                type="{{ field.field.widget.input_type }}" 
+                                name="{{ field.name }}" 
+                                id="{{ field.id_for_label }}"
+                                class="form-control form-control-gateway rounded-4 {% if field.errors %}is-invalid{% endif %}" 
+                                placeholder="{% if field.name == 'username' %}name@example.com{% else %}••••••••{% endif %}" 
+                                required
+                            >
+                        {% endif %}
+                        
                         {% if field.errors %}
                             <div class="text-danger small mt-1 fw-bold" style="font-size: 0.65rem;">{{ field.errors.0 }}</div>
                         {% endif %}
@@ -144,6 +159,22 @@
                     Sign In to Dashboard <i class="bi bi-arrow-right-short ms-1 h5 mb-0"></i>
                 </button>
             </form>
+
+            <script>
+                document.getElementById('togglePassword')?.addEventListener('click', function() {
+                    const passwordInput = document.getElementById('{{ form.password.id_for_label }}');
+                    const eyeIcon = document.getElementById('eyeIcon');
+                    if (passwordInput.type === 'password') {
+                        passwordInput.type = 'text';
+                        eyeIcon.classList.remove('bi-eye-fill');
+                        eyeIcon.classList.add('bi-eye-slash-fill');
+                    } else {
+                        passwordInput.type = 'password';
+                        eyeIcon.classList.remove('bi-eye-slash-fill');
+                        eyeIcon.classList.add('bi-eye-fill');
+                    }
+                });
+            </script>
 
             <div class="text-center mt-5 pt-3 border-top border-secondary border-opacity-10">
                 <p class="mb-3 small text-muted fw-500">New researcher joining the team?</p>

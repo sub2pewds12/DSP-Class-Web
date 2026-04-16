@@ -107,10 +107,23 @@ class AssignmentForm(forms.ModelForm):
             if name != 'deadline':
                 field.widget.attrs.update({'class': 'form-control'})
 
+class MultipleFileInput(forms.ClearableFileInput):
+    allow_multiple_selected = True
+
 class AssignmentSubmissionForm(forms.ModelForm):
+    files = forms.FileField(
+        widget=MultipleFileInput(attrs={
+            'multiple': True,
+            'class': 'form-control',
+            'accept': '.pdf,.zip,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg,.gif'
+        }),
+        label="Select Files",
+        help_text="Upload up to 10 files (max 50MB total)"
+    )
+
     class Meta:
         model = TeamSubmission
-        fields = ['title', 'file']
+        fields = ['title']
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

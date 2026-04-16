@@ -37,5 +37,5 @@ Detailed guides are available in the [`docs/`](docs/) folder:
 - [Authentication & Roles](docs/authentication_guide.md) — User roles and the registration flow.
 - [Database Management](docs/database_management.md) — Migrations, resets, and storage architecture.
 - [Deployment Checklist](docs/deployment_checklists.md) — Environment variables and Render setup.
-- [Quick Commands](docs/quick_commands.md) — Common terminal commands and essential links.
+- [Quick Commands](docs/quick_commands.md) — Essential command line tools and reference links.
 - [Testing Manual](docs/testing_manual.md) — Automated tests and manual verification steps.

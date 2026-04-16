@@ -64,6 +64,11 @@ INSTALLED_APPS = [
 
 AUTH_USER_MODEL = 'teams.CustomUser'
 
+AUTHENTICATION_BACKENDS = [
+    'teams.backends.CaseInsensitiveModelBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

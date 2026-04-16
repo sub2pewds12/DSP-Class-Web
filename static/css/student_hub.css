@@ -219,9 +219,13 @@ body {
 
 /* Specific Gateway Overrides */
 .form-control-gateway {
-    background-color: var(--bg-main) !important;
+    background-color: var(--bg-soft) !important;
     border-color: var(--glass-border) !important;
     color: var(--text-main) !important;
+}
+
+[data-theme="dark"] .form-control-gateway {
+    background-color: var(--bg-main) !important;
 }
 
 [data-theme="light"] .form-control-gateway {

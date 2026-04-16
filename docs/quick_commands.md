@@ -24,7 +24,7 @@ A one-page cheat sheet for common commands and essential links.
 
 ---
 
-## 💻 Terminal Commands (PowerShell)
+## 💻 Console Commands (PowerShell)
 
 ### Server Management
 | Action | Command |
