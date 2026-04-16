@@ -8,27 +8,13 @@ from django.utils.html import strip_tags
 from django.utils import timezone
 import math, platform, sys, django, threading
 from .models import Student, Team, Lecturer, CustomUser, ClassDocument, TeamSubmission, Assignment, SystemSettings
+from .utils.email_service import send_html_email
 from .forms import (
     TeamRegistrationForm, UserRegistrationForm, DocumentUploadForm, 
     TeamProjectForm, StudentRoleForm, AssignmentForm, AssignmentSubmissionForm,
     GradeSubmissionForm
 )
 
-def send_html_email(subject, template_name, context, recipient_list):
-    """Helper to send branded HTML emails with plain-text fallback."""
-    try:
-        html_message = render_to_string(template_name, context)
-        plain_message = strip_tags(html_message)
-        send_mail(
-            subject=subject,
-            message=plain_message,
-            from_email=None,
-            recipient_list=recipient_list,
-            html_message=html_message,
-            fail_silently=True
-        )
-    except Exception:
-        pass
 
 @login_required
 def dashboard_view(request, team_id=None):

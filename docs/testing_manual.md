@@ -14,17 +14,22 @@ This project includes a comprehensive test suite to ensure that authentication a
 ## 2. What Is Being Tested?
 - **Auth Redirections**: Verifies that Students go to `/hub/` and Lecturers are redirected to `/teacher/`.
 - **Permissions**: Verifies that Students are blocked from the Lecturer and Developer dashboards.
-- **Role Enforcement**: Verifies that public signup always creates Student accounts regardless of request data.
+- **Role Enforcement**: Verifies that public signup correctly assigns Student, Lecturer, or Dev roles and triggers the `is_approved` security gate where necessary.
+- **Approval System**: Verifies that unapproved staff are blocked from dashboards and correctly redirected to the pending status page.
 - **Team Join**: Verifies that students can join or create teams, and the first member is assigned as leader.
 - **Grading Flow**: Verifies that only Lecturers and Developers can grade submissions and release results.
 
 ## 3. Manual Verification Checklist
-Before every `git push`, you should perform these manual checks:
-1.  **Signup**: Does a new user get redirected to `/hub/` and is the success message shown?
-2.  **Login**: Does the login form correctly show error messages for incorrect credentials?
-3.  **Role Redirect**: Does a Lecturer login redirect to `/teacher/` automatically?
-4.  **Security**: Does accessing `/teacher/` while logged out redirect to `/login/`?
-5.  **Gallery**: Does `/gallery/` load without requiring login and show all teams?
-6.  **Assignments**: Can a Lecturer create an assignment and can a Student submit to it?
-7.  **Grading**: Can a Lecturer grade a submission and release results?
-8.  **Dev Dashboard**: Does `/dev-dashboard/` show analytics charts and system info (DEV role only)?
+Before every major release, perform these manual infrastructure checks:
+
+### Registration & Approval Workflow
+1.  **Staff Signup**: Register as a **Lecturer**. Are you redirected to `/pending-approval/`?
+2.  **Admin Alert**: Check the administrator email. Was there an alert about the new access request?
+3.  **Approval**: Log in as a **Dev**, visit the `/dev-dashboard/`, and **Approve** the new Lecturer.
+4.  **Welcome Email**: As the new Lecturer, did you receive a premium HTML "Welcome" email?
+5.  **Denial**: Repeat with a test account and verify the "Denial" email is sent and access remains blocked.
+
+### Infrastructure & Alerts
+6.  **Critical Errors**: Deliberately trigger an error (or use the shell to create a `SystemError`). Does the admin receive a **Critical Alert** email?
+7.  **Uptime Pulse**: Run `python manage.py log_pulse`. Does the dashboard update with the latest latency?
+8.  **Prod Uptime**: Ensure an external pinger (UptimeRobot) is active and correctly hitting the root URL.

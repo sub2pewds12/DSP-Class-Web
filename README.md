@@ -16,8 +16,9 @@ A comprehensive, production-ready platform designed to manage student team regis
 - **Manual Grading**: Dedicated numeric score (0-100) and qualitative feedback system.
 - **Result Release Control**: Grades are kept private until deliberately released by the lecturer.
 - **Resource Repository**: Central hub for class materials and PDFs.
-- **Public Gallery**: Showcase page for all teams and their project descriptions.
-- **User Guide**: Built-in guide page for students and lecturers.
+- **Role-Based Approval**: Secure gatekeeping where Lecturers and Admins require manual verification before access.
+- **HTML Email Notifications**: Branded, high-fidelity alerts for registration requests, approvals, denials, and system failures.
+- **System Telemetry & Monitoring**: Real-time tracking of DB latency and runtime errors with automated emergency alerting.
 - **Dev Dashboard**: System diagnostics, analytics charts, and infrastructure portals for developers.
 - **Seed Engine**: Custom `seed_dsp` command for surgical test data management.
 

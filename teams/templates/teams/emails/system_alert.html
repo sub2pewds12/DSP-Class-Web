@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRITICAL SYSTEM ALERT</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f8f9fa; }
+        .container { max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e0e0e0; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%); color: #ffffff; padding: 30px; text-align: center; }
+        .alert-icon { font-size: 48px; margin-bottom: 10px; }
+        .content { padding: 40px; }
+        .error-box { background-color: #fff5f5; border-left: 4px solid #d32f2f; padding: 20px; border-radius: 4px; font-family: monospace; margin: 20px 0; word-wrap: break-word; color: #b71c1c; }
+        .meta-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
+        .meta-table td { padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
+        .meta-table td.label { font-weight: bold; color: #666; width: 120px; }
+        .footer { background: #f1f1f1; padding: 20px; text-align: center; font-size: 12px; color: #777; }
+        .btn { display: inline-block; padding: 12px 24px; background-color: #d32f2f; color: #ffffff !important; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="alert-icon">⚠️</div>
+            <h1 style="margin: 0; font-size: 24px; text-transform: uppercase; letter-spacing: 2px;">Critical System Alert</h1>
+            <p style="margin: 5px 0 0 0; opacity: 0.9;">Infrastructure Monitoring Engine</p>
+        </div>
+        <div class="content">
+            <h2 style="color: #d32f2f; margin-top: 0;">{{ alert_title }}</h2>
+            <p>An urgent issue has been detected that requires your immediate attention. System telemetry reports the following failure:</p>
+            
+            <div class="error-box">
+                {{ error_message }}
+            </div>
+
+            <table class="meta-table">
+                <tr>
+                    <td class="label">Timestamp:</td>
+                    <td>{{ timestamp }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Module:</td>
+                    <td>{{ module }}</td>
+                </tr>
+                {% if url %}
+                <tr>
+                    <td class="label">Affected URL:</td>
+                    <td>{{ url }}</td>
+                </tr>
+                {% endif %}
+                {% if user %}
+                <tr>
+                    <td class="label">Impacted User:</td>
+                    <td>{{ user }}</td>
+                </tr>
+                {% endif %}
+            </table>
+
+            <div style="text-align: center;">
+                <a href="{{ dashboard_url }}" class="btn">Access Developer Dashboard</a>
+            </div>
+        </div>
+        <div class="footer">
+            <p>Digital Signal Processing Class Platform &bull; Automated Infrastructure Alert</p>
+            <p style="opacity: 0.6;">This is an automated message sent based on your infrastructure monitoring rules.</p>
+        </div>
+    </div>
+</body>
+</html>

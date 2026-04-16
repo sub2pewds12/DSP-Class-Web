@@ -63,3 +63,10 @@ CLOUDINARY_CLOUD_NAME=your-cloud-name
 CLOUDINARY_API_KEY=your-api-key
 CLOUDINARY_API_SECRET=your-api-secret
 ```
+
+## 6. Production Uptime (Render Free Tier)
+Because this project is configured for the **Render Free Tier**, the web service will automatically "Spin Down" after 15 minutes of inactivity.
+
+- **Impact**: The first request after a sleep period will take ~30 seconds to wake the server.
+- **Monitoring**: Infrastructure alerts (Database Pulse & Runtime Errors) only trigger when the server is "Awake."
+- **Solution**: Use a free service like **UptimeRobot** to ping your root URL (`/`) every 5 minutes. This keeps the site active 24/7 and ensures you are the first to know if a real outage occurs.

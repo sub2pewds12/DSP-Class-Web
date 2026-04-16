@@ -2,13 +2,13 @@
 
 The site uses a **three-role system** (Student, Lecturer, Developer) with a simple, direct registration process.
 
-## 1. Direct Registration
-Unlike traditional "email-first" onboarding, this site uses **Direct Registration** to ensure reliability on all hosting platforms (like Render Free).
+## 1. Registration Process
+The platform uses a **hybrid registration flow** to balance student ease-of-use with administrative security.
 
-- **How it works**: New users choose their password immediately during signup.
-- **Login**: Users are automatically logged in upon successful registration.
+- **Students**: Direct registration. Students pick their password and access the `/hub/` immediately.
+- **Lecturers & Admins**: Choice-based registration with a **Security Gate**. These roles default to `is_approved = False`.
+- **Approval Flow**: New staff must await manual approval via the **Developer Dashboard**. Automated HTML emails are sent upon approval or denial.
 - **Username**: Your **Email Address** serves as your username for logging in.
-- **Security**: All public signups are assigned the **Student** role. Lecturer and Developer accounts must be created through the Django Admin.
 
 ## 2. User Roles
 | Role | Access Level | Dashboard |

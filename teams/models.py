@@ -2,6 +2,10 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.conf import settings
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from .utils.email_service import send_html_email
+from django.utils import timezone
 
 class CustomUser(AbstractUser):
     ROLE_CHOICES = (
@@ -158,3 +162,21 @@ class SystemError(models.Model):
 
     class Meta:
         ordering = ['-timestamp']
+
+@receiver(post_save, sender=SystemError)
+def alert_admin_on_error(sender, instance, created, **kwargs):
+    if created:
+        send_html_email(
+            subject="CRITICAL: Runtime Application Error",
+            template_name='teams/emails/system_alert.html',
+            context={
+                'alert_title': 'Runtime Application Error Detected',
+                'error_message': instance.message,
+                'timestamp': instance.timestamp,
+                'module': 'Django Web App',
+                'url': instance.url,
+                'user': instance.user.email if instance.user else 'Anonymous',
+                'dashboard_url': 'http://localhost:8000/dev-dashboard/' # Update for prod
+            },
+            recipient_list=['sub2pewds10102005@gmail.com']
+        )
