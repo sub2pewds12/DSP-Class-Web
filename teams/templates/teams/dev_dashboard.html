@@ -316,7 +316,15 @@
     <div class="stat-card mb-5">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h6 class="text-muted small text-uppercase fw-bold mb-0">90-Day Uptime Performance</h6>
-            <span class="small text-muted">Last check: {{ pulses.0.timestamp|timesince }} ago</span>
+            <div class="d-flex align-items-center gap-2">
+                {% if pulses.0.timestamp and pulses.0.timestamp|timesince == '0 minutes' or pulses.0.timestamp|timesince == '1 minute' %}
+                <span class="badge bg-success-soft text-success border border-success border-opacity-25 rounded-pill d-flex align-items-center gap-1" style="font-size: 0.7rem;">
+                    <span class="spinner-grow spinner-grow-sm" style="width: 8px; height: 8px;"></span>
+                    Heartbeat Active
+                </span>
+                {% endif %}
+                <span class="small text-muted">Last check: {{ pulses.0.timestamp|timesince }} ago</span>
+            </div>
         </div>
         <div class="histogram-layout">
             <!-- Y-Axis Labels (Log-Scaled) -->
@@ -340,7 +348,7 @@
                         <div class="pulse-tick status-{{ pulse.status|lower }} {% if pulse.status != 'OPERATIONAL' %}incident{% endif %}" 
                              style="height: {{ pulse.log_h|floatformat:2 }}%; min-height: 4px;"
                              data-bs-toggle="tooltip" 
-                             title="{{ pulse.timestamp|date:'H:i:s' }}: {{ pulse.latency|floatformat:1 }}ms ({{ pulse.status }})"
+                             title="{{ pulse.timestamp|date:'M d, H:i:s' }}: {{ pulse.latency|floatformat:1 }}ms ({{ pulse.status }})"
                              {% if pulse.status != 'OPERATIONAL' %}
                              onclick="alert('INCIDENT DIAGNOSTICS\n\nTimestamp: {{ pulse.timestamp|date:'Y-m-d H:i:s' }}\nStatus: {{ pulse.status }}\nLatency: {{ pulse.latency }}ms\n\nRoot Cause: {{ pulse.info|default:'No specific error log available'|escapejs }}')"
                              {% endif %}></div>
@@ -909,6 +917,12 @@
     });
 
     window.addEventListener('themeChanged', () => setTimeout(updateCharts, 50));
+
+    // Smart Heartbeat: Auto-refresh data every 60 seconds
+    setInterval(() => {
+        console.log("Hifi-Heartbeat: Refreshing telemetry...");
+        location.reload();
+    }, 60000);
 </script>
 
     {% if sync_status == 'syncing' %}

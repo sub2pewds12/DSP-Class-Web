@@ -298,30 +298,8 @@ def dev_dashboard(request):
         else:
             sync_status = cache.get('last_sync_result', 'idle')
 
-    # --- Pulse & Monitoring Logic (ASYNCHRONOUS) ---
-    start_time = time.time()
+    # --- Pulse & Monitoring Logic (READ-ONLY) ---
     last_pulse = SystemPulse.objects.first()
-    
-    def background_pulse():
-        try:
-            connection.ensure_connection()
-            # We use a slightly different latency calc for the background
-            latency = (time.time() - start_time) * 1000
-            status = 'OPERATIONAL'
-            
-            # Align thresholds with formal monitoring standards
-            if latency > 1000:
-                status = 'WARNING'
-            if latency > 5000:
-                status = 'CRITICAL'
-                
-            SystemPulse.objects.create(status=status, latency=latency)
-        except Exception as e:
-            SystemPulse.objects.create(status='DOWN', latency=0, info=str(e))
-
-    # Increase frequency to 60 seconds (1 minute) for high-fidelity monitoring
-    if not last_pulse or (timezone.now() - last_pulse.timestamp).total_seconds() > 60:
-        threading.Thread(target=background_pulse, daemon=True).start()
 
     # Fetch Data for UI (Sync to 100-pulse window)
     pulses_history = SystemPulse.objects.all()[:100]

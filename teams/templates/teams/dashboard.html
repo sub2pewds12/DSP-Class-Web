@@ -20,10 +20,10 @@
             <div class="d-flex justify-content-between align-items-start mb-4">
                 <div>
                     <span class="text-muted small text-uppercase fw-bold ls-1">Project Portfolio</span>
-                    <h1 class="h1 text-main mb-1 fw-800">{{ team.name }}</h1>
+                    <h1 class="h1 text-main mb-1 fw-800" id="display-team-name">{{ team.name }}</h1>
                     <div class="mt-2">
                         <span class="text-primary-red fw-bold">Project Name:</span>
-                        <span class="h5 text-main ms-1">{{ team.project_name|default:"Awaiting project details..." }}</span>
+                        <span class="h5 text-main ms-1" id="display-project-name">{{ team.project_name|default:"Awaiting project details..." }}</span>
                     </div>
                 </div>
                 {% if team.leader == student %}
@@ -34,7 +34,7 @@
             </div>
 
             <div class="p-3 bg-soft rounded-4 border-0 mb-4">
-                <p class="text-muted small mb-0 fw-500" style="line-height: 1.6;">{{ team.project_description|default:"Your team hasn't defined their project objectives yet. Project leaders can update this description below." }}</p>
+                <p class="text-muted small mb-0 fw-500" id="display-project-description" style="line-height: 1.6;">{{ team.project_description|default:"Your team hasn't defined their project objectives yet. Project leaders can update this description below." }}</p>
             </div>
 
             {% if team.leader == student and not is_read_only %}
@@ -65,10 +65,12 @@
             </div>
             <div class="member-list scroll-hide" style="overflow-y: auto;">
                 {% for member in team.members.all %}
-                    <div class="d-flex align-items-center p-3 mb-3 rounded-4 transition {% if member.user == user %}bg-soft shadow-sm border-start border-4 border-danger{% else %}bg-soft border-opacity-10 border{% endif %}">
+                    <div class="d-flex align-items-center p-3 mb-3 rounded-4 transition member-list-item {% if member.user == user %}bg-soft shadow-sm border-start border-4 border-danger active-user-card{% else %}bg-soft border-opacity-10 border{% endif %}">
                         <div class="flex-grow-1 min-width-0">
                             <div class="fw-bold small text-main text-truncate">{{ member.user.get_full_name }}</div>
-                            <div class="text-primary-red opacity-75 fw-600" style="font-size: 0.65rem;">{{ member.role|default:"ASSIGNED ROLE"|upper }}</div>
+                            <div class="text-primary-red opacity-75 fw-600 user-role-badge" style="font-size: 0.65rem;" {% if member.user == user %}id="my-role-badge"{% endif %}>
+                                {{ member.role|default:"ASSIGNED ROLE"|upper }}
+                            </div>
                         </div>
                         {% if team.leader == member %}
                         <i class="bi bi-shield-lock-fill text-primary-red ms-2"></i>
@@ -88,14 +90,16 @@
             <div class="row g-4">
                 {% for assign in assignments %}
                     <div class="col-md-4">
-                        <div class="p-4 rounded-4 border bg-soft h-100 d-flex flex-column shadow-sm hover-up">
+                        <div class="p-4 rounded-4 border bg-soft h-100 d-flex flex-column shadow-sm hover-up assignment-card" id="assign-card-{{ assign.id }}">
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <h6 class="fw-bold text-main mb-0">{{ assign.title }}</h6>
-                                {% if assign.team_submission %}
-                                    <i class="bi bi-check-circle-fill text-success h5 mb-0"></i>
-                                {% else %}
-                                    <i class="bi bi-circle h5 mb-0 text-muted"></i>
-                                {% endif %}
+                                <div class="status-indicator">
+                                    {% if assign.team_submission %}
+                                        <i class="bi bi-check-circle-fill text-success h5 mb-0"></i>
+                                    {% else %}
+                                        <i class="bi bi-circle h5 mb-0 text-muted"></i>
+                                    {% endif %}
+                                </div>
                             </div>
                             <p class="text-muted small mb-4 flex-grow-1" style="font-size: 0.8rem;">{{ assign.description|truncatechars:90 }}</p>
                             
@@ -235,24 +239,66 @@
     {% endfor %}
 </div>
 
+<script>
     async function updateProject() {
         const form = document.querySelector('form[name="updateProjectForm"]');
+        const btn = form.querySelector('button[type="submit"]');
+        const originalText = btn.innerHTML;
+        
         const data = {
             project_name: form.querySelector('[name="project_name"]').value,
             project_description: form.querySelector('[name="project_description"]').value
         };
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
         try {
-            await apiCall('/api/student/update-project', 'POST', data);
-            location.reload();
-        } catch (e) { }
+            await apiCall('/api/student/project-update', 'POST', data);
+            
+            // Local DOM Patch
+            document.getElementById('display-project-name').textContent = data.project_name;
+            document.getElementById('display-project-description').textContent = data.project_description;
+            
+            const card = document.getElementById('display-project-name').closest('.bento-card');
+            card.classList.add('animate-fade-up');
+            setTimeout(() => card.classList.remove('animate-fade-up'), 1000);
+            
+            showToast('Portfolio Updated', 'Your team project details have been synchronized.');
+        } catch (e) { 
+            console.error(e);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
     }
 
     async function updateRole() {
-        const role = document.getElementById('id_role').value;
+        const modalEl = document.getElementById('roleModal');
+        const roleSelect = document.getElementById('id_role');
+        const role = roleSelect.value;
+        const roleLabel = roleSelect.options[roleSelect.selectedIndex].text;
+        const btn = modalEl.querySelector('button[type="submit"]');
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Updating...';
+
         try {
-            await apiCall('/api/student/update-role', 'POST', { role });
-            location.reload();
-        } catch (e) { }
+            await apiCall('/api/student/role-update', 'POST', { role });
+            
+            // Local DOM Patch
+            const badge = document.getElementById('my-role-badge');
+            if (badge) {
+                badge.textContent = roleLabel.toUpperCase();
+                badge.closest('.member-list-item').classList.add('animate-fade-up');
+            }
+            
+            bootstrap.Modal.getInstance(modalEl).hide();
+            showToast('Role Secured', `You are now the team's ${roleLabel}.`);
+        } catch (e) { } finally {
+            btn.disabled = false;
+            btn.innerHTML = 'Confirm Team Role';
+        }
     }
 
     async function submitAssignment(assignId) {
@@ -274,16 +320,26 @@
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading...';
 
         try {
-            await apiCall('/api/student/submit-assignment', 'POST', formData, true);
-            location.reload();
+            const result = await apiCall('/api/student/submit-assignment', 'POST', formData, true);
+            
+            // Local DOM Patch: Update the card icon to Checked
+            const card = document.getElementById(`assign-card-${assignId}`);
+            if (card) {
+                card.querySelector('.status-indicator').innerHTML = '<i class="bi bi-check-circle-fill text-success h5 mb-0"></i>';
+                card.classList.add('submission-card-active');
+            }
+            
+            bootstrap.Modal.getInstance(modal).hide();
+            showToast('Upload Successful', result.message);
+            
+            // Reset form for next time
+            form.reset();
         } catch (e) {
+            console.error(e);
+        } finally {
             btn.disabled = false;
             btn.innerHTML = originalHtml;
         }
     }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        // Auto-reopen modal logic removed as API handles errors via alerts
-    });
 </script>
 {% endblock %}

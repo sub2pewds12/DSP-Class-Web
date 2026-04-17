@@ -26,6 +26,10 @@
     --metric-gradient: linear-gradient(45deg, var(--primary-red), #ff7878);
     --chart-grid: rgba(0, 0, 0, 0.05);
     --chart-text: #666666;
+    
+    /* Animation Tokens */
+    --transition-standard: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    --transition-fast: all 0.2s ease;
 }
 
 [data-theme="dark"] {
@@ -138,8 +142,12 @@ body {
 
 .bento-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 12px 40px 0 rgba(211, 47, 47, 0.1);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12), 0 0 15px var(--primary-red-glow);
     border-color: var(--primary-red);
+}
+
+[data-theme="dark"] .bento-card:hover {
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3), var(--card-glow);
 }
 
 /* --- Spanning Logic --- */
@@ -313,10 +321,58 @@ body {
     transform: scale(1.05);
 }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: var(--bg-main); }
-::-webkit-scrollbar-thumb {
+/* --- Toast System Styling --- */
+.toast {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border) !important;
+}
+
+.toast-progress-bar {
+    height: 3px;
     background: var(--primary-red);
-    border-radius: 10px;
+    width: 100%;
+}
+
+/* --- Animations --- */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-up {
+    animation: fadeInUp 0.5s var(--transition-standard) forwards;
+}
+
+@keyframes pulse-red {
+    0% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(211, 47, 47, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0); }
+}
+
+.pulse-primary {
+    animation: pulse-red 2s infinite;
+}
+
+/* Member List Enhancements */
+.member-list-item {
+    transition: var(--transition-fast);
+}
+
+.member-list-item:hover {
+    background-color: var(--bg-soft);
+    padding-left: 2rem !important;
+}
+
+/* Submission Card State */
+.submission-card-active {
+    border-left: 4px solid var(--primary-red) !important;
+    background: linear-gradient(to right, var(--primary-red-glow), transparent);
 }

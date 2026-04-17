@@ -56,3 +56,25 @@ Resolve here: {request.build_absolute_uri('/dev-dashboard/')}
             print(f"Failed to log/email system error: {e}")
         
         return None # Let Django's default error handling take over
+
+class ActivityTrackingMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        # Update the system activity timestamp in cache
+        from django.core.cache import cache
+        from django.utils import timezone
+        from .utils.monitoring import start_ghost_heartbeat
+        
+        # We track any request as 'activity' to keep the monitoring alive during use
+        cache.set('last_system_activity', timezone.now(), 86400)
+        
+        # Ensure the 'Ghost Heartbeat' thread is running (Free tier background worker)
+        # This is non-blocking and self-shuts-down after 30 mins of idle time.
+        try:
+            start_ghost_heartbeat()
+        except:
+            pass # Never let monitoring fail the main request
+        
+        return self.get_response(request)

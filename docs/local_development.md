@@ -76,3 +76,15 @@ Because this project is configured for the **Render Free Tier**, the web service
 - **Impact**: The first request after a sleep period will take ~30 seconds to wake the server.
 - **Monitoring**: Infrastructure alerts (Database Pulse & Runtime Errors) only trigger when the server is "Awake."
 - **Solution**: Use a free service like **UptimeRobot** to ping your root URL (`/`) every 5 minutes. This keeps the site active 24/7 and ensures you are the first to know if a real outage occurs.
+
+## 7. High-Fidelity Monitoring (Smart Heartbeat)
+
+The project includes an autonomous "Ghost Heartbeat" monitor that tracks database latency with high precision.
+
+- **Automatic Activation**: The monitor starts automatically as soon as any visitor (you or a student) accesses the site. No manual commands are required.
+- **Smart Idle**: To save resources on the free tier, the monitor will stay active for a **30-minute grace period** after the last site interaction, then gracefully shut down until the next visit.
+- **Production Tracking**: If you set `PROD_DB_URL` in your `.env`, the local Developer Dashboard will track the latency of your **Live Production Database** instead of your local SQLite file, giving you a real-time health check of the production environment while you develop.
+- **Manual Control**: If you need to run the monitor as a persistent foreground process for testing, use:
+  ```powershell
+  python manage.py log_pulse --loop --interval 60
+  ```

@@ -86,6 +86,21 @@
         </div>
     {% endif %}
 
+    <!-- Global Toast Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-4" style="z-index: 2000;">
+        <div id="appToast" class="toast border-0 rounded-4 shadow-lg overflow-hidden" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header border-0 bg-dark text-white py-3">
+                <i class="bi bi-info-circle me-2" id="toast-icon"></i>
+                <strong class="me-auto" id="toast-title">System Notification</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" onclick="hideToast()"></button>
+            </div>
+            <div class="toast-body py-4 px-4 bg-white text-dark fw-500" id="toast-message">
+                Message content goes here...
+            </div>
+            <div class="toast-progress-bar" id="toast-progress"></div>
+        </div>
+    </div>
+
     {% block content %}{% endblock %}
 
     <!-- Footer-level JS initialization removed from here -->
@@ -127,6 +142,51 @@
             }
         });
 
+        function showToast(title, message, type = 'success') {
+            const toastEl = document.getElementById('appToast');
+            const titleEl = document.getElementById('toast-title');
+            const messageEl = document.getElementById('toast-message');
+            const iconEl = document.getElementById('toast-icon');
+            const headerEl = toastEl.querySelector('.toast-header');
+            const progressBar = document.getElementById('toast-progress');
+
+            titleEl.textContent = title;
+            messageEl.textContent = message;
+
+            // Reset classes
+            headerEl.className = 'toast-header border-0 py-3 text-white';
+            iconEl.className = 'bi me-2';
+            progressBar.style.width = '100%';
+            
+            if (type === 'success') {
+                headerEl.classList.add('bg-success');
+                iconEl.classList.add('bi-check-circle-fill');
+            } else if (type === 'error') {
+                headerEl.classList.add('bg-danger');
+                iconEl.classList.add('bi-exclamation-triangle-fill');
+            } else {
+                headerEl.classList.add('bg-dark');
+                iconEl.classList.add('bi-info-circle-fill');
+            }
+
+            const toast = new bootstrap.Toast(toastEl, { autohide: true, delay: 5000 });
+            toast.show();
+
+            // Progress bar animation
+            progressBar.style.transition = 'none';
+            progressBar.style.width = '100%';
+            setTimeout(() => {
+                progressBar.style.transition = 'width 5s linear';
+                progressBar.style.width = '0%';
+            }, 10);
+        }
+
+        function hideToast() {
+            const toastEl = document.getElementById('appToast');
+            const toast = bootstrap.Toast.getInstance(toastEl);
+            if (toast) toast.hide();
+        }
+
         async function apiCall(url, method = 'POST', data = null, isFile = false) {
             const options = {
                 method: method,
@@ -146,15 +206,25 @@
 
             try {
                 const response = await fetch(url, options);
-                const result = await response.json();
+                let result;
+                try {
+                    result = await response.json();
+                } catch (e) {
+                    throw new Error('Unexpected server response');
+                }
+
                 if (response.ok) {
                     return result;
                 } else {
-                    throw new Error(result.message || result.detail?.[0]?.msg || 'Operation failed');
+                    const errorMsg = result.message || result.detail?.[0]?.msg || 'Operation failed';
+                    showToast('Action Failed', errorMsg, 'error');
+                    throw new Error(errorMsg);
                 }
             } catch (error) {
                 console.error('[API Error]', error);
-                alert('API Error: ' + error.message);
+                if (!error.message.includes('Operation failed')) {
+                    showToast('System Error', 'Could not complete the request. Please try again.', 'error');
+                }
                 throw error;
             }
         }

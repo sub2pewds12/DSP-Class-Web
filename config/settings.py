@@ -80,6 +80,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'teams.middleware.ErrorMonitoringMiddleware',
+    'teams.middleware.ActivityTrackingMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
