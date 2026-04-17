@@ -11,8 +11,6 @@ urlpatterns = [
     path('dev-dashboard/', views.dev_dashboard, name='dev_dashboard'),
     path('storage-analytics/', views.storage_analytics_view, name='storage_analytics'),
     path('pending-approval/', views.pending_approval_view, name='pending_approval'),
-    path('user/<int:user_id>/approve/', views.approve_user, name='approve_user'),
-    path('user/<int:user_id>/deny/', views.deny_user, name='deny_user'),
     path('health-check/', views.health_check, name='health_check'),
     
     # Auth
@@ -29,15 +27,7 @@ urlpatterns = [
 
     # Action endpoints
     path('submission/<int:pk>/', views.submission_detail, name='submission_detail'),
-    path('assignment/<int:pk>/submit/', views.submit_assignment, name='submit_assignment'),
     path('assignment/<int:pk>/grades/', views.view_grades, name='view_grades'),
-    path('assignment/<int:pk>/release/', views.release_grades, name='release_grades'),
-    path('grade/<int:pk>/', views.grade_submission, name='grade_submission'),
-    path('document/<int:pk>/delete/', views.delete_document, name='delete_document'),
     path('submission/<int:pk>/delete/', views.delete_submission, name='delete_submission'),
     
-    # Incident Logic
-    path('incident/<int:pk>/resolve/', views.resolve_error, name='resolve_error'),
-    path('incident/bulk-resolve/', views.bulk_resolve_errors, name='bulk_resolve_errors'),
-    path('incident/sanitize/', views.sanitize_logs, name='sanitize_logs'),
 ]

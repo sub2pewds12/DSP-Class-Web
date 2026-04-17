@@ -114,6 +114,12 @@ DATABASES = {
     )
 }
 
+# Optimize SQLite for local development concurrency
+if DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
+    DATABASES['default']['OPTIONS'] = {
+        'timeout': 20,  # Increase timeout to 20 seconds
+    }
+
 # 1-Way Sync Portal: Production-Read source
 if os.getenv('PROD_DB_URL'):
     DATABASES['production'] = dj_database_url.parse(
@@ -190,7 +196,7 @@ LOGOUT_REDIRECT_URL = 'login'
 # Session Security
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_AGE = 3600  # 1 hour
-SESSION_SAVE_EVERY_REQUEST = True
+SESSION_SAVE_EVERY_REQUEST = False  # Changed from True to prevent SQLite locking
 
 # Cloudinary Configuration
 CLOUDINARY_STORAGE = {

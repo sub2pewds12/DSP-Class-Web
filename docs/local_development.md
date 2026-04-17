@@ -12,7 +12,13 @@ Since Windows often blocks script activation, the most reliable way to start you
 
 Once running, your site is available at: **[http://127.0.0.1:8000/](http://127.0.0.1:8000/)**
 
-## 2. Activating the Virtual Environment
+## 2. Configuration & Optimization (SQLite)
+To prevent "Database is Locked" errors during local development (especially when using the API docs), ensure your `config/settings.py` includes these optimizations:
+
+- **Increased Timeout**: The database configuration should include `'timeout': 20` in its options.
+- **Session Persistence**: Set `SESSION_SAVE_EVERY_REQUEST = False`. This prevents redundant database writes on every GET request, which is critical for handling the multiple concurrent requests fired by the Swagger UI.
+
+## 3. Activating the Virtual Environment
 If you want to use the virtual environment for other commands (like `pip install`), you might see an "Execution Policy" error. Use this command to bypass it for your current session:
 
 ```powershell

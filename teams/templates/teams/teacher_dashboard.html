@@ -117,8 +117,7 @@
                                                 <div class="modal fade" id="gradeModal{{ sub.id }}" tabindex="-1">
                                                     <div class="modal-dialog modal-dialog-centered">
                                                         <div class="modal-content border-0 rounded-5 shadow-lg bg-main">
-                                                            <form action="{% url 'grade_submission' sub.id %}" method="post">
-                                                                {% csrf_token %}
+                                                            <form onsubmit="event.preventDefault(); saveGrade({{ sub.id }});">
                                                                 <div class="modal-header border-0 bg-primary-red text-white py-4">
                                                                     <div class="modal-title h5 fw-bold mb-0">Grade: {{ team.name }}</div>
                                                                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -185,7 +184,7 @@
                     </div>
                     <div class="small text-muted mb-3">Due: {{ assign.deadline|date:"M d, H:i" }}</div>
                     <div class="d-flex justify-content-between align-items-center pt-2 border-top border-soft">
-                        <a href="{% url 'release_grades' assign.id %}" class="btn btn-link p-0 text-primary-red text-decoration-none small fw-bold {% if assign.grades_released %}disabled opacity-50{% endif %}" onclick="return confirm('Release all grades for this assignment?')">Release Grades</a>
+                        <button onclick="releaseGrades({{ assign.id }})" class="btn btn-link p-0 text-primary-red text-decoration-none small fw-bold {% if assign.grades_released %}disabled opacity-50{% endif %}" {% if assign.grades_released %}disabled{% endif %}>Release Grades</button>
                         {% if assign.instruction_file %}
                              <a href="{{ assign.instruction_file.url }}" target="_blank" class="btn btn-sm btn-primary-red rounded-pill px-3" style="font-size: 0.65rem;">View File</a>
                         {% endif %}
@@ -210,7 +209,7 @@
                         {% if doc.file %}
                             <a href="{{ doc.file.url }}" target="_blank" class="text-primary-red"><i class="bi bi-eye"></i></a>
                         {% endif %}
-                        <a href="{% url 'delete_document' doc.pk %}" class="text-muted" onclick="return confirm('Delete document?')"><i class="bi bi-trash"></i></a>
+                        <button onclick="deleteDocument({{ doc.pk }})" class="btn btn-link p-0 text-muted transition-all" title="Delete document"><i class="bi bi-trash"></i></button>
                     </div>
                 </div>
             {% endfor %}
@@ -222,12 +221,15 @@
                     {{ doc_form.errors }}
                 </div>
             {% endif %}
-            <form method="post" enctype="multipart/form-data">
-                {% csrf_token %}
+            <form id="uploadDocForm" onsubmit="event.preventDefault(); uploadDocument();">
                 <input type="hidden" name="upload_doc" value="1">
-                <div class="mb-2">{{ doc_form.title }}</div>
+                <div class="mb-2">
+                    <input type="text" name="title" class="form-control form-control-sm rounded-3 bg-soft text-main border-0 shadow-sm" placeholder="Document Title" required>
+                </div>
                 <div class="d-flex gap-2">
-                    <div class="flex-grow-1">{{ doc_form.file }}</div>
+                    <div class="flex-grow-1">
+                        <input type="file" name="file" class="form-control form-control-sm rounded-3 bg-soft text-main border-0 shadow-sm" required>
+                    </div>
                      <button type="submit" class="btn btn-primary-red btn-sm rounded-3">Upload</button>
                 </div>
             </form>
@@ -240,44 +242,28 @@
 <div class="modal fade" id="assignmentModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 rounded-5 shadow-lg bg-main">
-            <form method="post" enctype="multipart/form-data">
-                {% csrf_token %}
-                <input type="hidden" name="create_assignment" value="1">
+            <form id="assignmentForm" onsubmit="event.preventDefault(); createAssignment();">
                 <div class="modal-header border-0 bg-dark text-white py-4">
                     <h5 class="modal-title fw-bold">Create New Assignment</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4 bg-main">
-                    {% if assign_form.errors %}
-                        <div class="alert alert-danger rounded-4 border-0 small mb-4">
-                            <ul class="mb-0">
-                                {% for field in assign_form %}
-                                    {% for error in field.errors %}
-                                        <li><strong>{{ field.label }}:</strong> {{ error }}</li>
-                                    {% endfor %}
-                                {% endfor %}
-                                {% for error in assign_form.non_field_errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                    {% endif %}
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-uppercase text-muted">Assignment Title</label>
-                        {{ assign_form.title }}
+                        <input type="text" name="title" class="form-control rounded-4 bg-soft text-main border-0 shadow-sm" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-uppercase text-muted">Description</label>
-                        {{ assign_form.description }}
+                        <textarea name="description" class="form-control rounded-4 bg-soft text-main border-0 shadow-sm" rows="3"></textarea>
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-uppercase text-muted">Deadline</label>
                         <div class="small text-muted mb-1 opacity-75">Format: YYYY-MM-DD HH:MM</div>
-                        {{ assign_form.deadline }}
+                        <input type="datetime-local" name="deadline" class="form-control rounded-4 bg-soft text-main border-0 shadow-sm" required>
                     </div>
                     <div class="mb-0">
                         <label class="form-label small fw-bold text-uppercase text-muted">Instruction File (Optional)</label>
-                        {{ assign_form.instruction_file }}
+                        <input type="file" name="instruction_file" class="form-control rounded-4 bg-soft text-main border-0 shadow-sm">
                     </div>
                 </div>
                 <div class="modal-footer border-0 p-4 bg-main">
@@ -290,5 +276,78 @@
 
     </div>
 </div>
+<script>
+    async function saveGrade(subId) {
+        const modal = document.getElementById(`gradeModal${subId}`);
+        const grade = modal.querySelector('[name="grade"]').value;
+        const feedback = modal.querySelector('[name="feedback"]').value;
+
+        try {
+            await apiCall(`/api/lecturer/grade-submission/${subId}`, 'POST', { grade, feedback });
+            bootstrap.Modal.getInstance(modal).hide();
+            location.reload(); // Refresh to update the table
+        } catch (e) { }
+    }
+
+    async function releaseGrades(assignId) {
+        if (!confirm('Release all grades for this assignment? Students will see their results immediately.')) return;
+        try {
+            await apiCall(`/api/lecturer/release-grades/${assignId}`);
+            location.reload();
+        } catch (e) { }
+    }
+
+    async function deleteDocument(docId) {
+        if (!confirm('Permanently delete this class material?')) return;
+        try {
+            await apiCall(`/api/lecturer/delete-document/${docId}`);
+            location.reload();
+        } catch (e) { }
+    }
+
+    async function createAssignment() {
+        const form = document.getElementById('assignmentForm');
+        const formData = new FormData(form);
+        
+        // Convert FormData to standard fields for Ninja if not using multi-part
+        // But we have an instruction file, so we use multi-part.
+        // For Ninja with multi-part, we need to handle the schema JSON specially if mixed.
+        // Actually, I'll use a simpler approach for mixed data in Ninja.
+        
+        // Let's refine the API for create-assignment to take parameters if mixed.
+        // Alternatively, use FormData directly.
+        
+        try {
+            // We need to match the signature in api.py: (data: AssignmentSchema, instr_file: UploadedFile)
+            // This usually requires sending 'data' as a JSON string field in FormData.
+            const dataJSON = JSON.stringify({
+                title: formData.get('title'),
+                description: formData.get('description'),
+                deadline: formData.get('deadline')
+            });
+            const body = new FormData();
+            body.append('data', dataJSON);
+            const file = formData.get('instruction_file');
+            if (file && file.size > 0) body.append('instr_file', file);
+
+            await apiCall('/api/lecturer/create-assignment', 'POST', body, true);
+            location.reload();
+        } catch (e) { }
+    }
+
+    async function uploadDocument() {
+        const form = document.getElementById('uploadDocForm');
+        const formData = new FormData(form);
+        
+        try {
+            const body = new FormData();
+            body.append('title', formData.get('title'));
+            body.append('file', formData.get('file'));
+
+            await apiCall('/api/lecturer/upload-document', 'POST', body, true);
+            location.reload();
+        } catch (e) { }
+    }
+</script>
 {% endblock %}
 

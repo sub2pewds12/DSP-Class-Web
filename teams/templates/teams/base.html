@@ -118,9 +118,6 @@
             var btn = document.getElementById('theme-toggle-btn');
             if (btn) {
                 btn.addEventListener('click', toggleTheme);
-                console.log('[Theme] Toggle button found and listener attached.');
-            } else {
-                console.error('[Theme] Toggle button NOT found!');
             }
             
             var savedTheme = localStorage.getItem('hub-theme');
@@ -129,6 +126,38 @@
                 icon.className = 'bi bi-moon-stars';
             }
         });
+
+        async function apiCall(url, method = 'POST', data = null, isFile = false) {
+            const options = {
+                method: method,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                }
+            };
+            
+            if (data) {
+                if (isFile) {
+                    options.body = data; // Expects FormData
+                } else {
+                    options.headers['Content-Type'] = 'application/json';
+                    options.body = JSON.stringify(data);
+                }
+            }
+
+            try {
+                const response = await fetch(url, options);
+                const result = await response.json();
+                if (response.ok) {
+                    return result;
+                } else {
+                    throw new Error(result.message || result.detail?.[0]?.msg || 'Operation failed');
+                }
+            } catch (error) {
+                console.error('[API Error]', error);
+                alert('API Error: ' + error.message);
+                throw error;
+            }
+        }
     </script>
 </body>
 </html>

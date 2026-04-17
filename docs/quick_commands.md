@@ -12,6 +12,8 @@ A one-page cheat sheet for common commands and essential links.
 | **Public Gallery** | [http://127.0.0.1:8000/gallery/](http://127.0.0.1:8000/gallery/) |
 | **User Guide** | [http://127.0.0.1:8000/guide/](http://127.0.0.1:8000/guide/) |
 | **Admin Panel** | [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/) |
+| **Interactive API Docs** | [http://127.0.0.1:8000/api/docs](http://127.0.0.1:8000/api/docs) |
+| **Raw API Blueprint** | [http://127.0.0.1:8000/api/openapi.json](http://127.0.0.1:8000/api/openapi.json) |
 | **Signup** | [http://127.0.0.1:8000/signup/](http://127.0.0.1:8000/signup/) |
 
 ## 🚀 External Services

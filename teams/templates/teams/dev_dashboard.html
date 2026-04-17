@@ -454,15 +454,9 @@
                         </a>
                     </div>
                     <div class="col-4">
-                        <a href="{{ portals.render }}" target="_blank" class="portal-tile">
-                            <i class="bi bi-clouds-fill h4 mb-0 text-primary-red"></i>
-                            <span class="small fw-bold">Render Dash</span>
-                        </a>
-                    </div>
-                    <div class="col-4">
-                        <a href="{{ portals.gmail }}" target="_blank" class="portal-tile">
-                            <i class="bi bi-envelope-check-fill h4 mb-0 text-primary-red"></i>
-                            <span class="small fw-bold">Gmail Auth</span>
+                        <a href="{{ portals.openapi }}" target="_blank" class="portal-tile">
+                            <i class="bi bi-code-square h4 mb-0 text-primary-red"></i>
+                            <span class="small fw-bold">API Blueprint</span>
                         </a>
                     </div>
 
@@ -560,6 +554,9 @@
                         <button class="btn btn-sm btn-outline-success rounded-pill px-3" id="sanitizeBtn" onclick="sanitizeLogs()">
                             <i class="bi bi-shield-check me-1"></i>Verify & Sanitize
                         </button>
+                        <a href="/api/docs" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                            <i class="bi bi-code-square me-1"></i>Interactive API Explorer
+                        </a>
                     </div>
                     <span class="badge bg-danger rounded-pill" id="unresolvedBadge">{{ sys_info.unresolved_errors }} Unresolved</span>
                 </div>
@@ -660,12 +657,12 @@
                                 </td>
                                 <td class="border-0 text-end px-4">
                                     <div class="d-flex gap-2 justify-content-end">
-                                        <a href="{% url 'approve_user' p_user.id %}" class="btn btn-sm btn-success rounded-pill px-3 shadow-sm border-0">
+                                        <button onclick="approveUser({{ p_user.id }})" class="btn btn-sm btn-success rounded-pill px-3 shadow-sm border-0">
                                             <i class="bi bi-check-lg"></i> Approve
-                                        </a>
-                                        <a href="{% url 'deny_user' p_user.id %}" class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="return confirm('Permanently deny and delete this request?')">
+                                        </button>
+                                        <button onclick="denyUser({{ p_user.id }})" class="btn btn-sm btn-outline-danger rounded-pill px-3">
                                             <i class="bi bi-x-lg"></i> Deny
-                                        </a>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -838,54 +835,57 @@
         }
     }
 
-    async function resolveError(errorId) {
-        const row = document.getElementById(`error-${errorId}`);
+    async function resolveError(id) {
         try {
-            const resp = await fetch(`/incident/${errorId}/resolve/`);
-            const data = await resp.json();
-            if (data.status === 'success') {
+            const data = await apiCall(`/api/incident/${id}/resolve`);
+            const row = document.getElementById(`error-${id}`);
+            if (row) {
                 row.classList.add('error-resolved');
-                // Remove buttons
                 const btnContainer = row.querySelector('td:last-child .d-flex');
                 if (btnContainer) btnContainer.innerHTML = '<span class="badge bg-success-soft text-success rounded-pill px-3">Resolved</span>';
                 updateUnresolvedCount(-1);
             }
-        } catch (e) { console.error(e); }
+        } catch (e) { }
     }
 
-    async function bulkResolve(message) {
-        if (!confirm(`Resolve ALL incidents with message: "${message}"?`)) return;
-        
-        const formData = new FormData();
-        formData.append('message', message);
-        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-
+    async function bulkResolve(pattern) {
+        if (!confirm(`Resolve ALL incidents matching: "${pattern}"?`)) return;
         try {
-            const resp = await fetch('/incident/bulk-resolve/', {
-                method: 'POST',
-                body: formData
-            });
-            const data = await resp.json();
-            if (data.status === 'success') {
-                location.reload(); // Hard refresh to update everything for bulk
-            }
-        } catch (e) { console.error(e); }
+            await apiCall('/api/incident/bulk-resolve', 'POST', { pattern });
+            location.reload();
+        } catch (e) { }
     }
 
     async function sanitizeLogs() {
         const btn = document.getElementById('sanitizeBtn');
+        const originalHtml = btn.innerHTML;
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Verifying...';
         
         try {
-            const resp = await fetch('/incident/sanitize/');
-            const data = await resp.json();
+            const data = await apiCall('/api/incident/sanitize');
             alert(data.message);
             location.reload();
         } catch (e) {
             btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-shield-check me-1"></i>Verify & Sanitize';
+            btn.innerHTML = originalHtml;
         }
+    }
+
+    async function approveUser(id) {
+        if (!confirm('Approve this user access request?')) return;
+        try {
+            await apiCall(`/api/dev/approve-user/${id}`);
+            location.reload();
+        } catch (e) { }
+    }
+
+    async function denyUser(id) {
+        if (!confirm('Permanently deny and delete this request?')) return;
+        try {
+            await apiCall(`/api/dev/deny-user/${id}`);
+            location.reload();
+        } catch (e) { }
     }
 
     function updateUnresolvedCount(delta) {

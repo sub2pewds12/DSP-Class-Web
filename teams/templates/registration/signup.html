@@ -91,6 +91,13 @@
 
             <form method="post">
                 {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert bg-red-soft text-danger border-0 small py-3 mb-4 rounded-4">
+                        <i class="bi bi-exclamation-circle-fill me-2"></i> {{ form.non_field_errors.0 }}
+                    </div>
+                {% endif %}
+
                 <div class="row g-4">
                     {% for field in form %}
                     <div class="{% if field.name == 'role' %}col-12{% else %}col-md-6{% endif %}">

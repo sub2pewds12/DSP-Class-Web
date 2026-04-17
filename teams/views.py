@@ -61,72 +61,16 @@ def dashboard_view(request, team_id=None):
             team.leader = team.members.first()
             team.save()
 
-        # Disable POST processing if in read-only mode
-        if request.method == 'POST' and not is_read_only:
-            if 'update_project' in request.POST and student == team.leader:
-                project_form = TeamProjectForm(request.POST, instance=team)
-                if project_form.is_valid():
-                    project_form.save()
-                    messages.success(request, "Project details updated successfully.")
-                    return redirect('dashboard_with_team', team_id=team.id) if team_id else redirect('dashboard')
-            
-            elif 'update_role' in request.POST:
-                role_form = StudentRoleForm(request.POST, instance=student)
-                if role_form.is_valid():
-                    role_form.save()
-                    messages.success(request, "Your role has been updated.")
-                    return redirect('dashboard_with_team', team_id=team.id) if team_id else redirect('dashboard')
+    if team:
+        if not team.leader and team.members.exists():
+            # Auto-assign first member as leader if missing
+            team.leader = team.members.first()
+            team.save()
 
-            elif 'upload_assignment' in request.POST:
-                assign_id = request.POST.get('assignment_id')
-                assignment = get_object_or_404(Assignment, id=assign_id)
-                assign_form = AssignmentSubmissionForm(request.POST, request.FILES)
-                
-                if assign_form.is_valid():
-                    files = request.FILES.getlist('files')
-                    
-                    # 1. Validate File Count
-                    if len(files) > 10:
-                        messages.error(request, "Maximum of 10 files allowed.")
-                        request.session['form_error_id'] = assign_id
-                        return redirect('dashboard_with_team', team_id=team.id) if team_id else redirect('dashboard')
-                    
-                    # 2. Validate Total Size (50MB)
-                    total_size = sum(f.size for f in files)
-                    if total_size > 50 * 1024 * 1024:
-                        messages.error(request, "Total file size exceeds 50MB limit.")
-                        request.session['form_error_id'] = assign_id
-                        return redirect('dashboard_with_team', team_id=team.id) if team_id else redirect('dashboard')
-                    
-                    # 3. Validate File Types (No executables)
-                    allowed_exts = ['.pdf', '.zip', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.png', '.jpg', '.jpeg', '.gif']
-                    import os
-                    for f in files:
-                        ext = os.path.splitext(f.name)[1].lower()
-                        if ext not in allowed_exts:
-                            messages.error(request, f"File type '{ext}' not allowed. Only documents and images are permitted.")
-                            request.session['form_error_id'] = assign_id
-                            return redirect('dashboard_with_team', team_id=team.id) if team_id else redirect('dashboard')
-
-                    # All validations passed
-                    sub = assign_form.save(commit=False)
-                    sub.team = team
-                    sub.assignment = assignment
-                    sub.submitted_by = request.user
-                    sub.save()
-                    
-                    # Create SubmissionFile objects
-                    from .models import SubmissionFile
-                    for f in files:
-                        SubmissionFile.objects.create(submission=sub, file=f)
-                    
-                    status = "on time"
-                    if sub.submitted_at and assignment.deadline and sub.submitted_at > assignment.deadline:
-                        status = "LATE"
-                    messages.success(request, f"Successfully submitted {len(files)} files to '{assignment.title}' ({status}).")
-                    return redirect('dashboard_with_team', team_id=team.id) if team_id else redirect('dashboard')
-                else:
-                    request.session['form_error_id'] = assign_id
+        # Forms (only for members with appropriate permissions)
+        project_form = TeamProjectForm(instance=team)
+        role_form = StudentRoleForm(instance=student)
+        assign_form = AssignmentSubmissionForm()
 
         # Annotate assignments
         for a in assignments:
@@ -193,25 +137,6 @@ def teacher_dashboard(request):
     # Ensure lecturer profile exists
     Lecturer.objects.get_or_create(user=request.user)
     
-    if request.method == 'POST':
-        if 'upload_doc' in request.POST:
-            doc_form = DocumentUploadForm(request.POST, request.FILES)
-            if doc_form.is_valid():
-                doc = doc_form.save(commit=False)
-                doc.uploaded_by = request.user
-                doc.save()
-                messages.success(request, f"Document '{doc.title}' uploaded.")
-                return redirect('teacher_dashboard')
-        
-        elif 'create_assignment' in request.POST:
-            assign_form = AssignmentForm(request.POST, request.FILES)
-            if assign_form.is_valid():
-                assign = assign_form.save(commit=False)
-                assign.created_by = request.user
-                assign.save()
-                messages.success(request, f"Assignment '{assign.title}' set with deadline: {assign.deadline}")
-                return redirect('teacher_dashboard')
-
     # Prefetch with safer logic
     teams = Team.objects.prefetch_related(
         'members__user', 
@@ -257,40 +182,8 @@ def teacher_dashboard(request):
         'documents': documents
     })
 
-@login_required
-def grade_submission(request, pk):
-    if request.user.role not in ['LECTURER', 'DEV']:
-        return redirect('dashboard')
-    
-    submission = get_object_or_404(TeamSubmission, pk=pk)
-    if request.method == 'POST':
-        form = GradeSubmissionForm(request.POST, instance=submission)
-        if form.is_valid():
-            form.save()
-            messages.success(request, f"Grade updated for {submission.team.name}.")
-    
-    return redirect('teacher_dashboard')
 
-@login_required
-def release_grades(request, pk):
-    if request.user.role not in ['LECTURER', 'DEV']:
-        return redirect('dashboard')
-    
-    assignment = get_object_or_404(Assignment, pk=pk)
-    assignment.grades_released = True
-    assignment.save()
-    messages.success(request, f"Grades released for '{assignment.title}'. Students can now see their results!")
-    return redirect('teacher_dashboard')
 
-@login_required
-def delete_document(request, pk):
-    if request.user.role not in ['LECTURER', 'DEV']:
-        return redirect('dashboard')
-    doc = get_object_or_404(ClassDocument, pk=pk)
-    title = doc.title
-    doc.delete()
-    messages.success(request, f"Document '{title}' deleted.")
-    return redirect('teacher_dashboard')
 
 @login_required
 def delete_submission(request, pk):
@@ -543,8 +436,8 @@ def dev_dashboard(request):
     portals = {
         'admin': '/admin/',
         'render': 'https://dashboard.render.com',
-        'cloudinary': f"https://cloudinary.com/console/cloud/{settings.CLOUDINARY_STORAGE['CLOUD_NAME']}",
-        'gmail': 'https://myaccount.google.com/apppasswords',
+        'cloudinary': f"https://cloudinary.com/console/cloud/{settings.CLOUDINARY_STORAGE['CLOUD_NAME']}/media_library",
+        'openapi': '/api/openapi.json',
         'uptime_status': 'https://stats.uptimerobot.com/eX7GdUhav0',
         'uptime_dashboard': 'https://dashboard.uptimerobot.com/monitors',
     }
@@ -622,54 +515,6 @@ def gallery_view(request):
     teams = Team.objects.prefetch_related('members__user').all()
     return render(request, 'teams/gallery.html', {'teams': teams})
 
-@login_required
-def approve_user(request, user_id):
-    if request.user.role != 'DEV':
-        return redirect('dashboard')
-    
-    user = get_object_or_404(CustomUser, id=user_id)
-    user.is_approved = True
-    user.save() # Custom save() will set staff/superuser perms accordingly
-    
-    # Notify User
-    send_html_email(
-        subject="Your Account has been Approved!",
-        template_name='teams/emails/user_approved.html',
-        context={
-            'user_name': user.first_name,
-            'role_name': user.role,
-            'login_url': request.build_absolute_uri('/login/')
-        },
-        recipient_list=[user.email]
-    )
-    
-    messages.success(request, f"User '{user.get_full_name()}' has been approved as {user.role}.")
-    return redirect('dev_dashboard')
-
-@login_required
-def deny_user(request, user_id):
-    if request.user.role != 'DEV':
-        return redirect('dashboard')
-    
-    user = get_object_or_404(CustomUser, id=user_id)
-    name = user.get_full_name()
-    email = user.email
-    role = user.role
-    user.delete()
-    
-    # Notify User of Denial
-    send_html_email(
-        subject="Application Status Update",
-        template_name='teams/emails/user_denied.html',
-        context={
-            'user_name': name,
-            'role_name': role,
-        },
-        recipient_list=[email]
-    )
-    
-    messages.warning(request, f"Registration request for '{name}' has been denied and removed.")
-    return redirect('dev_dashboard')
 
 @login_required
 def storage_analytics_view(request):
@@ -728,8 +573,8 @@ def storage_analytics_view(request):
     recent_docs = ClassDocument.objects.order_by('-uploaded_at')[:5]
     recent_subs = SubmissionFile.objects.select_related('submission__team').order_by('-uploaded_at')[:5]
     
-    # 4. External Portal URL
-    cloudinary_portal = f"https://cloudinary.com/console/cloud/{settings.CLOUDINARY_STORAGE['CLOUD_NAME']}/reports"
+    # 4. External Portal URL (Direct to Media Library)
+    cloudinary_portal = f"https://cloudinary.com/console/cloud/{settings.CLOUDINARY_STORAGE['CLOUD_NAME']}/media_library"
     
     return render(request, 'teams/storage_analytics.html', {
         'stats': storage_stats,
@@ -770,86 +615,3 @@ def view_grades(request, pk):
 
 def pending_approval_view(request):
     return render(request, 'registration/pending_approval.html')
-
-@login_required
-def resolve_error(request, pk):
-    if getattr(request.user, 'role', '') != 'DEV':
-        return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
-    
-    from .models import SystemError
-    error = get_object_or_404(SystemError, pk=pk)
-    error.is_resolved = True
-    error.save()
-    
-    return JsonResponse({'status': 'success', 'message': f'Incident {pk} resolved.'})
-
-@login_required
-def bulk_resolve_errors(request):
-    if getattr(request.user, 'role', '') != 'DEV':
-        return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
-    
-    if request.method != 'POST':
-        return JsonResponse({'status': 'error', 'message': 'POST required'}, status=405)
-        
-    message = request.POST.get('message')
-    if not message:
-        return JsonResponse({'status': 'error', 'message': 'No message provided'}, status=400)
-    
-    from .models import SystemError
-    count = SystemError.objects.filter(message=message, is_resolved=False).update(is_resolved=True)
-    
-    return JsonResponse({'status': 'success', 'message': f'Resolved {count} similar incidents.'})
-
-@login_required
-def sanitize_logs(request):
-    if getattr(request.user, 'role', '') != 'DEV':
-        return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
-    
-    from .models import SystemError
-    from concurrent.futures import ThreadPoolExecutor
-    
-    # Limit to top 100 most recent unresolved incidents to keep it fast
-    unresolved = list(SystemError.objects.filter(is_resolved=False).order_by('-timestamp')[:100])
-    
-    # Map URLs to errors to avoid redundant probes
-    url_to_errors = {}
-    for err in unresolved:
-        if err.url:
-            if err.url not in url_to_errors:
-                url_to_errors[err.url] = []
-            url_to_errors[err.url].append(err)
-            
-    if not url_to_errors:
-        return JsonResponse({'status': 'success', 'message': 'No unique URLs found in the recent log backlog.'})
-        
-    resolved_ids = []
-    
-    def check_url(url):
-        try:
-            abs_url = request.build_absolute_uri(url)
-            # Parallel verification with a tight timeout
-            resp = requests.get(abs_url, timeout=1.5, verify=False)
-            if resp.status_code < 400:
-                return url
-        except Exception:
-            pass
-        return None
-
-    # Process unique URLs in parallel (max 10 workers)
-    with ThreadPoolExecutor(max_workers=10) as executor:
-        results = list(executor.map(check_url, url_to_errors.keys()))
-        
-    # Map fixed URLs back to error IDs
-    for url in results:
-        if url:
-            for err in url_to_errors[url]:
-                resolved_ids.append(err.id)
-                
-    # Batch resolve the identified incidents
-    if resolved_ids:
-        SystemError.objects.filter(id__in=resolved_ids).update(is_resolved=True)
-                
-    return JsonResponse({
-        'status': 'success', 
-        'message': f'Optimization complete. Processed top 100 incidents. {len(resolved_ids)} fixed incidents auto-resolved.'
-    })
