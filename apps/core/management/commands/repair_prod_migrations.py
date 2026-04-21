@@ -1,3 +1,4 @@
+from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.db import connection
 
@@ -27,4 +28,13 @@ class Command(BaseCommand):
             
             rows_deleted = cursor.rowcount
             self.stdout.write(self.style.SUCCESS(f"Successfully cleared {rows_deleted} migration records."))
-            self.stdout.write(self.style.SUCCESS("Post-repair: Run 'migrate --fake-initial' to rebuild history safely."))
+            
+        # Standardize core apps to their latest state using --fake
+        # This prevents 'already applied' SQL errors like dropping non-existent columns.
+        core_apps_to_fake = ['contenttypes', 'auth', 'admin', 'sessions']
+        for app in core_apps_to_fake:
+            self.stdout.write(f"Faking migration history for {app}...")
+            call_command('migrate', app, fake=True, interactive=False, verbosity=1)
+            
+        self.stdout.write(self.style.SUCCESS("Surgical repair complete. Core apps have been standard-faked."))
+        self.stdout.write(self.style.NOTICE("Next step: 'migrate --fake-initial' will initialize our NEW modular apps."))
