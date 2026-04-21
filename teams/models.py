@@ -1,182 +1,25 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
-from django.conf import settings
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from .utils.email_service import send_html_email
-from django.utils import timezone
+from apps.core.models import SystemSettings, SystemPulse, SystemError
 
-class CustomUser(AbstractUser):
-    ROLE_CHOICES = (
-        ('STUDENT', 'Student'),
-        ('LECTURER', 'Lecturer/Teacher'),
-        ('DEV', 'Developer/Admin'),
-    )
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='STUDENT')
-    email = models.EmailField(unique=True)
-    is_approved = models.BooleanField(default=True) # Default True for existing users
-
-    def __str__(self):
-        return f"{self.get_full_name()} ({self.role})"
-
-    def save(self, *args, **kwargs):
-        # Administrative privileges are only granted to APPROVED users
-        if self.is_approved:
-            if self.role == 'DEV':
-                self.is_staff = True
-                self.is_superuser = True
-            elif self.role == 'LECTURER':
-                self.is_staff = True
-                self.is_superuser = False
-            else:
-                self.is_staff = False
-                self.is_superuser = False
-        else:
-            # Unapproved users strictly have NO staff/admin access
-            self.is_staff = False
-            self.is_superuser = False
-            
-        super().save(*args, **kwargs)
-
-class SystemSettings(models.Model):
-    max_team_size = models.IntegerField(default=4)
-
-    def save(self, *args, **kwargs):
-        if not self.pk and SystemSettings.objects.exists():
-            return SystemSettings.objects.first()
-        return super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"System Settings (Max Size: {self.max_team_size})"
-
-    class Meta:
-        verbose_name_plural = "System Settings"
-
+# Proxy imports for backward compatibility during Phase 1
+from apps.users.models import CustomUser, Student, Lecturer, Developer
+from apps.academia.models import ClassDocument, Assignment, TeamSubmission, SubmissionFile
 
 class Team(models.Model):
     name = models.CharField(max_length=255, unique=True)
     project_name = models.CharField(max_length=255, blank=True)
     project_description = models.TextField(blank=True)
-    leader = models.ForeignKey('Student', null=True, blank=True, on_delete=models.SET_NULL, related_name='led_teams')
+    leader = models.ForeignKey('users.Student', null=True, blank=True, on_delete=models.SET_NULL, related_name='led_teams')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def clean(self):
         super().clean()
         if self.pk:
-            settings = SystemSettings.objects.first()
-            max_size = settings.max_team_size if settings else 4
+            settings = SystemSettings.get_settings()
+            max_size = settings.max_team_size
             if self.members.count() > max_size:
                 raise ValidationError(f"Team cannot have more than {max_size} members.")
 
     def __str__(self):
         return self.name
-
-
-class Student(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='student_profile')
-    team = models.ForeignKey(Team, null=True, blank=True, on_delete=models.SET_NULL, related_name='members')
-    role = models.CharField(max_length=255, blank=True, default="Member")
-
-    def __str__(self):
-        return f"Student: {self.user.get_full_name()}"
-
-class Lecturer(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='lecturer_profile')
-    department = models.CharField(max_length=255, blank=True)
-
-    def __str__(self):
-        return f"Lecturer: {self.user.get_full_name()}"
-
-class Developer(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='developer_profile')
-    access_level = models.IntegerField(default=1) # Can be used for tiered dev perms
-
-    def __str__(self):
-        return f"Developer: {self.user.get_full_name()}"
-
-class ClassDocument(models.Model):
-    title = models.CharField(max_length=255)
-    file = models.FileField(upload_to='class_docs/')
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='documents')
-
-    def __str__(self):
-        return self.title
-
-class Assignment(models.Model):
-    title = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
-    instruction_file = models.FileField(upload_to='assignment_instructions/', null=True, blank=True)
-    deadline = models.DateTimeField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='created_assignments')
-    grades_released = models.BooleanField(default=False)
-
-    def __str__(self):
-        return self.title
-
-class TeamSubmission(models.Model):
-    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='submissions')
-    assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE, related_name='submissions', null=True, blank=True)
-    title = models.CharField(max_length=255)
-    file = models.FileField(upload_to='team_submissions/', null=True, blank=True) # Deprecated, moving to SubmissionFile
-    submitted_at = models.DateTimeField(auto_now_add=True)
-    submitted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    grade = models.IntegerField(null=True, blank=True)
-    feedback = models.TextField(blank=True)
-
-    def __str__(self):
-        return f"{self.team.name} - {self.title}"
-
-class SubmissionFile(models.Model):
-    submission = models.ForeignKey(TeamSubmission, on_delete=models.CASCADE, related_name='files')
-    file = models.FileField(upload_to='team_submissions/')
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"File for {self.submission.title}"
-
-class SystemPulse(models.Model):
-    STATUS_CHOICES = (
-        ('OPERATIONAL', 'Operational'),
-        ('WARNING', 'Warning'),
-        ('CRITICAL', 'Critical'),
-        ('DOWN', 'Down'),
-    )
-    timestamp = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='OPERATIONAL')
-    latency = models.FloatField(help_text="Response time in ms")
-    info = models.TextField(blank=True)
-
-    class Meta:
-        ordering = ['-timestamp']
-
-class SystemError(models.Model):
-    timestamp = models.DateTimeField(auto_now_add=True)
-    message = models.CharField(max_length=255)
-    stack_trace = models.TextField()
-    url = models.CharField(max_length=255, blank=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
-    is_resolved = models.BooleanField(default=False)
-
-    class Meta:
-        ordering = ['-timestamp']
-
-@receiver(post_save, sender=SystemError)
-def alert_admin_on_error(sender, instance, created, **kwargs):
-    if created:
-        send_html_email(
-            subject="CRITICAL: Runtime Application Error",
-            template_name='teams/emails/system_alert.html',
-            context={
-                'alert_title': 'Runtime Application Error Detected',
-                'error_message': instance.message,
-                'timestamp': instance.timestamp,
-                'module': 'Django Web App',
-                'url': instance.url,
-                'user': instance.user.email if instance.user else 'Anonymous',
-                'dashboard_url': 'http://localhost:8000/dev-dashboard/' # Update for prod
-            },
-            recipient_list=['sub2pewds10102005@gmail.com']
-        )

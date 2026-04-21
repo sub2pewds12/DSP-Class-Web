@@ -665,10 +665,10 @@
                                 </td>
                                 <td class="border-0 text-end px-4">
                                     <div class="d-flex gap-2 justify-content-end">
-                                        <button onclick="approveUser({{ p_user.id }})" class="btn btn-sm btn-success rounded-pill px-3 shadow-sm border-0">
+                                        <button id="btn-approve-{{ p_user.id }}" onclick="approveUser({{ p_user.id }})" class="btn btn-sm btn-success rounded-pill px-3 shadow-sm border-0">
                                             <i class="bi bi-check-lg"></i> Approve
                                         </button>
-                                        <button onclick="denyUser({{ p_user.id }})" class="btn btn-sm btn-outline-danger rounded-pill px-3">
+                                        <button id="btn-deny-{{ p_user.id }}" onclick="denyUser({{ p_user.id }})" class="btn btn-sm btn-danger rounded-pill px-3 shadow-sm border-0">
                                             <i class="bi bi-x-lg"></i> Deny
                                         </button>
                                     </div>
@@ -882,18 +882,34 @@
 
     async function approveUser(id) {
         if (!confirm('Approve this user access request?')) return;
+        const btn = document.getElementById(`btn-approve-${id}`);
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Processing...';
+        
         try {
             await apiCall(`/api/dev/approve-user/${id}`);
             location.reload();
-        } catch (e) { }
+        } catch (e) {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
     }
 
     async function denyUser(id) {
         if (!confirm('Permanently deny and delete this request?')) return;
+        const btn = document.getElementById(`btn-deny-${id}`);
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Processing...';
+
         try {
             await apiCall(`/api/dev/deny-user/${id}`);
             location.reload();
-        } catch (e) { }
+        } catch (e) {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
     }
 
     function updateUnresolvedCount(delta) {

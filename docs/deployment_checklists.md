@@ -51,9 +51,16 @@ For your live site to work securely, you **must** add these variables in the Ren
 | `runtime.txt` | Specifies the Python version |
 | `requirements.txt` | Python dependencies |
 
-## 4. Production Security (Automatic)
-When `DEBUG=False`, the following security settings are automatically enabled:
-- HSTS (1 year, including subdomains, with preload)
-- SSL redirect
-- Secure session and CSRF cookies
-- HTTPS proxy header detection
+## 4. Production Security & Resilience (Phase 4 Hardened)
+When `DEBUG=False`, the following security settings are automatically active:
+- **HSTS**: 1 year, including subdomains, with preload.
+- **Header Hardening**: `X-Frame-Options: DENY`, `SECURE_CONTENT_TYPE_NOSNIFF`, and `SECURE_REFERRER_POLICY: same-origin`.
+- **CSP**: Content Security Policy is active (refer to `production.py`).
+- **Resilience**: Analytics caching and automated self-healing are enabled.
+
+## 5. Docker Orchestration
+For local production simulation or containerized cloud hosting:
+1.  **Build**: `docker-compose build`
+2.  **Run**: `docker-compose up -d`
+3.  **Logs**: `docker-compose logs -f web`
+4.  **Admin Check**: Visit `localhost:8000/dev-dashboard/`

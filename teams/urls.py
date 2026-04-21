@@ -29,5 +29,8 @@ urlpatterns = [
     path('submission/<int:pk>/', views.submission_detail, name='submission_detail'),
     path('assignment/<int:pk>/grades/', views.view_grades, name='view_grades'),
     path('submission/<int:pk>/delete/', views.delete_submission, name='delete_submission'),
+    path('submission/<int:pk>/grade/', views.grade_submission, name='grade_submission'),
+    path('assignment/<int:pk>/release/', views.release_grades, name='release_grades'),
+    path('document/upload/', views.upload_document, name='upload_document'),
     
 ]

@@ -14,12 +14,15 @@ from django.utils.html import strip_tags
 from django.utils import timezone
 import math, platform, sys, django, threading
 from .models import Student, Team, Lecturer, CustomUser, ClassDocument, TeamSubmission, Assignment, SystemSettings
-from .utils.email_service import send_html_email
-from .forms import (
-    TeamRegistrationForm, UserRegistrationForm, DocumentUploadForm, 
-    TeamProjectForm, StudentRoleForm, AssignmentForm, AssignmentSubmissionForm,
-    GradeSubmissionForm
+from apps.core.utils.email_service import send_html_email
+from apps.users.forms import UserRegistrationForm, StudentRoleForm
+from apps.academia.forms import (
+    DocumentUploadForm, AssignmentForm, AssignmentSubmissionForm, 
+    GradeSubmissionForm, TeamRegistrationForm, TeamProjectForm
 )
+from apps.academia.services import SubmissionService, AssignmentService
+from apps.users.services import UserService
+from apps.core.services import InfrastructureService
 
 
 @login_required
@@ -29,99 +32,84 @@ def dashboard_view(request, team_id=None):
         
     if request.user.role == 'LECTURER':
         return redirect('teacher_dashboard')
-    
-    # Clear any stale modal error markers
-    if 'form_error_id' in request.session:
-        error_id = request.session.pop('form_error_id')
-    else:
-        error_id = None
+    if request.user.role == 'DEV' and not team_id:
+        return redirect('dev_dashboard')
 
-    student, created = Student.objects.get_or_create(user=request.user)
-    documents = ClassDocument.objects.all().order_by('-uploaded_at')
-    assignments = Assignment.objects.all().order_by('-deadline')
+    student, _ = Student.objects.get_or_create(user=request.user)
     
-    # Determine the target team and access mode
+    # Determine team context
+    team = student.team
     is_read_only = False
     if team_id:
         team = get_object_or_404(Team, id=team_id)
-        # Developers can see any team; others must be members
-        if request.user.role == 'DEV':
-            if not team.members.filter(user=request.user).exists():
-                is_read_only = True
-        else:
-            if not team.members.filter(user=request.user).exists():
-                messages.error(request, "Access restricted. You can only view dashboards for teams you belong to.")
+        if request.user.role != 'DEV' and not team.members.filter(user=request.user).exists():
+            messages.error(request, "Access restricted.")
+            return redirect('dashboard')
+        if request.user.role == 'DEV' and not team.members.filter(user=request.user).exists():
+            is_read_only = True
+
+    # Handle Actions
+    if request.method == 'POST':
+        if team and 'upload_assignment' in request.POST:
+            form = AssignmentSubmissionForm(request.POST, request.FILES)
+            if form.is_valid():
+                assignment = get_object_or_404(Assignment, id=request.POST.get('assignment_id'))
+                files = request.FILES.getlist('files')
+                if not files:
+                    messages.error(request, "Please select at least one file.")
+                    return redirect('dashboard')
+                
+                try:
+                    SubmissionService.create_submission(
+                        user=request.user,
+                        assignment=assignment,
+                        title=form.cleaned_data['title'],
+                        files=files
+                    )
+                    messages.success(request, f"Assignment '{assignment.title}' submitted.")
+                except ValueError as e:
+                    messages.error(request, str(e))
                 return redirect('dashboard')
-    else:
-        team = student.team
+        
+        elif not team:
+            form = TeamRegistrationForm(request.POST)
+            if form.is_valid():
+                team_choice = form.cleaned_data['team_choice']
+                if team_choice: team = team_choice
+                else: team = Team.objects.create(name=form.cleaned_data['new_team_name'])
+                
+                student.team = team
+                student.save()
+                if team.members.count() == 1:
+                    team.leader = student
+                    team.save()
+                messages.success(request, f"Joined {team.name}")
+                return redirect('dashboard')
+
+    # Prepare Context
+    documents = ClassDocument.objects.all().order_by('-uploaded_at')
+    assignments = Assignment.objects.all().order_by('-deadline')
 
     if team:
-        if not team.leader and team.members.exists():
-            # Auto-assign first member as leader if missing (legacy or dev-created)
-            team.leader = team.members.first()
-            team.save()
-
-    if team:
-        if not team.leader and team.members.exists():
-            # Auto-assign first member as leader if missing
-            team.leader = team.members.first()
-            team.save()
-
-        # Forms (only for members with appropriate permissions)
-        project_form = TeamProjectForm(instance=team)
-        role_form = StudentRoleForm(instance=student)
-        assign_form = AssignmentSubmissionForm()
-
-        # Annotate assignments
         for a in assignments:
             a.team_submission = team.submissions.filter(assignment=a).order_by('-submitted_at').first()
-            if a.team_submission and a.team_submission.submitted_at and a.deadline:
-                a.is_late = a.team_submission.submitted_at > a.deadline
-            else:
-                a.is_late = False
-
-        # Forms (only for members with appropriate permissions)
-        project_form = TeamProjectForm(instance=team)
-        role_form = StudentRoleForm(instance=student)
-        assign_form = AssignmentSubmissionForm()
-
+            a.is_late = a.team_submission.is_late if a.team_submission else False
+            
         return render(request, 'teams/dashboard.html', {
-            'student': student, 
+            'student': student,
             'team': team,
             'documents': documents,
             'assignments': assignments,
-            'project_form': project_form,
-            'role_form': role_form,
-            'assign_form': assign_form,
-            'error_id': error_id,
-            'is_read_only': is_read_only,
+            'project_form': TeamProjectForm(instance=team),
+            'role_form': StudentRoleForm(instance=student),
+            'assign_form': AssignmentSubmissionForm(),
+            'is_read_only': is_read_only
         })
 
-    if request.method == 'POST':
-        form = TeamRegistrationForm(request.POST)
-        if form.is_valid():
-            team_choice = form.cleaned_data['team_choice']
-            new_team_name = form.cleaned_data['new_team_name']
-
-            if team_choice:
-                team = team_choice
-            else:
-                team, t_created = Team.objects.get_or_create(name=new_team_name)
-
-            student.team = team
-            student.save()
-            
-            # If they are the first member, they become the leader
-            if team.members.count() == 1:
-                team.leader = student
-                team.save()
-
-            messages.success(request, f"Successfully joined the team: {team.name}")
-            return redirect('dashboard')
-    else:
-        form = TeamRegistrationForm()
-
-    return render(request, 'teams/register.html', {'form': form, 'documents': documents})
+    return render(request, 'teams/register.html', {
+        'form': TeamRegistrationForm(),
+        'documents': documents
+    })
 
 def guide_view(request):
     return render(request, 'teams/guide.html')
@@ -147,28 +135,23 @@ def teacher_dashboard(request):
     documents = ClassDocument.objects.all().order_by('-uploaded_at')
     assignments = Assignment.objects.all().order_by('-deadline')
     
-    # Process teams to check if submissions were late with safeguards
-    # and build a comprehensive status map for the assignment grid
-    for t in teams:
-        t.assignment_status = []
-        # Create a dictionary of the team's submissions keyed by assignment ID
-        # (Picking the latest submission if multiple exist)
-        team_subs = {}
-        for s in t.submissions.all():
-            if s.assignment_id not in team_subs or s.submitted_at > team_subs[s.assignment_id].submitted_at:
-                team_subs[s.assignment_id] = s
-        
-        for a in assignments:
-            sub = team_subs.get(a.id)
-            if sub:
-                sub.is_late = False
-                if sub.submitted_at and a.deadline:
-                    try:
-                        sub.is_late = sub.submitted_at > a.deadline
-                    except (TypeError, ValueError):
-                        sub.is_late = False
-            t.assignment_status.append({'assignment': a, 'submission': sub})
+    # Offload status mapping logic to service
+    teams = AssignmentService.get_team_status_matrix(teams, assignments)
 
+    if request.method == 'POST':
+        if 'create_assignment' in request.POST:
+            assign_form = AssignmentForm(request.POST, request.FILES)
+            if assign_form.is_valid():
+                AssignmentService.create_assignment(
+                    user=request.user,
+                    title=assign_form.cleaned_data['title'],
+                    deadline=assign_form.cleaned_data['deadline'],
+                    description=assign_form.cleaned_data['description'],
+                    instruction_file=request.FILES.get('instruction_file')
+                )
+                messages.success(request, "Assignment created successfully.")
+                return redirect('teacher_dashboard')
+        
     # Only initialize new forms if they weren't already created (and potentially failed) during POST
     if 'doc_form' not in locals(): doc_form = DocumentUploadForm()
     if 'assign_form' not in locals(): assign_form = AssignmentForm()
@@ -200,6 +183,49 @@ def delete_submission(request, pk):
     
     return redirect('dashboard' if request.user.role == 'STUDENT' else 'teacher_dashboard')
 
+@login_required
+def grade_submission(request, pk):
+    if request.user.role not in ['LECTURER', 'DEV']:
+        messages.error(request, "Unauthorized access.")
+        return redirect('dashboard')
+    
+    submission = get_object_or_404(TeamSubmission, pk=pk)
+    if request.method == 'POST':
+        form = GradeSubmissionForm(request.POST)
+        if form.is_valid():
+            submission.grade = form.cleaned_data['grade']
+            submission.feedback = form.cleaned_data['feedback']
+            submission.save()
+            messages.success(request, f"Submission for {submission.team.name} graded.")
+    return redirect('teacher_dashboard')
+
+@login_required
+def release_grades(request, pk):
+    if request.user.role not in ['LECTURER', 'DEV']:
+        return redirect('dashboard')
+    
+    assignment = get_object_or_404(Assignment, pk=pk)
+    assignment.grades_released = True
+    assignment.save()
+    messages.success(request, f"Grades for '{assignment.title}' have been released.")
+    return redirect('teacher_dashboard')
+
+@login_required
+def upload_document(request):
+    if request.user.role not in ['LECTURER', 'DEV']:
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        form = DocumentUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            AssignmentService.upload_document(
+                user=request.user,
+                title=form.cleaned_data['title'],
+                file=request.FILES['file']
+            )
+            messages.success(request, "Document uploaded successfully.")
+    return redirect('teacher_dashboard')
+
 def signup_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
@@ -207,49 +233,13 @@ def signup_view(request):
     if request.method == 'POST':
         form = UserRegistrationForm(request.POST)
         if form.is_valid():
-            user = form.save(commit=False)
-            user.username = user.email # Use email as username
+            user, is_auto_approved = UserService.register_user(form.cleaned_data, request)
             
-            # Extract role and set approval state
-            role = form.cleaned_data.get('role', 'STUDENT')
-            user.role = role
-            if role == 'STUDENT':
-                user.is_approved = True
-            else:
-                user.is_approved = False
-                
-            password = form.cleaned_data.get('password')
-            user.set_password(password)
-            user.save()
-            
-            # Handle Student Auto-Approval
-            if role == 'STUDENT':
-                Student.objects.get_or_create(user=user)
-                login(request, user, backend='teams.backends.CaseInsensitiveModelBackend')
+            if is_auto_approved:
                 messages.success(request, f"Welcome, {user.first_name}! Your account has been created successfully.")
                 return redirect('dashboard')
             
-            # Handle Staff/Dev Registration (Requires Approval)
-            if role == 'DEV':
-                from .models import Developer
-                Developer.objects.get_or_create(user=user)
-            else:
-                Lecturer.objects.get_or_create(user=user)
-            
-            # Trigger Admin Notification
-            send_html_email(
-                subject=f"Access Request: {role} - {user.get_full_name()}",
-                template_name='teams/emails/admin_request.html',
-                context={
-                    'user_name': user.get_full_name(),
-                    'user_email': user.email,
-                    'requested_role': role,
-                    'dashboard_url': request.build_absolute_uri('/dev-dashboard/')
-                },
-                recipient_list=['sub2pewds10102005@gmail.com']
-            )
-            
-            messages.info(request, f"Registration submitted. An administrator must approve your {role.lower()} access.")
+            messages.info(request, f"Registration submitted. An administrator must approve your {user.role.lower()} access.")
             return redirect('pending_approval')
     else:
         form = UserRegistrationForm()
@@ -301,79 +291,26 @@ def dev_dashboard(request):
     # --- Pulse & Monitoring Logic (READ-ONLY) ---
     last_pulse = SystemPulse.objects.first()
 
-    # Fetch Data for UI (Sync to 100-pulse window)
-    pulses_history = SystemPulse.objects.all()[:100]
-    # For Chart.js - latest 100 in chronological order
-    graph_pulses = list(reversed(SystemPulse.objects.all()[:100]))
+    # Offload Analytics to Core Service
+    analytics = InfrastructureService.get_system_analytics(pulses_window=100)
     
-    # --- Advanced Infrastructure Analytics Engine ---
-    recent_p = list(pulses_history)
-    advanced_insights = []
-    health_score = 100
-    severity = "success"
+    pulses_history = analytics['pulses']
+    graph_pulses = list(reversed(pulses_history)) 
+    recent_p = pulses_history # For histogram logic
+    advanced_insights = analytics['insights']
+    health_score = analytics['health']
+    momentum = analytics['momentum']
+    severity = analytics['severity']
+    analysis_msg = analytics['message']
     
-    if recent_p:
-        # 1. Volatility Index (Jitter Detection)
-        latencies = [p.latency for p in recent_p]
-        jitters = [abs(latencies[i] - latencies[i-1]) for i in range(1, len(latencies))]
-        avg_volatility = sum(jitters) / len(jitters) if jitters else 0
-        
-        # 2. Consistency Index (Percentile Benchmarking)
-        # Using 500ms as a fixed "High Performance" threshold for this academic context
-        consistent_pulses = len([p for p in recent_p if p.latency < 500 and p.status != 'DOWN'])
-        consistency_pct = (consistent_pulses / len(recent_p)) * 100
-        
-        # 3. Performance Momentum (Trend: Last 20 vs Previous 80)
-        current_window = latencies[:20]
-        baseline_window = latencies[20:100]
-        curr_avg = sum(current_window)/len(current_window) if current_window else 0
-        base_avg = sum(baseline_window)/len(baseline_window) if baseline_window else 0
-        momentum = "STABLE"
-        if curr_avg < base_avg * 0.9: momentum = "IMPROVING"
-        elif curr_avg > base_avg * 1.1: momentum = "DEGRADING"
-        
-        # 4. Friction Analysis (Error Hotspots)
-        from django.db.models import Count
-        hotspot = SystemError.objects.values('url').annotate(count=Count('id')).order_by('-count').first()
-        
-        # Synthesis
-        if avg_volatility > 200:
-            advanced_insights.append({"type": "volatility", "label": "High Volatility", "text": f"Response jitter is elevated ({avg_volatility:.1f}ms). Connection quality is inconsistent.", "icon": "bi-reception-2"})
-        else:
-            advanced_insights.append({"type": "volatility", "label": "Signal Stable", "text": "Latency variance is within nominal limits. Signal consistency is high.", "icon": "bi-reception-4 text-success"})
-
-        if consistency_pct < 90:
-            advanced_insights.append({"type": "consistency", "label": "Consistency Drop", "text": f"System fell below performance baseline for {100-consistency_pct:.0f}% of recent cycles.", "icon": "bi-activity text-warning"})
-        
-        if hotspot and hotspot['count'] > 2:
-            advanced_insights.append({"type": "friction", "label": "Service Friction", "text": f"Recurrent failures detected on endpoint: {hotspot['url']}. Potential logic bottleneck.", "icon": "bi-exclamation-octagon text-danger"})
-            health_score -= 15
-
-        # Final Scoring logic
-        health_score -= (avg_volatility / 50)  # Volatility penalty
-        health_score -= (100 - consistency_pct) # Consistency penalty
-        if momentum == "DEGRADING": health_score -= 10
-        health_score = max(5, min(100, health_score))
-        
-        if health_score < 70: severity = "warning"
-        if health_score < 40 or any(p.status == 'DOWN' for p in recent_p[:5]): severity = "danger"
-
-        # Predictive Insight
-        if momentum == "DEGRADING" and health_score < 80:
-            analysis_msg = "Degradation trend detected. System consistency is decreasing; resource scaling or error audit recommended."
-        elif health_score > 90:
-            analysis_msg = "Infrastructure is operating at peak efficiency with negligible friction and high signal consistency."
-        else:
-            analysis_msg = "System is operational with moderate data-flow variance. No immediate critical interventions required."
-
     system_analysis = {
-        'message': analysis_msg if recent_p else "Collecting telemetry...",
+        'message': analysis_msg,
         'score': int(health_score),
         'severity': severity,
         'momentum': momentum,
-        'volatility': f"{avg_volatility:.1f}ms",
-        'consistency': f"{consistency_pct:.0f}%",
-        'insights': advanced_insights[:3] # Show top 3
+        'volatility': f"{analytics['volatility']:.1f}ms",
+        'consistency': f"{analytics['consistency']:.0f}%",
+        'insights': advanced_insights[:3] 
     }
     
     # Rolling Uptime Calculation (Last 100 pulses in current cycle)

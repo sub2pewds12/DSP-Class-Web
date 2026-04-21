@@ -4,7 +4,9 @@ from datetime import timedelta
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
-from teams.models import Team, Student, Lecturer, CustomUser, ClassDocument, TeamSubmission, Assignment
+from teams.models import Team
+from apps.users.models import Student, Lecturer, CustomUser
+from apps.academia.models import ClassDocument, TeamSubmission, Assignment
 
 User = get_user_model()
 

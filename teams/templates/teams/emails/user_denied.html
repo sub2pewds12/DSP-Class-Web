@@ -4,83 +4,57 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #0d0d0d;
-            margin: 0;
-            padding: 0;
-            color: #e0e0e0;
-        }
-        .container {
-            width: 100%;
-            max-width: 600px;
-            margin: 40px auto;
-            background-color: #1a1a1a;
-            border-radius: 20px;
-            overflow: hidden;
-            border: 1px solid #333;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-        }
-        .header {
-            background: #212121;
-            padding: 30px;
-            text-align: center;
-        }
-        .header h1 {
-            color: #ffffff;
-            margin: 0;
-            font-size: 24px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-        .content {
-            padding: 40px;
-            line-height: 1.6;
-        }
-        .notice-box {
-            background-color: rgba(211, 47, 47, 0.05);
-            padding: 25px;
-            border-radius: 12px;
-            margin: 20px 0;
-            border: 1px solid rgba(211, 47, 47, 0.1);
-            text-align: center;
-        }
-        .footer {
-            padding: 20px;
-            text-align: center;
-            font-size: 12px;
-            color: #666;
-            background-color: #141414;
-        }
-        .contact-link {
-            color: #d32f2f;
-            text-decoration: none;
-            font-weight: bold;
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f7f9fc; margin: 0; padding: 0; }
+        .wrapper { width: 100%; table-layout: fixed; background-color: #f7f9fc; padding-bottom: 40px; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; margin-top: 40px; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        .header { background: #ffffff; padding: 30px; border-bottom: 3px solid #64748b; text-align: center; }
+        .logo-row { display: flex; justify-content: center; align-items: center; gap: 20px; }
+        .logo { height: 45px; width: auto; }
+        .brand { margin-top: 15px; color: #1e293b; font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; }
+        .content { padding: 40px 50px; color: #334155; line-height: 1.7; }
+        .status-header { text-align: center; margin-bottom: 30px; }
+        .status-header h2 { color: #1e293b; margin: 0; font-size: 22px; font-weight: 800; }
+        .notice-box { background-color: #f8fafc; border-radius: 12px; padding: 25px; margin: 20px 0; border: 1px solid #e2e8f0; border-left: 4px solid #64748b; }
+        .footer { padding: 30px; text-align: center; font-size: 11px; color: #94a3b8; background-color: #ffffff; border-top: 1px solid #f1f5f9; }
+        .contact-link { color: #E11D48; text-decoration: none; font-weight: bold; }
+        .hust-text { color: #E11D48; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Application Status</h1>
-        </div>
-        <div class="content">
-            <p>Hello {{ user_name }},</p>
-            <p>Thank you for your interest in the DSP Class Platform. After reviewing your request for <strong>{{ role_name }}</strong> access, we are unable to approve your application at this time.</p>
-            
-            <div class="notice-box">
-                <p style="margin:0; color: #888;">This decision may be due to incomplete information or lack of current eligibility status.</p>
+    <div class="wrapper">
+        <div class="container">
+            <div class="header">
+                <div class="logo-row">
+                    <img src="https://hust.edu.vn/uploads/sys/logobk-pc-1.png" alt="HUST" class="logo">
+                    <img src="https://seee.hust.edu.vn/uploads/seee/logo-dhbk-1-02_130_191.png" alt="SEEE" class="logo">
+                </div>
+                <div class="brand">DSP Class Platform <span class="hust-text">HUST</span></div>
             </div>
+            <div class="content">
+                <div class="status-header">
+                    <h2>Application Status Update</h2>
+                    <p style="margin: 5px 0 0; color: #64748b; opacity: 0.8;">Verification Review Completed</p>
+                </div>
+                
+                <p>Hello <strong>{{ user_name }}</strong>,</p>
+                <p>Thank you for your interest in the DSP Class Platform. After reviewing your request for <strong>{{ role_name }}</strong> access, we are unable to approve your application at this time.</p>
+                
+                <div class="notice-box">
+                    <p style="margin:0; font-size: 14px; color: #475569;">
+                        <strong>Reason for decision:</strong> This may be due to incomplete enrollment information, mismatched student records, or a lack of current eligibility for the requested role.
+                    </p>
+                </div>
 
-            <p>If you believe this is an error or would like more information, please contact the platform administrator directly.</p>
-            
-            <p style="text-align: center; margin-top: 30px;">
-                <a href="mailto:sub2pewds10102005@gmail.com" class="contact-link">Contact Support</a>
-            </p>
-        </div>
-        <div class="footer">
-            &copy; 2026 DSP Class Platform. Sent with focus on security and excellence.
+                <p>If you believe this decision was made in error or if your academic status has recently changed, please contact the platform administration team for further clarification.</p>
+                
+                <p style="text-align: center; margin-top: 30px;">
+                    <a href="mailto:sub2pewds10102005@gmail.com" class="contact-link">Contact Platform Support</a>
+                </p>
+            </div>
+            <div class="footer">
+                Hanoi University of Science and Technology • School of Electrical & Electronic Engineering<br>
+                &copy; 2026 DSP Class Platform. Sent with focus on security and academic standards.
+            </div>
         </div>
     </div>
 </body>

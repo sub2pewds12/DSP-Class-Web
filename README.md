@@ -33,6 +33,14 @@ Surgically remove only test data while preserving real user accounts:
 .\.venv\Scripts\python.exe manage.py seed_dsp --clear
 ```
 
+- [System Pulse & Resilience](docs/resilience_guide.md) — Self-healing engine and analytics caching.
+
+## 🐳 Docker Deployment
+The platform is fully containerized for consistent deployment:
+1. **Build & Start**: `docker-compose up --build -d`
+2. **Setup**: The container automatically handles migrations and static collection.
+3. **Check**: Access the dev-dashboard at `localhost:8000/dev-dashboard/` to verify health.
+
 ## 📂 Documentation
 Detailed guides are available in the [`docs/`](docs/) folder:
 - [Local Development](docs/local_development.md) — Running the server and setting up your environment.

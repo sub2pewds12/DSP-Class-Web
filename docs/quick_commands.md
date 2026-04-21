@@ -28,10 +28,21 @@ A one-page cheat sheet for common commands and essential links.
 
 ## 💻 Console Commands (PowerShell)
 
-### Server Management
+### 🐳 Docker Deployment (Production)
 | Action | Command |
 | :--- | :--- |
-| **Start Server** | `.\.venv\Scripts\python.exe manage.py runserver` |
+| **Build Project** | `docker-compose build` |
+| **Run Stack** | `docker-compose up -d` |
+| **Stop Stack** | `docker-compose down` |
+| **View Logs** | `docker-compose logs -f web` |
+| **Run Migrations** | `docker-compose exec web python manage.py migrate` |
+
+## 🦾 Resilience & Health
+| Action | Description |
+| :--- | :--- |
+| **Reset Health** | Delete old pulses: `python manage.py prune_pulses` |
+| **Bypass Cache** | Force real-time telemetry via dashboard "Refresh" |
+| **Recovery Test** | Health Score < 40 triggers automated cache flush |
 | **Fix Execution Policy** | `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process` |
 | **Activate Venv** | `.\.venv\Scripts\activate` |
 

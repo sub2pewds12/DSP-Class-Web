@@ -7,11 +7,13 @@ import requests
 import os
 from concurrent.futures import ThreadPoolExecutor
 from typing import List, Optional
-from .models import (
-    SystemError, Student, Team, Assignment, TeamSubmission, 
-    SubmissionFile, ClassDocument, CustomUser
-)
-from .utils.email_service import send_html_email
+from apps.users.models import CustomUser, Student
+from apps.core.models import SystemError
+from apps.academia.models import Assignment, TeamSubmission, SubmissionFile, ClassDocument
+from .models import Team
+from apps.academia.services import SubmissionService, AssignmentService
+from apps.users.services import UserService
+from apps.core.utils.email_service import send_html_email
 
 api = NinjaAPI(
     title="Smart Incident Hub & Academic API", 
@@ -164,17 +166,15 @@ def submit_assignment_api(request, assignment_id: int, files: List[UploadedFile]
         if ext not in allowed_exts:
             return 400, {"status": "error", "message": f"File type '{ext}' not allowed."}
 
-    with transaction.atomic():
-        # Create submission
-        sub = TeamSubmission.objects.create(
-            team=team,
+    try:
+        sub = SubmissionService.create_submission(
+            user=request.user,
             assignment=assignment,
             title=f"Submission for {assignment.title}",
-            submitted_by=request.user
+            files=files
         )
-        # Create file objects
-        for f in files:
-            SubmissionFile.objects.create(submission=sub, file=f)
+    except ValueError as e:
+        return 400, {"status": "error", "message": str(e)}
     
     status = "on time"
     if sub.submitted_at and assignment.deadline and sub.submitted_at > assignment.deadline:
@@ -191,11 +191,11 @@ def create_assignment_api(request, data: AssignmentSchema, instr_file: Optional[
         return 403, {"status": "error", "message": "Unauthorized"}
     
     # Simple deadline parsing
-    assign = Assignment.objects.create(
+    assign = AssignmentService.create_assignment(
+        user=request.user,
         title=data.title,
-        description=data.description,
         deadline=data.deadline,
-        created_by=request.user,
+        description=data.description,
         instruction_file=instr_file
     )
     return {"status": "success", "message": f"Assignment '{assign.title}' created."}
@@ -206,10 +206,10 @@ def upload_document_api(request, title: str, file: UploadedFile = File(...)):
     if request.user.role not in ['LECTURER', 'DEV']:
         return 403, {"status": "error", "message": "Unauthorized"}
     
-    doc = ClassDocument.objects.create(
+    doc = AssignmentService.upload_document(
+        user=request.user,
         title=title,
-        file=file,
-        uploaded_by=request.user
+        file=file
     )
     return {"status": "success", "message": f"Document '{doc.title}' uploaded."}
 
@@ -257,21 +257,7 @@ def approve_user_api(request, user_id: int):
     if request.user.role != 'DEV':
         return 403, {"status": "error", "message": "Unauthorized"}
     
-    user = get_object_or_404(CustomUser, id=user_id)
-    user.is_approved = True
-    user.save()
-    
-    # Notify User
-    send_html_email(
-        subject="Your Account has been Approved!",
-        template_name='teams/emails/user_approved.html',
-        context={
-            'user_name': user.first_name,
-            'role_name': user.role,
-            'login_url': request.build_absolute_uri('/login/')
-        },
-        recipient_list=[user.email]
-    )
+    UserService.approve_user(user_id, request)
     
     return {"status": "success", "message": f"User '{user.get_full_name()}' approved."}
 
@@ -281,18 +267,7 @@ def deny_user_api(request, user_id: int):
     if request.user.role != 'DEV':
         return 403, {"status": "error", "message": "Unauthorized"}
     
-    user = get_object_or_404(CustomUser, id=user_id)
-    name = user.get_full_name()
-    email = user.email
-    role = user.role
-    user.delete()
-    
-    send_html_email(
-        subject="Application Status Update",
-        template_name='teams/emails/user_denied.html',
-        context={'user_name': name, 'role_name': role},
-        recipient_list=[email]
-    )
+    name = UserService.deny_user(user_id)
     return {"status": "success", "message": f"User '{name}' denied and removed."}
 
 # --- General Actions ---
