@@ -11,6 +11,9 @@ class CustomUser(AbstractUser):
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='STUDENT')
     email = models.EmailField(unique=True)
     is_approved = models.BooleanField(default=True)
+    
+    class Meta:
+        db_table = 'teams_customuser'
 
     def __str__(self):
         return f"{self.get_full_name()} ({self.role})"
@@ -36,12 +39,18 @@ class Student(models.Model):
     team = models.ForeignKey('teams.Team', null=True, blank=True, on_delete=models.SET_NULL, related_name='members')
     role = models.CharField(max_length=255, blank=True, default="Member")
 
+    class Meta:
+        db_table = 'teams_student'
+
     def __str__(self):
         return f"Student: {self.user.get_full_name()}"
 
 class Lecturer(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='lecturer_profile')
     department = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        db_table = 'teams_lecturer'
 
     def __str__(self):
         return f"Lecturer: {self.user.get_full_name()}"
@@ -50,6 +59,9 @@ class Developer(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='developer_profile')
     access_level = models.IntegerField(default=1)
     github_username = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        db_table = 'teams_developer'
 
     def __str__(self):
         return f"Developer: {self.user.get_full_name()}"

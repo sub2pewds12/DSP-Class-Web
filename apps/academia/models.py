@@ -10,6 +10,9 @@ class ClassDocument(models.Model):
     def __str__(self):
         return self.title
 
+    class Meta:
+        db_table = 'teams_classdocument'
+
 class Assignment(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
@@ -21,6 +24,9 @@ class Assignment(models.Model):
 
     def __str__(self):
         return self.title
+
+    class Meta:
+        db_table = 'teams_assignment'
 
 class TeamSubmission(models.Model):
     # Use string reference to avoid circular import with teams app
@@ -43,6 +49,9 @@ class TeamSubmission(models.Model):
     def __str__(self):
         return f"{self.title} (Team Submission)"
 
+    class Meta:
+        db_table = 'teams_teamsubmission'
+
 class SubmissionFile(models.Model):
     submission = models.ForeignKey(TeamSubmission, on_delete=models.CASCADE, related_name='files')
     file = models.FileField(upload_to='team_submissions/')
@@ -50,3 +59,6 @@ class SubmissionFile(models.Model):
 
     def __str__(self):
         return f"File for {self.submission.title}"
+
+    class Meta:
+        db_table = 'teams_submissionfile'

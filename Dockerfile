@@ -42,6 +42,7 @@ EXPOSE 8000
 
 # Entrypoint for production
 # Includes database migrations and gunicorn startup
-CMD python manage.py migrate --noinput && \
+CMD python manage.py repair_prod_migrations && \
+    python manage.py migrate --fake-initial --noinput && \
     python manage.py collectstatic --noinput && \
     gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120
