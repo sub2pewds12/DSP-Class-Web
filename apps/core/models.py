@@ -16,9 +16,10 @@ class SystemSettings(models.Model):
         return settings
 
     def __str__(self):
-        return f"System Settings (Max Size: {self.max_team_size})"
+        return f"System Settings (ID: {self.id})"
 
     class Meta:
+        db_table = 'teams_systemsettings'
         verbose_name_plural = "System Settings"
 
 class SystemPulse(models.Model):
@@ -35,6 +36,7 @@ class SystemPulse(models.Model):
 
     class Meta:
         ordering = ['-timestamp']
+        db_table = 'teams_systempulse'
 
 class SystemError(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
@@ -46,3 +48,4 @@ class SystemError(models.Model):
 
     class Meta:
         ordering = ['-timestamp']
+        db_table = 'teams_systemerror'
