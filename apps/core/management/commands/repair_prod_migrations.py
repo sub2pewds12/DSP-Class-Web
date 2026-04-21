@@ -27,4 +27,4 @@ class Command(BaseCommand):
             
             rows_deleted = cursor.rowcount
             self.stdout.write(self.style.SUCCESS(f"Successfully cleared {rows_deleted} migration records."))
-            self.stdout.write(self.style.IMPORTANT("Post-repair: Run 'migrate --fake-initial' to rebuild history safely."))
+            self.stdout.write(self.style.SUCCESS("Post-repair: Run 'migrate --fake-initial' to rebuild history safely."))
