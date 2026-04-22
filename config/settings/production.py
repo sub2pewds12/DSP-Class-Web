@@ -29,9 +29,15 @@ if not DEBUG:
     # Trusted Origins
     CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', 'https://dsp-class-web.onrender.com').split(',')
 
+# Database Configuration
+# We surgically strip 'pgbouncer' flags to prevent driver parsing errors on Render
+raw_db_url = os.environ.get('DATABASE_URL', os.environ.get('PROD_DB_URL'))
+if raw_db_url and 'pgbouncer' in raw_db_url:
+    raw_db_url = raw_db_url.split('?')[0]
+
 DATABASES = {
     'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL', os.environ.get('PROD_DB_URL', f"sqlite:///{BASE_DIR}/db.sqlite3")),
+        default=raw_db_url or f"sqlite:///{BASE_DIR}/db.sqlite3",
         conn_max_age=600,
         ssl_require=not DEBUG
     )

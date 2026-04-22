@@ -6,11 +6,16 @@ from dotenv import load_dotenv
 # Load secret box (.env)
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 
+# We surgically strip 'pgbouncer' flags to prevent driver parsing errors on Render
+raw_db_url = os.environ.get('DATABASE_URL')
+if raw_db_url and 'pgbouncer' in raw_db_url:
+    raw_db_url = raw_db_url.split('?')[0]
+
 DEBUG = True
 
 DATABASES = {
     'default': dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR}/db.sqlite3",
+        default=raw_db_url or f"sqlite:///{BASE_DIR}/db.sqlite3",
         conn_max_age=600,
         ssl_require=False
     )
