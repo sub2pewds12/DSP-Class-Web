@@ -344,8 +344,16 @@ def dev_dashboard(request):
     pulse_data = []
 
     # System Errors
-    system_errors = SystemError.objects.all()[:15]
+    show_archive = request.GET.get('archive') == '1'
+    if show_archive:
+        system_errors = SystemError.objects.filter(is_resolved=True).order_by('-timestamp')[:50]
+    else:
+        system_errors = SystemError.objects.filter(is_resolved=False).order_by('-timestamp')[:20]
+        
     unresolved_count = SystemError.objects.filter(is_resolved=False).count()
+
+    from apps.core.supabase_service import SupabaseService
+    supabase_status = SupabaseService.check_connection()
 
     # 1. System Infrastructure Portals
     portals = {
@@ -418,6 +426,8 @@ def dev_dashboard(request):
         'log_max_latency': log_max_latency,
         'log_benchmarks': log_benchmarks,
         'system_errors': system_errors,
+        'show_archive': show_archive,
+        'supabase_status': supabase_status,
         'sync_status': sync_status,
         'current_status': last_pulse.status if last_pulse else 'UNKNOWN',
         'system_analysis': system_analysis,

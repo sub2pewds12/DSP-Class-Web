@@ -16,3 +16,4 @@ django-ninja==1.6.2
 django-cors-headers==4.7.0
 django-ratelimit==4.1.0
 django-unfold==0.45.0
+supabase==2.12.0
