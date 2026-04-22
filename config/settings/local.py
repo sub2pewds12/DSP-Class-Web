@@ -21,6 +21,10 @@ DATABASES = {
     )
 }
 
+# NUCLEAR OPTION: Explicitly remove 'pgbouncer' from OPTIONS to prevent driver crashes
+if 'pgbouncer' in DATABASES['default'].get('OPTIONS', {}):
+    DATABASES['default']['OPTIONS'].pop('pgbouncer', None)
+
 # Optimize SQLite for local development concurrency
 if DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
     DATABASES['default']['OPTIONS'] = {

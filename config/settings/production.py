@@ -43,6 +43,10 @@ DATABASES = {
     )
 }
 
+# NUCLEAR OPTION: Explicitly remove 'pgbouncer' from OPTIONS to prevent driver crashes
+if 'pgbouncer' in DATABASES['default'].get('OPTIONS', {}):
+    DATABASES['default']['OPTIONS'].pop('pgbouncer', None)
+
 # Email Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
