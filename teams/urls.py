@@ -1,5 +1,6 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
+from django_ratelimit.decorators import ratelimit
 from . import views
 
 urlpatterns = [
@@ -14,8 +15,8 @@ urlpatterns = [
     path('health-check/', views.health_check, name='health_check'),
     
     # Auth
-    path('signup/', views.signup_view, name='signup'),
-    path('login/', auth_views.LoginView.as_view(redirect_authenticated_user=True), name='login'),
+    path('signup/', ratelimit(key='ip', rate='3/m', block=True)(views.signup_view), name='signup'),
+    path('login/', ratelimit(key='ip', rate='5/m', block=True)(auth_views.LoginView.as_view(redirect_authenticated_user=True)), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     
     # Built-in Password Reset for the Gmail "Set Initial Password" flow
@@ -31,6 +32,6 @@ urlpatterns = [
     path('submission/<int:pk>/delete/', views.delete_submission, name='delete_submission'),
     path('submission/<int:pk>/grade/', views.grade_submission, name='grade_submission'),
     path('assignment/<int:pk>/release/', views.release_grades, name='release_grades'),
-    path('document/upload/', views.upload_document, name='upload_document'),
+    path('document/upload/', ratelimit(key='ip', rate='10/m', block=True)(views.upload_document), name='upload_document'),
     
 ]

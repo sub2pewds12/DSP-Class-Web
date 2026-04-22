@@ -63,6 +63,7 @@ Your `.env` file should contain:
 ```env
 SECRET_KEY=your-secret-key
 DEBUG=True
+DATABASE_URL=postgresql://postgres:password@db.zidhrjftuoyrvoxfnyev.supabase.co:6543/postgres?pgbouncer=true
 EMAIL_HOST_USER=your-email@gmail.com
 EMAIL_HOST_PASSWORD=xxxx-xxxx-xxxx-xxxx
 CLOUDINARY_CLOUD_NAME=your-cloud-name

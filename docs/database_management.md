@@ -3,13 +3,13 @@
 ## 1. Storage Architecture
 The project uses a **dual-storage** strategy:
 
-| Layer | Local Development | Production (Render) |
-| :--- | :--- | :--- |
-| **Database** | SQLite (`db.sqlite3`) | PostgreSQL (via `DATABASE_URL`) |
-| **Media Files** | Cloudinary | Cloudinary |
-| **Static Files** | Django dev server | WhiteNoise (compressed) |
+| **Database** | SQLite (`db.sqlite3`) or `.env` | **Supabase PostgreSQL** (Tokyo Cluster) |
+| **Media Files** | Cloudinary | Cloudinary (Persistent Cloud Storage) |
+| **Static Files** | Django dev server | WhiteNoise (Compressed & Buffered) |
 
-The database backend is selected automatically via `dj-database-url`. Locally, it defaults to SQLite. In production, set the `DATABASE_URL` environment variable to your PostgreSQL connection string.
+The database backend is selected automatically via `dj-database-url`. Locally, it defaults to SQLite unless a `DATABASE_URL` is found in your `.env` file.
+
+**Supabase Production Connectivity**: Always use the **Transaction Pooler** (Port 6543) with `?pgbouncer=true`. This ensures compatibility with IPv4-only networks (like Render) and provides high-performance connection management.
 
 **Cloudinary** handles all user-uploaded files (assignment instructions, team submissions, class documents) so they persist across deployments regardless of ephemeral hosting.
 
@@ -60,3 +60,11 @@ If your database gets corrupted or you want to start fresh:
 | `ClassDocument` | Uploaded class materials (PDFs, etc.) |
 | `Assignment` | Tasks with deadlines and grade-release control |
 | `TeamSubmission` | Team uploads linked to assignments, with grade and feedback |
+## 7. Row Level Security (RLS) & Cloaking
+To protect student data, we employ a "Database Cloaking" strategy via Supabase RLS:
+- **Locked by Default**: All tables have RLS enabled, meaning direct API access is denied.
+- **Backend Only**: Only the server-side Django service (authenticated via PostgreSQL) can read and write data.
+- **Verification**: New tables must have RLS enabled via the Supabase SQL Editor:
+  ```sql
+  ALTER TABLE public.new_table ENABLE ROW LEVEL SECURITY;
+  ```

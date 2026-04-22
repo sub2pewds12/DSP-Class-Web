@@ -13,3 +13,7 @@ dj-database-url==2.3.0
 cloudinary==1.41.0
 django-cloudinary-storage==0.3.0
 django-ninja==1.6.2
+python-dotenv==1.0.1
+django-cors-headers==4.7.0
+django-ratelimit==4.1.0
+django-unfold==0.45.0

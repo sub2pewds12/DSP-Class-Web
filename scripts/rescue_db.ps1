@@ -10,11 +10,25 @@ if (-not (Test-Path $BackupDir)) {
     New-Item -ItemType Directory -Path $BackupDir | Out-Null
 }
 
-# 2. Check for pg_dump
-if (-not (Get-Command pg_dump -ErrorAction SilentlyContinue)) {
-    Write-Host "CRITICAL ERROR: pg_dump not found in your PATH." -ForegroundColor Red
-    Write-Host "Please install PostgreSQL Command Line Tools or add them to your PATH."
-    Write-Host "Download link: https://www.postgresql.org/download/windows/"
+# 2. Check for pg_dump (with common fallbacks)
+$PgDumpPath = "pg_dump"
+if (-not (Get-Command $PgDumpPath -ErrorAction SilentlyContinue)) {
+    $CommonPaths = @(
+        "C:\Program Files\PostgreSQL\18\bin\pg_dump.exe",
+        "C:\Program Files\PostgreSQL\17\bin\pg_dump.exe",
+        "C:\Program Files\PostgreSQL\16\bin\pg_dump.exe"
+    )
+    foreach ($Path in $CommonPaths) {
+        if (Test-Path $Path) {
+            $PgDumpPath = "& `"$Path`""
+            break
+        }
+    }
+}
+
+if (-not ($PgDumpPath -match "pg_dump")) {
+    Write-Host "CRITICAL ERROR: pg_dump not found." -ForegroundColor Red
+    Write-Host "Please install PostgreSQL Command Line Tools."
     exit
 }
 
@@ -28,9 +42,7 @@ if (-not $DBUrl) {
 # 4. Perform Backup
 Write-Host "Rescue in progress... saving to $BackupFile" -ForegroundColor Cyan
 try {
-    # Extracting connection details from URL if possible, or passing URL directly
-    # pg_dump can take a connection string as the first argument
-    & pg_dump $DBUrl --no-owner --no-privileges --file=$BackupFile
+    Invoke-Expression "$PgDumpPath `"$DBUrl`" --no-owner --no-privileges --file=`"$BackupFile`""
     
     if ($LASTEXITCODE -eq 0) {
         Write-Host "SUCCESS! Your production data is safe." -ForegroundColor Green

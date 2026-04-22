@@ -4,22 +4,25 @@ A comprehensive, production-ready platform designed to manage student team regis
 
 ## 🚀 Tech Stack
 - **Backend / API**: Django 5.0 (Python) + **Django Ninja** (Schema-driven API layer)
-- **Database**: SQLite (Local) / PostgreSQL (Production via `dj-database-url`)
-- **Media Storage**: Cloudinary (Persistent cloud storage for student submissions and instructions)
+- **Database**: **Supabase PostgreSQL** (Tokyo Cluster) with Row Level Security (RLS)
+- **Dashboard UI**: **Django Unfold** (Premium, Dark-mode responsive admin portal)
+- **Media Storage**: Cloudinary (Persistent cloud storage for student submissions)
 - **Static Files**: WhiteNoise (Compressed static asset serving)
-- **Frontend**: Vanilla CSS & JavaScript + Bootstrap 5 (Modern, AJAX-driven Dashboard UI)
+- **Frontend**: Vanilla CSS & JavaScript + Bootstrap 5
 - **Platform**: Render (Automated CI/CD deployment via Docker)
 
 ## 🌟 Key Features
-- **Team Registration**: Specialized logic for creating and joining teams with leader-auto-assignment.
+- **Modern Unfold Dashboard**: High-end administrative interface with dark mode and streamlined navigation.
 - **Structured Assignments**: Lecturers define tasks with specific deadlines and upload-specific slots.
-- **Modern AJAX Dashboards**: All state-modifying actions (grading, uploads, role edits) are handled via a centralized API utility, eliminating page reloads.
-- **Interactive API Documentation**: Full Swagger / OpenAPI portal for system integration and diagnostic testing.
+- **API Shielding & Security**: Global **CORS** headers, **IP-based Rate Limiting**, and **Host Hardening**.
+- **Modern AJAX Dashboards**: All state-modifying actions are handled via a centralized API utility.
+- **Interactive API Documentation**: Full Swagger / OpenAPI portal for system integration.
 - **Manual Grading**: Dedicated numeric score (0-100) and qualitative feedback system.
-- **Result Release Control**: Grades are kept private until deliberately released by the lecturer.
+- **Result Release Control**: Grades are kept private until deliberately released.
 - **Resource Repository**: Central hub for class materials and PDFs.
-- **Role-Based Approval**: Secure gatekeeping where Lecturers and Admins require manual verification before access.
+- **Role-Based Approval**: Secure gatekeeping where Lecturers and Admins require manual verification.
 - **System Telemetry & Monitoring**: Real-time tracking of DB latency and runtime errors with automated emergency alerting.
+- **Database Cloaking**: Row Level Security (RLS) enabled on all tables to prevent public API exposure.
 - **Dev Center Portals**: Deep-linked management tools for Render, Cloudinary, and UptimeRobot analytics.
 - **Seed Engine**: Custom `seed_dsp` command for surgical test data management.
 

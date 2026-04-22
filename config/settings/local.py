@@ -1,5 +1,10 @@
 from .base import *
 import dj_database_url
+import os
+from dotenv import load_dotenv
+
+# Load secret box (.env)
+load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 DEBUG = True
 
