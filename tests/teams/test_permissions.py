@@ -1,7 +1,7 @@
 from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
-from teams.models import CustomUser, Student, Team, TeamSubmission, Assignment
+from apps.teams.models import CustomUser, Student, Team, TeamSubmission, Assignment
 
 @override_settings(DEFAULT_FILE_STORAGE='django.core.files.storage.FileSystemStorage')
 class PermissionTests(TestCase):

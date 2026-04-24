@@ -11,14 +11,21 @@ class ErrorMonitoringMiddleware:
         return self.get_response(request)
 
     def process_exception(self, request, exception):
+        from django.http import Http404
+        from .services.notification_service import NotificationService
+
+        # 1. Ignore 404 errors (too much noise for email)
+        if isinstance(exception, Http404):
+            return None
+
         try:
-            # 1. Capture details
+            # 2. Capture details
             msg = str(exception)
             stack = traceback.format_exc()
             path = request.path
             user = request.user if request.user.is_authenticated else None
             
-            # 2. Log to Database
+            # 3. Log to Database (always log, even if throttled)
             error_log = SystemError.objects.create(
                 message=msg,
                 stack_trace=stack,
@@ -26,7 +33,12 @@ class ErrorMonitoringMiddleware:
                 user=user
             )
 
-            # 3. Send Email Alert
+            # 4. Smart Notification Check
+            # We use a 10-minute cooldown for the exact same error message
+            if NotificationService.should_throttle('critical_error', msg, cooldown_minutes=10):
+                return None # Silence! 
+
+            # 5. Send Email Alert
             subject = f"CRITICAL: Fatal Error at {path}"
             body = f"""A fatal system error has occurred.
 
@@ -43,6 +55,7 @@ Resolve here: {request.build_absolute_uri('/dev-dashboard/')}
 """
             recipient = getattr(settings, 'EMAIL_HOST_USER', 'sub2pewds10102005@gmail.com')
             
+            from django.core.mail import send_mail
             send_mail(
                 subject,
                 body,

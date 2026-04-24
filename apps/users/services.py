@@ -36,6 +36,19 @@ class UserService:
                 user.is_approved = True
                 user.save()
                 Student.objects.create(user=user)
+                
+                # Send automatic welcome email
+                send_html_email(
+                    subject="Welcome to DSP Class Hub",
+                    template_name='teams/emails/user_approved.html',
+                    context={
+                        'user_name': user.first_name,
+                        'role_name': 'STUDENT',
+                        'login_url': request.build_absolute_uri('/login/') if request else '/login/'
+                    },
+                    recipient_list=[user.email]
+                )
+
                 if request:
                     login(request, user, backend='apps.users.backends.CaseInsensitiveModelBackend')
                 return user, True # (user, is_auto_approved)
@@ -49,7 +62,7 @@ class UserService:
             else:
                 Lecturer.objects.create(user=user)
                 
-            # 3. Notification Logic
+            # 3. Notification Logic (ONLY for non-students)
             UserService._notify_admin_of_request(user, role, request)
             
             return user, False
@@ -75,24 +88,35 @@ class UserService:
 
     @staticmethod
     def deny_user(user_id):
-        """Denies and deletes a pending user registration."""
-        user = CustomUser.objects.get(id=user_id)
-        name = user.get_full_name()
-        email = user.email
-        role = user.role
-        user.delete()
-        
-        send_html_email(
-            subject="Application Status Update",
-            template_name='teams/emails/user_denied.html',
-            context={'user_name': name, 'role_name': role},
-            recipient_list=[email]
-        )
-        return name
+        """Denies and deletes a pending user registration safely."""
+        from django.shortcuts import get_object_or_404
+        try:
+            user = CustomUser.objects.get(id=user_id)
+            name = user.get_full_name()
+            email = user.email
+            role = user.role
+            user.delete()
+            
+            send_html_email(
+                subject="Application Status Update",
+                template_name='teams/emails/user_denied.html',
+                context={'user_name': name, 'role_name': role},
+                recipient_list=[email]
+            )
+            return name
+        except CustomUser.DoesNotExist:
+            return "User already processed"
 
     @staticmethod
     def _notify_admin_of_request(user, role, request=None):
         """Triggers email notification to the administrator."""
+        from apps.core.services.notification_service import NotificationService
+        
+        # We throttle registration alerts to once every 5 minutes to prevent floods
+        # We use a broad key since these are all "Access Requests"
+        if NotificationService.should_throttle('access_request', 'new_registration_alert', cooldown_minutes=5):
+            return 
+            
         send_html_email(
             subject=f"Access Request: {role} - {user.get_full_name()}",
             template_name='teams/emails/admin_request.html',

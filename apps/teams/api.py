@@ -152,6 +152,9 @@ def submit_assignment_api(request, assignment_id: int, files: List[UploadedFile]
         
     assignment = get_object_or_404(Assignment, id=assignment_id)
     
+    if not assignment.is_active:
+        return 400, {"status": "error", "message": "Submissions are closed for this assignment."}
+    
     # Validation logic
     if len(files) > 10:
         return 400, {"status": "error", "message": "Maximum of 10 files allowed."}
@@ -254,21 +257,32 @@ def delete_document_api(request, doc_id: int):
 @api.post("/dev/approve-user/{user_id}", response=SuccessResponse, tags=["Dev"])
 def approve_user_api(request, user_id: int):
     """Approve a pending user registration and notify them via email."""
-    if request.user.role != 'DEV':
+    if getattr(request.user, 'role', '') != 'DEV':
         return 403, {"status": "error", "message": "Unauthorized"}
-    
+        
+    user = get_object_or_404(CustomUser, id=user_id)
     UserService.approve_user(user_id, request)
-    
     return {"status": "success", "message": f"User '{user.get_full_name()}' approved."}
 
 @api.post("/dev/deny-user/{user_id}", response=SuccessResponse, tags=["Dev"])
 def deny_user_api(request, user_id: int):
     """Deny and delete a pending user registration."""
-    if request.user.role != 'DEV':
+    if getattr(request.user, 'role', '') != 'DEV':
         return 403, {"status": "error", "message": "Unauthorized"}
-    
-    name = UserService.deny_user(user_id)
+        
+    user = get_object_or_404(CustomUser, id=user_id)
+    name = user.get_full_name()
+    UserService.deny_user(user_id)
     return {"status": "success", "message": f"User '{name}' denied and removed."}
+
+@api.get("/dev/supabase-status", tags=["Dev"])
+def get_supabase_status(request):
+    """Asynchronous heartbeat for the Supabase platform."""
+    if getattr(request.user, 'role', '') != 'DEV':
+        return 403, {"status": "error", "message": "Unauthorized"}
+        
+    from apps.core.supabase_service import SupabaseService
+    return SupabaseService.check_connection()
 
 # --- General Actions ---
 

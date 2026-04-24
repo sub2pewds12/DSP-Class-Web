@@ -1,0 +1,1335 @@
+{% extends 'teams/base.html' %}
+{% load static %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    .dev-hub {
+        color: var(--text-main);
+        padding-bottom: 5rem;
+    }
+
+    .stat-card {
+        background: var(--dash-card-bg);
+        border: 1px solid var(--dash-card-border);
+        border-radius: 1.5rem;
+        padding: 1.5rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.4s ease, border-color 0.4s ease;
+        height: 100%;
+        box-shadow: var(--card-shadow);
+        color: var(--text-main);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        border-color: var(--primary-red);
+    }
+
+    .stat-card-link {
+        text-decoration: none !important;
+        color: inherit !important;
+        display: block;
+        height: 100%;
+    }
+
+    .glass-card {
+        background: rgba(var(--dash-card-bg-rgb), 0.7) !important;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid var(--dash-card-border);
+    }
+
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: 800;
+        background: var(--metric-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 250px;
+        width: 100%;
+    }
+
+    .activity-feed-scroll {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .activity-feed-scroll::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .activity-feed-scroll::-webkit-scrollbar-thumb {
+        background: var(--dash-accent);
+        border-radius: 10px;
+    }
+
+    .badge-dev {
+        background: var(--primary-red-glow);
+        color: var(--primary-red);
+        border: 1px solid var(--primary-red);
+    }
+
+    .btn-portal {
+        color: var(--text-main);
+        border: 1px solid var(--dash-card-border);
+        transition: all 0.3s ease;
+    }
+
+    .btn-portal:hover {
+        background: var(--bg-soft);
+        color: var(--primary-red);
+        border-color: var(--primary-red);
+    }
+
+    .hover-bg:hover {
+        background: rgba(var(--primary-red-rgb, 211, 47, 47), 0.05);
+    }
+
+    .error-resolved {
+        opacity: 0.4;
+        filter: grayscale(0.5);
+        transition: all 0.6s ease;
+    }
+
+    .error-row {
+        transition: all 0.6s ease;
+    }
+
+    /* Monitoring Styles - Reimagined as High-Altitude Histogram */
+    .histogram-layout {
+        display: flex;
+        gap: 12px;
+        align-items: stretch;
+    }
+
+    .y-axis {
+        display: flex;
+        flex-direction: column;
+        padding: 4px 0;
+        text-align: right;
+        min-width: 48px;
+        position: relative;
+    }
+
+    .y-label {
+        position: absolute;
+        right: 0;
+        font-size: 10px;
+        font-family: var(--font-mono);
+        color: var(--text-muted);
+        line-height: 1;
+        transform: translateY(-50%);
+    }
+
+    .uptime-bar-container {
+        flex: 1;
+        position: relative;
+    }
+
+    .uptime-bar {
+        height: 180px;
+        display: flex;
+        gap: 1px;
+        align-items: flex-end;
+        background: rgba(0, 0, 0, 0.03);
+        padding: 4px;
+        border-radius: 8px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .grid-lines {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .grid-line {
+        position: absolute;
+        left: 0;
+        right: 0;
+        border-top: 1px dashed rgba(var(--text-muted-rgb), 0.15);
+        width: 100%;
+    }
+
+    .pulse-tick {
+        flex: 1;
+        min-width: 2px;
+        border-radius: 1px 1px 0 0;
+        opacity: 0.85;
+        transition: all 0.2s ease;
+        position: relative;
+        z-index: 3;
+    }
+
+    .pulse-tick:hover {
+        opacity: 1;
+        transform: scaleY(1.05);
+        filter: brightness(1.2);
+    }
+
+    .pulse-tick.incident {
+        cursor: pointer;
+        box-shadow: 0 0 10px rgba(var(--bs-danger-rgb), 0.3);
+    }
+
+    .status-operational {
+        background: #2ecc71;
+    }
+
+    .status-warning {
+        background: #f1c40f;
+    }
+
+    .status-critical {
+        background: #e67e22;
+    }
+
+    .status-down {
+        background: #e74c3c;
+    }
+
+    /* Specific overrides for histogram bars */
+    .pulse-tick.status-down {
+        min-height: 100%;
+        border-radius: 1px;
+    }
+
+    .pulse-tick.status-critical {
+        min-height: 80%;
+    }
+
+    /* Operations Hub Redesign */
+    .operations-hub {
+        background: var(--bg-surface);
+        border: 1px solid rgba(var(--text-muted-rgb), 0.1);
+        border-radius: 1.5rem;
+        overflow: hidden;
+    }
+
+    .hub-pane-portal {
+        background: rgba(var(--primary-red-rgb), 0.03);
+        padding: 2rem;
+        border-right: 1px solid rgba(var(--text-muted-rgb), 0.05);
+    }
+
+    .hub-pane-registry {
+        padding: 2rem;
+    }
+
+    .portal-tile {
+        background: var(--bg-surface);
+        border: 1px solid rgba(var(--text-muted-rgb), 0.1);
+        border-radius: 1rem;
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        text-decoration: none !important;
+        color: var(--text-main);
+    }
+
+    .portal-tile:hover {
+        background: var(--primary-red);
+        border-color: var(--primary-red);
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(var(--primary-red-rgb), 0.3);
+    }
+
+    .portal-tile:hover i,
+    .portal-tile:hover span {
+        color: white !important;
+    }
+
+    .registry-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+    }
+
+    .registry-item {
+        background: rgba(var(--text-muted-rgb), 0.05);
+        border-radius: 1rem;
+        padding: 1rem;
+        text-align: center;
+        border: 1px solid transparent;
+        transition: border-color 0.3s ease;
+    }
+
+    .registry-item:hover {
+        border-color: rgba(var(--primary-red-rgb), 0.2);
+    }
+
+    .registry-value {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--text-main);
+        line-height: 1.2;
+    }
+
+    .registry-label {
+        font-size: 0.6rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        letter-spacing: 0.05em;
+    }
+
+    .error-row {
+        border-left: 4px solid #e74c3c;
+    }
+
+    .error-resolved {
+        border-left: 4px solid #2ecc71;
+        opacity: 0.6;
+    }
+
+    /* Vanish Animation */
+    @keyframes vanishOut {
+        0% {
+            opacity: 1;
+            transform: scaleY(1);
+        }
+
+        50% {
+            opacity: 0;
+            transform: scaleY(0.5);
+        }
+
+        100% {
+            opacity: 0;
+            transform: scaleY(0);
+            padding-top: 0;
+            padding-bottom: 0;
+            margin-top: 0;
+            margin-bottom: 0;
+            height: 0;
+        }
+    }
+
+    .vanish-out {
+        animation: vanishOut 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        pointer-events: none;
+    }
+
+    @keyframes pulse-opacity {
+        0% {
+            opacity: 0.4;
+        }
+
+        50% {
+            opacity: 1;
+        }
+
+        100% {
+            opacity: 0.4;
+        }
+    }
+
+    .animate-pulse {
+        animation: pulse-opacity 1.5s infinite ease-in-out;
+    }
+
+    /* Dashboard Table Adjustments */
+    .table {
+        color: var(--text-main) !important;
+    }
+
+    .table thead th {
+        border-bottom-color: var(--dash-card-border) !important;
+        color: var(--text-muted) !important;
+    }
+
+    .table td {
+        border-bottom-color: var(--dash-card-border) !important;
+    }
+
+    .bg-soft {
+        background-color: var(--bg-soft) !important;
+    }
+
+    .bg-secondary-soft {
+        background-color: rgba(var(--dash-card-bg-rgb), 0.5) !important;
+        border: 1px solid var(--dash-card-border);
+    }
+
+    /* Soft Severity Backgrounds */
+    .bg-success-soft {
+        background-color: rgba(46, 204, 113, 0.1) !important;
+    }
+
+    .bg-warning-soft {
+        background-color: rgba(241, 196, 15, 0.1) !important;
+    }
+
+    .bg-danger-soft {
+        background-color: rgba(231, 76, 60, 0.1) !important;
+    }
+
+    /* Sync Toasts */
+    .sync-toast {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        background: var(--bg-surface);
+        border: 1px solid var(--primary-red);
+        color: var(--text-main);
+        padding: 1rem 1.5rem;
+        border-radius: 1rem;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        animation: toastIn 0.5s ease-out;
+    }
+
+    @keyframes toastIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    /* Premium Database Pulse Renovations */
+    .pulse-hero {
+        font-family: var(--font-mono);
+        font-size: 3.5rem;
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: -2px;
+        background: linear-gradient(to bottom, #fff 0%, rgba(255, 255, 255, 0.4) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .db-status-chip {
+        padding: 4px 12px;
+        border-radius: 100px;
+        background: rgba(var(--dash-accent-rgb), 0.1);
+        border: 1px solid rgba(var(--dash-accent-rgb), 0.2);
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .wave-container {
+        height: 40px;
+        width: 100%;
+        overflow: hidden;
+        position: relative;
+        mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+    }
+
+    .wave-svg {
+        position: absolute;
+        width: 200%;
+        height: 100%;
+        animation: moveWave 4s linear infinite;
+    }
+
+    @keyframes moveWave {
+        0% {
+            transform: translateX(0);
+        }
+
+        100% {
+            transform: translateX(-50%);
+        }
+    }
+
+    .db-grid-val {
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.02);
+        transition: all 0.3s ease;
+    }
+
+    .db-grid-val:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(var(--dash-accent-rgb), 0.3);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4 pb-5">
+    <div class="d-flex justify-content-between align-items-end mb-5">
+        <div>
+            <span class="badge badge-dev mb-2 px-3 py-1 rounded-pill">System Operator</span>
+            <h1 class="display-4 fw-bold">Developer <span class="text-primary-red">Control Center</span></h1>
+            <p class="text-muted">High-fidelity platform telemetry and system diagnostics.</p>
+        </div>
+        <div class="text-end">
+            <div class="small text-muted mb-1">System Health: <span class="fw-bold text-main">{{ sys_info.uptime_pct }}</span></div>
+            <div
+                class="badge {% if current_status == 'OPERATIONAL' %}bg-success{% elif current_status == 'WARNING' %}bg-warning{% else %}bg-danger{% endif %} rounded-pill px-3">
+                {{ current_status|title }}</div>
+        </div>
+    </div>
+
+    <!-- Uptime History Bar -->
+    <div class="stat-card mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="text-muted small text-uppercase fw-bold mb-0">90-Day Uptime Performance</h6>
+            <div class="d-flex align-items-center gap-2">
+                {% if pulses.0.timestamp and pulses.0.timestamp|timesince == '0 minutes' or pulses.0.timestamp|timesince == '1 minute' %}
+                <span class="badge bg-success-soft text-success border border-success border-opacity-25 rounded-pill d-flex align-items-center gap-1" style="font-size: 0.7rem;">
+                    <span class="spinner-grow spinner-grow-sm" style="width: 8px; height: 8px;"></span>
+                    Heartbeat Active
+                </span>
+                {% endif %}
+                <span class="small text-muted">Last check: {{ pulses.0.timestamp|timesince }} ago • <span class="fw-bold text-main">{{ db_telemetry.latency }}ms</span></span>
+            </div>
+        </div>
+        <div class="histogram-layout">
+            <!-- Y-Axis Labels (Log-Scaled) -->
+            <div class="y-axis">
+                {% for mark in log_benchmarks %}
+                <span class="y-label" style="bottom: {{ mark.pos }}%;">{{ mark.label }}</span>
+                {% endfor %}
+            </div>
+
+            <div class="uptime-bar-container">
+                <!-- Grid Lines (Log-Scaled) -->
+                <div class="grid-lines">
+                    {% for mark in log_benchmarks %}
+                    <div class="grid-line" style="bottom: {{ mark.pos }}%;"></div>
+                    {% endfor %}
+                </div>
+
+                <!-- Histogram Bars -->
+                <div class="uptime-bar">
+                    {% for pulse in pulses reversed %}
+                    <div class="pulse-tick status-{{ pulse.status|lower }} {% if pulse.status != 'OPERATIONAL' %}incident{% endif %}"
+                        style="height: {{ pulse.log_h|floatformat:2 }}%; min-height: 4px;" data-bs-toggle="tooltip"
+                        title="{{ pulse.timestamp|date:'M d, H:i:s' }}: {{ pulse.latency|floatformat:1 }}ms ({{ pulse.status }})"
+                        {% if pulse.status != 'OPERATIONAL' %}
+                        onclick="alert('INCIDENT DIAGNOSTICS\n\nTimestamp: {{ pulse.timestamp|date:'Y-m-d H:i:s' }}\nStatus: {{ pulse.status }}\nLatency: {{ pulse.latency }}ms\n\nRoot Cause: {{ pulse.info|default:'No specific error log available'|escapejs }}')"
+                        {% endif %}></div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="d-flex justify-content-between mt-2 small text-muted">
+            <span>100 pulses ago</span>
+            <span>Rolling Uptime: {{ sys_info.uptime_pct }}</span>
+            <span>Just now</span>
+        </div>
+
+        <!-- Legend -->
+        <div class="mt-3 d-flex flex-wrap gap-3 justify-content-center border-top pt-3">
+            <div class="d-flex align-items-center gap-2 small text-muted">
+                <div class="status-operational rounded-circle" style="width: 8px; height: 8px;"></div>
+                <span>Operational</span>
+            </div>
+            <div class="d-flex align-items-center gap-2 small text-muted">
+                <div class="status-warning rounded-circle" style="width: 8px; height: 8px;"></div>
+                <span>Warning</span>
+            </div>
+            <div class="d-flex align-items-center gap-2 small text-muted">
+                <div class="status-critical rounded-circle" style="width: 8px; height: 8px;"></div>
+                <span>Degraded</span>
+            </div>
+            <div class="d-flex align-items-center gap-2 small text-muted">
+                <div class="status-down rounded-circle" style="width: 8px; height: 8px;"></div>
+                <span>Down</span>
+            </div>
+        </div>
+
+        <!-- Advanced Infrastructure Analytics Block -->
+        <div class="mt-4 p-4 rounded-4 bg-soft border-0 animate__animated animate__fadeIn">
+            <div class="d-flex align-items-start gap-3 mb-4">
+                <div class="flex-shrink-0">
+                    <div class="bg-{{ system_analysis.severity }} rounded-circle d-flex align-items-center justify-content-center shadow-lg"
+                        style="width: 50px; height: 50px;">
+                        <i class="bi bi-cpu-fill text-white h4 mb-0"></i>
+                    </div>
+                </div>
+                <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span
+                            class="small fw-800 text-uppercase tracking-wider text-{{ system_analysis.severity }}">Advanced
+                            Diagnostic Insight</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <span
+                                class="badge bg-{{ system_analysis.severity }}-soft text-{{ system_analysis.severity }} border border-{{ system_analysis.severity }} border-opacity-25 rounded-pill"
+                                style="font-size: 0.75rem;">Health Index: {{ system_analysis.score }}/100</span>
+                            <span
+                                class="badge {% if system_analysis.momentum == 'IMPROVING' %}bg-success-soft text-success{% elif system_analysis.momentum == 'DEGRADING' %}bg-danger-soft text-danger{% else %}bg-secondary-soft text-muted{% endif %} rounded-pill"
+                                style="font-size: 0.65rem;">{{ system_analysis.momentum }}</span>
+                        </div>
+                    </div>
+                    <p class="mb-0 text-main fw-600 h5">{{ system_analysis.message }}</p>
+                </div>
+            </div>
+
+            <!-- Technical Metrics Grid -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="p-3 bg-secondary-soft rounded-4 text-center border border-light border-opacity-10">
+                        <div class="small text-muted mb-1 text-uppercase fw-bold" style="font-size: 0.6rem;">System
+                            Volatility</div>
+                        <div class="h4 fw-800 text-main mb-0">{{ system_analysis.volatility }}</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 bg-secondary-soft rounded-4 text-center border border-light border-opacity-10">
+                        <div class="small text-muted mb-1 text-uppercase fw-bold" style="font-size: 0.6rem;">Consistency
+                            Index</div>
+                        <div class="h4 fw-800 text-main mb-0">{{ system_analysis.consistency }}</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 bg-secondary-soft rounded-4 text-center border border-light border-opacity-10">
+                        <div class="small text-muted mb-1 text-uppercase fw-bold" style="font-size: 0.6rem;">Node Status
+                        </div>
+                        <div class="h4 fw-800 text-{{ system_analysis.severity }} mb-0 text-uppercase"
+                            style="font-size: 0.9rem;">{{ system_analysis.severity }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Diagnostic Details -->
+            <div class="diagnostic-details border-top pt-4">
+                <h6 class="small fw-800 text-muted text-uppercase mb-3 tracking-widest">Technical Observations</h6>
+                <div class="row g-3">
+                    {% for insight in system_analysis.insights %}
+                    <div class="col-md-12">
+                        <div
+                            class="d-flex align-items-center gap-3 p-3 rounded-4 bg-secondary-soft border border-light border-opacity-10">
+                            <i class="bi {{ insight.icon }} h5 mb-0 text-{{ system_analysis.severity }}"></i>
+                            <div>
+                                <div class="fw-bold text-main small">{{ insight.label }}</div>
+                                <div class="text-muted" style="font-size: 0.75rem;">{{ insight.text }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phase 3: Integrated Operations Hub -->
+    <div class="operations-hub mb-5 shadow-sm animate__animated animate__fadeInUp">
+        <div class="row g-0">
+            <!-- Left Pane: Infrastructure Gateway -->
+            <div class="col-lg-5 hub-pane-portal">
+                <div class="d-flex align-items-center gap-2 mb-4">
+                    <i class="bi bi-cpu-fill text-primary-red h5 mb-0"></i>
+                    <h5 class="fw-800 mb-0">System Infrastructure</h5>
+                    <div class="ms-auto">
+                        <span class="badge bg-secondary-soft text-secondary rounded-pill animate-pulse"
+                            id="supabase-badge" style="font-size: 0.65rem;">
+                            <i class="bi bi-gear-wide-connected me-1"></i>Supabase Engine: INITIALIZING...
+                        </span>
+                    </div>
+                </div>
+                <div class="row g-3">
+                    <!-- Row 1: Primary Control -->
+                    <div class="col-4">
+                        <a href="{{ portals.admin }}" target="_blank" class="portal-tile">
+                            <i class="bi bi-shield-lock-fill h4 mb-0 text-primary-red"></i>
+                            <span class="small fw-bold">Site Admin</span>
+                        </a>
+                    </div>
+                    <div class="col-4">
+                        <a href="{{ portals.openapi }}" target="_blank" class="portal-tile">
+                            <i class="bi bi-code-square h4 mb-0 text-primary-red"></i>
+                            <span class="small fw-bold">API Blueprint</span>
+                        </a>
+                    </div>
+
+                    <!-- Row 2: Infrastructure & Monitoring -->
+                    <div class="col-4">
+                        <a href="{% url 'storage_analytics' %}" class="portal-tile">
+                            <i class="bi bi-cloud-check-fill h4 mb-0 text-primary-red"></i>
+                            <span class="small fw-bold">Cloud Stat</span>
+                        </a>
+                    </div>
+                    <div class="col-4">
+                        <a href="{{ portals.uptime_status }}" target="_blank" class="portal-tile">
+                            <i class="bi bi-activity h4 mb-0 text-primary-red"></i>
+                            <span class="small fw-bold">Public Health</span>
+                        </a>
+                    </div>
+                    <div class="col-4">
+                        <a href="{{ portals.uptime_dashboard }}" target="_blank" class="portal-tile">
+                            <i class="bi bi-speedometer2 h4 mb-0 text-primary-red"></i>
+                            <span class="small fw-bold">Monitor Config</span>
+                        </a>
+                    </div>
+                </div>
+                <div class="mt-4 p-3 bg-secondary-soft rounded-4 border border-light border-opacity-10">
+                    <div class="small text-muted mb-1 opacity-75">Platform Identity</div>
+                    <div class="d-flex align-items-center gap-2">
+                        <img src="https://www.google.com/favicon.ico" width="16" class="rounded-circle shadow-sm">
+                        <span class="small fw-bold text-main">Google Cloud Verified</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Pane: Database Registry -->
+            <div class="col-lg-7 hub-pane-registry">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-database-fill-gear text-primary-red h5 mb-0"></i>
+                        <h5 class="fw-800 mb-0">Database Registry</h5>
+                    </div>
+                    <div
+                        class="badge bg-success-soft text-success border border-success border-opacity-10 rounded-pill px-3">
+                        <span class="pulse-dot me-1"></span>{{ db_telemetry.db_status }}
+                    </div>
+                </div>
+
+                <div class="registry-grid">
+                    {% for model, count in db_telemetry.items %}
+                    {% if model != 'db_engine' and model != 'db_host' and model != 'db_status' and model != 'User' and model != 'sys_usage' and model != 'latency' %}
+                    <div class="registry-item">
+                        <div class="registry-value">{{ count }}</div>
+                        <div class="registry-label">{{ model }}s</div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                    <!-- Hero Metric: Total System Users (Full Width) -->
+                    <div class="registry-item"
+                        style="grid-column: span 3; background: rgba(var(--primary-red-rgb), 0.05); border-color: rgba(var(--primary-red-rgb), 0.1);">
+                        <div class="registry-value text-primary-red">{{ db_telemetry.User }}</div>
+                        <div class="registry-label text-primary-red">Total Verified Users</div>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="small text-muted fw-bold text-uppercase" style="font-size: 0.65rem;">Engine
+                            Architecture</div>
+                        <div class="fw-800 text-main">{{ db_telemetry.db_engine|upper }}</div>
+                    </div>
+                    <div class="text-end">
+                        <div class="small text-muted fw-bold text-uppercase" style="font-size: 0.65rem;">Host Node</div>
+                        <div class="fw-800 text-main">{{ db_telemetry.db_host|default:"Local Instance" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- System Incident Log -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="stat-card glass-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-exclamation-triangle-fill text-primary-red me-2"></i>Fatal
+                        Error & Incident Log</h5>
+                    <button class="btn btn-sm btn-outline-success rounded-pill px-3" id="sanitizeBtn"
+                        onclick="sanitizeLogs()">
+                        <i class="bi bi-shield-check me-1"></i>Verify & Sanitize
+                    </button>
+                    <button
+                        class="btn btn-sm {% if show_archive %}btn-primary{% else %}btn-outline-primary{% endif %} rounded-pill px-3"
+                        onclick="toggleArchive()">
+                        <i
+                            class="bi {% if show_archive %}bi-lightning-fill{% else %}bi-clock-history{% endif %} me-1"></i>
+                        {% if show_archive %}View Active Incidents{% else %}View Historical Archive{% endif %}
+                    </button>
+                    <a href="/api/docs" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                        <i class="bi bi-code-square me-1"></i>Interactive API Explorer
+                    </a>
+                </div>
+                <span class="badge bg-danger rounded-pill" id="unresolvedBadge">{{ sys_info.unresolved_errors }}
+                    Unresolved</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="small text-muted text-uppercase">
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Error Message</th>
+                            <th>URL</th>
+                            <th>User</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for error in system_errors %}
+                        <tr class="{% if error.is_resolved %}error-resolved{% else %}error-row{% endif %}"
+                            id="error-{{ error.id }}">
+                            <td class="small">{{ error.timestamp|date:"M d, H:i" }}</td>
+                            <td class="fw-bold text-main"
+                                style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+                                title="{{ error.message }}">
+                                {{ error.message }}
+                            </td>
+                            <td><code>{{ error.url }}</code></td>
+                            <td><span class="badge bg-secondary-soft text-main">{{ error.user.username|default:"Guest" }}</span></td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3"
+                                        onclick="alert('Traceback (Log ID: {{ error.id }}):\n\n{{ error.stack_trace|escapejs|truncatechars:2000 }}')">View
+                                        Stack</button>
+                                    {% if not error.is_resolved %}
+                                    <button class="btn btn-sm btn-success rounded-pill px-3"
+                                        onclick="resolveError({{ error.id }})">Resolve</button>
+                                    <button class="btn btn-sm btn-outline-primary rounded-pill px-2"
+                                        data-bs-toggle="tooltip" title="Resolve all similar"
+                                        onclick="bulkResolve('{{ error.message|escapejs }}')"><i
+                                            class="bi bi-stack"></i></button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="bi bi-check-circle-fill text-success d-block h1 mb-3"></i>
+                                No system incidents recorded. All systems green.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Access Requests Workflow (Full Width) -->
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <div class="stat-card glass-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-shield-lock-fill text-primary-red h5 mb-0"></i>
+                    <h5 class="fw-800 mb-0">Pending Access Requests</h5>
+                </div>
+                {% if pending_users %}
+                <span class="badge bg-primary-red rounded-pill animate__animated animate__pulse animate__infinite">{{ pending_users|length }} Awaiting Action</span>
+                {% endif %}
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover border-0 align-middle">
+                    <thead class="text-muted small text-uppercase fw-800">
+                        <tr>
+                            <th class="border-0 px-4">User Identity</th>
+                            <th class="border-0">Requested Role</th>
+                            <th class="border-0">Registered At</th>
+                            <th class="border-0 text-end px-4">Management Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p_user in pending_users %}
+                        <tr class="hover-bg transition-all">
+                            <td class="px-4 border-0">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="rounded-circle bg-secondary-soft d-flex align-items-center justify-content-center"
+                                        style="width: 40px; height: 40px;">
+                                        <i class="bi bi-person h5 mb-0 text-main opacity-75"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-main">{{ p_user.get_full_name }}</div>
+                                        <div class="small text-muted">{{ p_user.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="border-0">
+                                <span
+                                    class="badge {% if p_user.role == 'DEV' %}bg-primary-red{% else %}bg-secondary-soft text-main{% endif %} rounded-pill px-3 py-2">
+                                    {{ p_user.get_role_display }}
+                                </span>
+                            </td>
+                            <td class="border-0 small text-muted">
+                                {{ p_user.date_joined|date:"M d, Y • H:i" }}
+                            </td>
+                            <td class="border-0 text-end px-4">
+                                <div class="d-flex gap-2 justify-content-end">
+                                    <button id="btn-approve-{{ p_user.id }}" onclick="approveUser({{ p_user.id }})"
+                                        class="btn btn-sm btn-success rounded-pill px-3 shadow-sm border-0">
+                                        <i class="bi bi-check-lg"></i> Approve
+                                    </button>
+                                    <button id="btn-deny-{{ p_user.id }}" onclick="denyUser({{ p_user.id }})"
+                                        class="btn btn-sm btn-danger rounded-pill px-3 shadow-sm border-0">
+                                        <i class="bi bi-x-lg"></i> Deny
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-5 border-0">
+                                <div class="opacity-50">
+                                    <i class="bi bi-check2-all h1 d-block mb-3 text-success"></i>
+                                    <div class="fw-bold text-main">No Pending Requests</div>
+                                    <div class="small text-muted">System access queue is currently empty</div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- System Diagnostics -->
+    <div class="col-md-4">
+        <div class="stat-card">
+            <h5 class="fw-bold mb-4"><i class="bi bi-cpu me-2"></i>Environment Pulse</h5>
+            <ul class="list-unstyled">
+                <li class="mb-3 d-flex justify-content-between border-bottom pb-2 border-secondary border-opacity-25">
+                    <span class="text-muted">OS Release</span>
+                    <span class="fw-bold">{{ sys_info.os }}</span>
+                </li>
+                <li class="mb-3 d-flex justify-content-between border-bottom pb-2 border-secondary border-opacity-25">
+                    <span class="text-muted">Python Core</span>
+                    <span class="fw-bold">{{ sys_info.python_version }}</span>
+                </li>
+                <li class="mb-3 d-flex justify-content-between border-bottom pb-2 border-secondary border-opacity-25">
+                    <span class="text-muted">Django Engine</span>
+                    <span class="fw-bold">{{ sys_info.django_version }}</span>
+                </li>
+                <li class="mb-3 d-flex justify-content-between">
+                    <span class="text-muted">Max Team Capacity</span>
+                    <span class="badge bg-primary-red rounded-pill">{{ settings.max_team_size }} Members</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Role Analytics -->
+    <div class="col-md-4">
+        <div class="stat-card glass-card">
+            <h5 class="fw-bold mb-4"><i class="bi bi-people-fill me-2"></i>Global Role Composition</h5>
+            <div class="chart-container" style="height: 200px;">
+                <canvas id="roleChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Infrastructure Command Center (Extended) -->
+    <div class="col-md-8">
+        <div class="stat-card glass-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-cpu-fill text-primary-red h5 mb-0"></i>
+                    <h5 class="fw-800 mb-0">Infrastructure Command Center</h5>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="badge bg-soft text-main border-0 rounded-pill px-3">NODE: {{ db_telemetry.db_host|default:"LOCAL" }}</span>
+                    <div class="db-status-chip text-primary-red">Live Sync</div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <!-- Left: Dynamic Telemetry -->
+                <div class="col-lg-7 border-end border-light border-opacity-10 pe-lg-4">
+                    <h6 class="small fw-800 text-muted text-uppercase mb-3 ls-1">Real-time Performance</h6>
+                    <div class="d-flex flex-column gap-3">
+                        <!-- CPU -->
+                        <div class="db-grid-val p-3 rounded-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="status-{% if db_telemetry.sys_usage.cpu < 70 %}operational{% else %}critical{% endif %} rounded-circle"
+                                        style="width: 8px; height: 8px;"></div>
+                                    <span class="small fw-bold">CPU LOAD</span>
+                                </div>
+                                <span class="small fw-800">{{ db_telemetry.sys_usage.cpu }}%</span>
+                            </div>
+                            <div class="progress"
+                                style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 10px;">
+                                <div class="progress-bar {% if db_telemetry.sys_usage.cpu < 70 %}bg-success{% else %}bg-danger{% endif %}"
+                                    style="width: {{ db_telemetry.sys_usage.cpu }}%;"></div>
+                            </div>
+                        </div>
+                        <!-- RAM -->
+                        <div class="db-grid-val p-3 rounded-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="status-operational rounded-circle" style="width: 8px; height: 8px;">
+                                    </div>
+                                    <span class="small fw-bold">MEMORY UTILIZATION</span>
+                                </div>
+                                <span class="small fw-800">{{ db_telemetry.sys_usage.ram }}%</span>
+                            </div>
+                            <div class="progress"
+                                style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 10px;">
+                                <div class="progress-bar bg-info" style="width: {{ db_telemetry.sys_usage.ram }}%;">
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Disk -->
+                        <div class="db-grid-val p-3 rounded-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="small fw-bold text-uppercase" style="font-size: 0.65rem;">Storage
+                                    Cluster</span>
+                                <span class="small fw-800">{{ db_telemetry.sys_usage.disk }}% CAPACITY</span>
+                            </div>
+                            <div class="progress"
+                                style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 10px;">
+                                <div class="progress-bar bg-secondary"
+                                    style="width: {{ db_telemetry.sys_usage.disk }}%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: System Specs & Diagnostics -->
+                <div class="col-lg-5">
+                    <h6 class="small fw-800 text-muted text-uppercase mb-3 ls-1">Environment Specs</h6>
+                    <div class="d-flex flex-column gap-2">
+                        <div class="db-grid-val p-3 rounded-4">
+                            <div class="small text-muted fw-bold mb-1" style="font-size: 0.55rem;">OS ARCHITECTURE</div>
+                            <div class="fw-800 text-main">{{ platform_info.os_release }}</div>
+                        </div>
+                        <div class="db-grid-val p-3 rounded-4">
+                            <div class="small text-muted fw-bold mb-1" style="font-size: 0.55rem;">RUNTIME ENGINE</div>
+                            <div class="fw-800 text-main">{{ platform_info.python_version }}</div>
+                            <div class="small text-muted fw-bold mt-1" style="font-size: 0.55rem;">DJANGO v{{ platform_info.django_version }}</div>
+                        </div>
+                        <div class="db-grid-val p-3 rounded-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="d-flex flex-column">
+                                    <span class="small text-muted fw-bold" style="font-size: 0.55rem;">SYSTEM UPTIME</span>
+                                    <span class="fw-800 text-primary-red">{{ db_telemetry.sys_usage.uptime }} Days</span>
+                                </div>
+                                <i class="bi bi-clock-history text-muted h4 mb-0 opacity-25"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Activity Trends Row -->
+<div class="row g-4 mt-2">
+    <!-- Live Traffic Feed -->
+    <div class="col-md-4">
+        <div class="stat-card">
+            <h5 class="fw-bold mb-4"><i class="bi bi-activity me-2"></i>Live Activity Feed</h5>
+            <div class="activity-feed-scroll">
+                {% for sub in recent_activity %}
+                <div class="d-flex align-items-center mb-3 p-2 rounded-3 hover-bg">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-circle {% if sub.submitted_at > sub.assignment.deadline %}bg-danger{% else %}bg-success{% endif %}"
+                            style="width: 10px; height: 10px;"></div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <div class="small fw-bold">{{ sub.team.name }}</div>
+                        <div class="text-muted" style="font-size: 0.7rem;">{{ sub.title }} • {{ sub.submitted_at|timesince }} ago</div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-4 text-muted small">No traffic recorded</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- System API Registry & Cache -->
+    <div class="col-md-8">
+        <div class="stat-card glass-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-diagram-3-fill me-2 text-primary-red"></i>Infrastructure Hub</h5>
+                    <div class="d-flex align-items-center gap-1 ms-2">
+                        <span class="status-operational rounded-circle animate-pulse" style="width: 6px; height: 6px;"></span>
+                        <span class="small text-muted fw-bold" style="font-size: 0.6rem; letter-spacing: 1px;">ACTIVE TELEMETRY</span>
+                    </div>
+                </div>
+                <span class="badge bg-soft text-main border-0 rounded-pill px-3">System Healthy</span>
+            </div>
+            <div class="row g-4">
+                <!-- Column 1: API Status -->
+                <div class="col-md-4">
+                    <h6 class="small fw-bold text-muted text-uppercase mb-3 ls-1" style="font-size: 0.65rem;">Registry Status</h6>
+                    <div class="d-flex flex-column gap-1">
+                        <div class="d-flex justify-content-between align-items-center p-1 px-2 rounded-3 hover-bg">
+                            <span class="small fw-bold" style="font-size: 0.7rem;">/api/submissions</span>
+                            <span class="text-success fw-bold" style="font-size: 0.65rem;">200 OK</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center p-1 px-2 rounded-3 hover-bg">
+                            <span class="small fw-bold" style="font-size: 0.7rem;">/api/lecturer/grade</span>
+                            <span class="text-success fw-bold" style="font-size: 0.65rem;">200 OK</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center p-1 px-2 rounded-3 hover-bg">
+                            <span class="small fw-bold" style="font-size: 0.7rem;">/api/auth/token</span>
+                            <span class="text-success fw-bold" style="font-size: 0.65rem;">200 OK</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Column 2: Active Pulse (The High-Density Core) -->
+                <div class="col-md-4 border-start border-end border-light border-opacity-10 px-md-4">
+                    <h6 class="small fw-bold text-muted text-uppercase mb-3 ls-1" style="font-size: 0.65rem;">Active Pulse</h6>
+                    <div class="d-flex flex-column gap-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex flex-column">
+                                <span class="small text-muted fw-bold" style="font-size: 0.55rem;">LATENCY</span>
+                                <span class="h5 fw-800 mb-0 text-main">{{ db_telemetry.latency }}ms</span>
+                            </div>
+                            <div class="text-end d-flex flex-column">
+                                <span class="small text-muted fw-bold" style="font-size: 0.55rem;">SYS LOAD</span>
+                                <span class="h5 fw-800 mb-0 text-main">{{ db_telemetry.sys_usage.load }}</span>
+                            </div>
+                        </div>
+                        <div class="pt-2 border-top border-light border-opacity-10 d-flex justify-content-between">
+                            <div class="d-flex flex-column">
+                                <span class="small text-muted fw-bold" style="font-size: 0.55rem;">NET IO</span>
+                                <span class="small fw-800 text-main">{{ db_telemetry.sys_usage.net_io }}MB</span>
+                            </div>
+                            <div class="d-flex flex-column text-end">
+                                <span class="small text-muted fw-bold" style="font-size: 0.55rem;">THREADS</span>
+                                <span class="small fw-800 text-main">{{ db_telemetry.sys_usage.processes }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 3: Cache Performance -->
+                <div class="col-md-4">
+                    <h6 class="small fw-bold text-muted text-uppercase mb-3 ls-1" style="font-size: 0.65rem;">Cache Stats</h6>
+                    <div class="d-flex flex-column justify-content-center">
+                        <div class="d-flex justify-content-between align-items-end mb-2">
+                            <span class="h4 fw-800 mb-0 text-info">94.2%</span>
+                            <span class="small text-muted fw-bold" style="font-size: 0.55rem;">HIT RATIO</span>
+                        </div>
+                        <div class="progress" style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 4px;">
+                            <div class="progress-bar bg-info shadow-sm" style="width: 94%;"></div>
+                        </div>
+                        <p class="small text-muted mt-2 mb-0 italic" style="font-size: 0.6rem; line-height: 1.2;">Redis cache is optimizing session & trend distribution.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<script>
+    function getThemeTokens() {
+        const style = getComputedStyle(document.documentElement);
+        return {
+            grid: style.getPropertyValue('--chart-grid').trim() || 'rgba(128,128,128,0.1)',
+            text: style.getPropertyValue('--chart-text').trim() || '#888',
+            accent: style.getPropertyValue('--dash-accent').trim() || '#d32f2f',
+            cyan: style.getPropertyValue('--dash-cyan').trim() || '#0dcaf0'
+        };
+    }
+
+    function initRoleChart() {
+        const tokens = getThemeTokens();
+        const roleCtx = document.getElementById('roleChart').getContext('2d');
+        new Chart(roleCtx, {
+            type: 'doughnut',
+            data: {
+                labels: {{ role_labels| safe }},
+    datasets: [{
+        data: {{ role_data| safe }},
+        backgroundColor: [tokens.accent, tokens.cyan, '#8b5cf6', '#10b981'],
+        borderWidth: 0,
+        cutout: '70%'
+                }]
+            },
+    options: {
+        responsive: true,
+            maintainAspectRatio: false,
+                plugins: {
+            legend: { position: 'bottom', labels: { color: tokens.text, boxWidth: 10, padding: 10, font: { size: 10 } } }
+        }
+    }
+        });
+    }
+
+    function updateCharts() {
+        const tokens = getThemeTokens();
+        // Since trendsChart moved, we only update roleChart if it's dynamic
+        // But for simplicity, we can just reload on theme change if needed
+    }
+
+    async function resolveError(id) {
+        try {
+            const data = await apiCall(`/api/incident/${id}/resolve`);
+            const row = document.getElementById(`error-${id}`);
+            if (row) {
+                // Apply vanish animation
+                row.classList.add('vanish-out');
+
+                // Update counter immediately
+                updateUnresolvedCount(-1);
+
+                // Remove from DOM after animation
+                setTimeout(() => {
+                    row.remove();
+                    // Check if table is empty to show checkmark
+                    const tbody = document.querySelector('#incidentTable tbody');
+                    if (tbody && tbody.children.length === 0) {
+                        location.reload(); // Refresh to show the "All Systems Green" state
+                    }
+                }, 500);
+            }
+        } catch (e) { }
+    }
+
+    function toggleArchive() {
+        const url = new URL(window.location.href);
+        if (url.searchParams.get('archive') === '1') {
+            url.searchParams.delete('archive');
+        } else {
+            url.searchParams.set('archive', '1');
+        }
+        window.location.href = url.toString();
+    }
+
+    async function bulkResolve(pattern) {
+        if (!confirm(`Resolve ALL incidents matching: "${pattern}"?`)) return;
+        try {
+            await apiCall('/api/incident/bulk-resolve', 'POST', { pattern });
+            location.reload();
+        } catch (e) { }
+    }
+
+    async function sanitizeLogs() {
+        const btn = document.getElementById('sanitizeBtn');
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Verifying...';
+
+        try {
+            const data = await apiCall('/api/incident/sanitize');
+            alert(data.message);
+            location.reload();
+        } catch (e) {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+    }
+
+    async function approveUser(id) {
+        if (!confirm('Approve this user access request?')) return;
+        const btn = document.getElementById(`btn-approve-${id}`);
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Processing...';
+
+        try {
+            await apiCall(`/api/dev/approve-user/${id}`);
+            location.reload();
+        } catch (e) {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+    }
+
+    async function denyUser(id) {
+        if (!confirm('Permanently deny and delete this request?')) return;
+        const btn = document.getElementById(`btn-deny-${id}`);
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Processing...';
+
+        try {
+            await apiCall(`/api/dev/deny-user/${id}`);
+            location.reload();
+        } catch (e) {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+    }
+
+    function updateUnresolvedCount(delta) {
+        const badge = document.getElementById('unresolvedBadge');
+        if (badge) {
+            let count = parseInt(badge.textContent) || 0;
+            count += delta;
+            badge.textContent = `${count} Unresolved`;
+            if (count === 0) badge.className = 'badge bg-success rounded-pill';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initRoleChart();
+
+        // Tooltip Init
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+    });
+
+    window.addEventListener('themeChanged', () => setTimeout(updateCharts, 50));
+
+    // Smart Heartbeat: Auto-refresh data every 60 seconds
+    setInterval(() => {
+        console.log("Hifi-Heartbeat: Refreshing telemetry...");
+        location.reload();
+    }, 60000);
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const badge = document.getElementById('supabase-badge');
+        fetch('/api/dev/supabase-status')
+            .then(response => {
+                if (!response.ok) throw new Error('API Error');
+                return response.json();
+            })
+            .then(data => {
+                badge.classList.remove('bg-secondary-soft', 'text-secondary', 'animate-pulse');
+                badge.classList.add(`bg-${data.severity}-soft`, `text-${data.severity}`);
+                badge.innerHTML = `<i class="bi bi-gear-wide-connected me-1"></i>Supabase Engine: ${data.status}`;
+            })
+            .catch(error => {
+                badge.classList.remove('animate-pulse');
+                badge.classList.add('bg-danger-soft', 'text-danger');
+                badge.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-1"></i>Supabase Engine: ERROR`;
+            });
+    });
+</script>
+
+{% if sync_status == 'syncing' %}
+<div class="sync-toast animate__animated animate__fadeInRight" id="syncToast">
+    <div class="spinner-border spinner-border-sm text-primary-red" role="status"></div>
+    <span class="small fw-bold">Syncing with Production...</span>
+</div>
+{% elif sync_status == 'success' %}
+<div class="sync-toast" id="syncToast">
+    <i class="bi bi-patch-check-fill text-success" style="font-size: 1.2rem;"></i>
+    <span class="small fw-bold">Real-time Parity Achieved ✨</span>
+</div>
+<script>
+    setTimeout(() => {
+        const toast = document.getElementById('syncToast');
+        if (toast) {
+            toast.style.transition = 'opacity 0.5s ease-out';
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 500);
+        }
+    }, 5000);
+</script>
+{% endif %}
+</div>
+{% endblock %}

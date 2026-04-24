@@ -11,7 +11,13 @@ class InfrastructureService:
     
     @staticmethod
     def send_system_error_alert(error_instance):
-        """Sends an HTML email alert when a system error occurs."""
+        """Sends an HTML email alert when a system error occurs with smart throttling."""
+        from apps.core.services.notification_service import NotificationService
+        
+        # We throttle identical errors for 10 minutes to prevent email storms
+        if NotificationService.should_throttle('system_error', error_instance.message, cooldown_minutes=10):
+            return
+            
         send_html_email(
             subject="CRITICAL: Runtime Application Error",
             template_name='core/emails/system_alert.html',

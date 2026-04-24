@@ -21,7 +21,9 @@ A comprehensive, production-ready platform designed to manage student team regis
 - **Result Release Control**: Grades are kept private until deliberately released.
 - **Resource Repository**: Central hub for class materials and PDFs.
 - **Role-Based Approval**: Secure gatekeeping where Lecturers and Admins require manual verification.
-- **System Telemetry & Monitoring**: Real-time tracking of DB latency and runtime errors with automated emergency alerting.
+- **NOC-Style System Telemetry**: High-density real-time tracking of DB latency, system load, and runtime errors with automated emergency alerting.
+- **Automated Storage Maintenance**: Submission engine automatically purges old records and files when students upload replacements, preventing database bloat.
+- **Scalable Dashboard Logic**: Optimized database prefetching solves N+1 performance bottlenecks for the student interface.
 - **Database Cloaking**: Row Level Security (RLS) enabled on all tables to prevent public API exposure.
 - **Dev Center Portals**: Deep-linked management tools for Render, Cloudinary, and UptimeRobot analytics.
 - **Seed Engine**: Custom `seed_dsp` command for surgical test data management.

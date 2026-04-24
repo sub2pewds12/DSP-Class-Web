@@ -25,6 +25,9 @@ class SubmissionService:
         team = user.student_profile.team
         
         with transaction.atomic():
+            # Enforcement: New submissions replace ALL previous files for this assignment
+            TeamSubmission.objects.filter(team=team, assignment=assignment).delete()
+            
             submission = TeamSubmission.objects.create(
                 team=team,
                 assignment=assignment,

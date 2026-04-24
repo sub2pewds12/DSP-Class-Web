@@ -1,6 +1,6 @@
 from django.test import TestCase, Client
 from django.urls import reverse
-from teams.models import CustomUser, Student, Lecturer
+from apps.teams.models import CustomUser, Student, Lecturer
 
 class AuthRedirectionTests(TestCase):
     def setUp(self):

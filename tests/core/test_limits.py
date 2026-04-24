@@ -1,5 +1,5 @@
 from django.test import TestCase
-from teams.models import Team, Student, CustomUser, SystemSettings
+from apps.teams.models import Team, Student, CustomUser, SystemSettings
 from apps.academia.forms import TeamRegistrationForm
 
 class TeamLimitTests(TestCase):

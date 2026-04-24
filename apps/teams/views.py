@@ -12,7 +12,7 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.utils import timezone
-import math, platform, sys, django, threading
+import math, platform, sys, django, threading, psutil
 from .models import Student, Team, Lecturer, CustomUser, ClassDocument, TeamSubmission, Assignment, SystemSettings
 from apps.core.utils.email_service import send_html_email
 from apps.users.forms import UserRegistrationForm, StudentRoleForm
@@ -74,9 +74,13 @@ def dashboard_view(request, team_id=None):
         elif not team:
             form = TeamRegistrationForm(request.POST)
             if form.is_valid():
-                team_choice = form.cleaned_data['team_choice']
-                if team_choice: team = team_choice
-                else: team = Team.objects.create(name=form.cleaned_data['new_team_name'])
+                from django.db import IntegrityError
+                try:
+                    if team_choice: team = team_choice
+                    else: team = Team.objects.create(name=form.cleaned_data['new_team_name'])
+                except IntegrityError:
+                    messages.error(request, f"Team name '{form.cleaned_data['new_team_name']}' is already taken. Please choose a unique name.")
+                    return redirect('dashboard')
                 
                 student.team = team
                 student.save()
@@ -91,8 +95,15 @@ def dashboard_view(request, team_id=None):
     assignments = Assignment.objects.all().order_by('-deadline')
 
     if team:
+        # Optimize: Fetch submissions for this team in a single query
+        from django.db.models import Prefetch
+        team_subs = team.submissions.all().order_by('-submitted_at')
+        assignments = Assignment.objects.all().order_by('-deadline').prefetch_related(
+            Prefetch('submissions', queryset=team_subs, to_attr='team_assigned_subs')
+        )
+        
         for a in assignments:
-            a.team_submission = team.submissions.filter(assignment=a).order_by('-submitted_at').first()
+            a.team_submission = a.team_assigned_subs[0] if a.team_assigned_subs else None
             a.is_late = a.team_submission.is_late if a.team_submission else False
             
         return render(request, 'teams/dashboard.html', {
@@ -156,13 +167,40 @@ def teacher_dashboard(request):
     if 'doc_form' not in locals(): doc_form = DocumentUploadForm()
     if 'assign_form' not in locals(): assign_form = AssignmentForm()
 
+    # --- Submission Trends (for Activity Chart) ---
+    last_14_days = timezone.now() - timezone.timedelta(days=14)
+    trends_raw = TeamSubmission.objects.filter(submitted_at__gte=last_14_days).select_related('team').order_by('submitted_at')
+    
+    trends_map = {}
+    for sub in trends_raw:
+        d = sub.submitted_at.date()
+        if d not in trends_map:
+            trends_map[d] = {'count': 0, 'teams': set()}
+        trends_map[d]['count'] += 1
+        trends_map[d]['teams'].add(sub.team.name)
+
+    sorted_dates = sorted(trends_map.keys())
+    trend_labels = [d.strftime('%b %d') for d in sorted_dates]
+    trend_data = [trends_map[d]['count'] for d in sorted_dates]
+    
+    trend_details = []
+    for d in sorted_dates:
+        teams_list = list(trends_map[d]['teams'])
+        detail = ", ".join(teams_list[:3])
+        if len(teams_list) > 3:
+            detail += f" and {len(teams_list) - 3} more..."
+        trend_details.append(detail)
+
     return render(request, 'teams/teacher_dashboard.html', {
         'teams': teams, 
         'assignments': assignments,
         'doc_form': doc_form,
         'assign_form': assign_form,
         'grade_form': GradeSubmissionForm(),
-        'documents': documents
+        'documents': documents,
+        'trend_labels': trend_labels,
+        'trend_data': trend_data,
+        'trend_details': trend_details
     })
 
 
@@ -243,7 +281,7 @@ def signup_view(request):
             return redirect('pending_approval')
     else:
         form = UserRegistrationForm()
-    return render(request, 'registration/signup.html', {'form': form})
+    return render(request, 'teams/registration/signup.html', {'form': form})
 
 @login_required
 def dev_dashboard(request):
@@ -352,9 +390,6 @@ def dev_dashboard(request):
         
     unresolved_count = SystemError.objects.filter(is_resolved=False).count()
 
-    from apps.core.supabase_service import SupabaseService
-    supabase_status = SupabaseService.check_connection()
-
     # 1. System Infrastructure Portals
     portals = {
         'admin': '/admin/',
@@ -376,14 +411,19 @@ def dev_dashboard(request):
         'User': CustomUser.objects.count(),
         'db_engine': settings.DATABASES['default'].get('ENGINE', 'Unknown').split('.')[-1],
         'db_host': settings.DATABASES['default'].get('HOST', 'localhost'),
-        'db_status': 'Connected' if last_pulse and last_pulse.status != 'DOWN' else 'Unknown'
+        'db_status': 'Connected' if last_pulse and last_pulse.status != 'DOWN' else 'Unknown',
+        'latency': round(last_pulse.latency, 1) if last_pulse else 0,
+        'sys_usage': {
+            'cpu': psutil.cpu_percent(),
+            'ram': psutil.virtual_memory().percent,
+            'disk': psutil.disk_usage('/').percent,
+            'load': os.getloadavg()[0] if hasattr(os, 'getloadavg') else 0,
+            'processes': len(psutil.pids()),
+            'net_io': round((psutil.net_io_counters().bytes_sent + psutil.net_io_counters().bytes_recv) / (1024 * 1024), 1),
+            'uptime': f"{int((time.time() - psutil.boot_time()) // 3600)}h {int(((time.time() - psutil.boot_time()) % 3600) // 60)}m"
+        }
     }
 
-    # 3. Submission Trends
-    last_14_days = timezone.now() - timezone.timedelta(days=14)
-    submission_trends = TeamSubmission.objects.filter(submitted_at__gte=last_14_days).annotate(date=TruncDate('submitted_at')).values('date').annotate(count=Count('id')).order_by('date')
-    trend_labels = [s['date'].strftime('%b %d') for s in submission_trends]
-    trend_data = [s['count'] for s in submission_trends]
 
     # ... other stats ...
 
@@ -410,8 +450,9 @@ def dev_dashboard(request):
     pending_users = CustomUser.objects.filter(is_approved=False).order_by('-date_joined')
 
     return render(request, 'teams/dev_dashboard.html', {
-        'trend_labels': trend_labels,
-        'trend_data': trend_data,
+        'trend_labels': [],
+        'trend_data': [],
+        'trend_details': [],
         'role_labels': role_labels,
         'role_data': role_data,
         'sys_info': sys_info,
@@ -427,7 +468,6 @@ def dev_dashboard(request):
         'log_benchmarks': log_benchmarks,
         'system_errors': system_errors,
         'show_archive': show_archive,
-        'supabase_status': supabase_status,
         'sync_status': sync_status,
         'current_status': last_pulse.status if last_pulse else 'UNKNOWN',
         'system_analysis': system_analysis,
@@ -490,13 +530,46 @@ def storage_analytics_view(request):
         
     # 2. Local Database Overlay
     doc_count = ClassDocument.objects.count()
+    # Count both multi-file model and main submission field
     sub_count = SubmissionFile.objects.count()
+    main_sub_count = TeamSubmission.objects.exclude(file='').count()
     assign_count = Assignment.objects.exclude(instruction_file='').count()
-    storage_stats['total_files'] = doc_count + sub_count + assign_count
     
-    # 3. Recent Assets
-    recent_docs = ClassDocument.objects.order_by('-uploaded_at')[:5]
-    recent_subs = SubmissionFile.objects.select_related('submission__team').order_by('-uploaded_at')[:5]
+    storage_stats['total_files'] = doc_count + sub_count + main_sub_count + assign_count
+    
+    # Calculate Local Storage Size (Fallback for Cloudinary)
+    local_size_mb = 0
+    media_root = settings.MEDIA_ROOT
+    if os.path.exists(media_root):
+        for dirpath, dirnames, filenames in os.walk(media_root):
+            for f in filenames:
+                fp = os.path.join(dirpath, f)
+                local_size_mb += os.path.getsize(fp)
+    
+    local_size_mb = local_size_mb / (1024 * 1024)
+    # If size is > 0 but < 0.1, show 3 decimals to ensure visibility, otherwise 2
+    local_size_mb = round(local_size_mb, 3) if 0 < local_size_mb < 0.1 else round(local_size_mb, 2)
+    
+    # Overlay local stats if cloud stats are empty
+    if storage_stats['usage']['used'] == 0:
+        storage_stats['usage']['used'] = local_size_mb
+        storage_stats['usage']['pct'] = min(100, round((local_size_mb / storage_stats['usage']['limit']) * 100, 1))
+
+    # 3. Recent Assets (Aggregated)
+    recent_docs = list(ClassDocument.objects.order_by('-uploaded_at')[:5])
+    # Fetch from both models for a complete view
+    recent_subs = list(TeamSubmission.objects.exclude(file='').select_related('team').order_by('-submitted_at')[:5])
+    
+    def get_human_size(file_obj):
+        try:
+            size = file_obj.size
+            if size < 1024: return f"{size} B"
+            if size < 1024 * 1024: return f"{round(size/1024, 1)} KB"
+            return f"{round(size/(1024*1024), 1)} MB"
+        except: return "0 B"
+
+    for doc in recent_docs: doc.file_size = get_human_size(doc.file)
+    for sub in recent_subs: sub.file_size = get_human_size(sub.file)
     
     # 4. External Portal URL (Direct to Media Library)
     cloudinary_portal = f"https://cloudinary.com/console/cloud/{settings.CLOUDINARY_STORAGE['CLOUD_NAME']}/media_library"
@@ -539,4 +612,4 @@ def view_grades(request, pk):
     return render(request, 'teams/view_grades.html', {'assignment': assignment, 'submission': submission})
 
 def pending_approval_view(request):
-    return render(request, 'registration/pending_approval.html')
+    return render(request, 'teams/registration/pending_approval.html')

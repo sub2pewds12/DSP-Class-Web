@@ -4,13 +4,13 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 from django.http import HttpResponse
-from teams.api import api
+from apps.teams.api import api
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('favicon.ico', lambda r: HttpResponse(status=204)),
     path('api/', api.urls),
-    path('', include('teams.urls')),
+    path('', include('apps.teams.urls')),
 ]
 
 if settings.DEBUG:

@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.db import transaction
-from teams.models import CustomUser, Team, Student, Lecturer, Assignment, TeamSubmission, SubmissionFile, ClassDocument
+from apps.teams.models import CustomUser, Team, Student, Lecturer, Assignment, TeamSubmission, SubmissionFile, ClassDocument
 from apps.core.utils.backup_manager import BackupManager
 import logging
 

@@ -3,7 +3,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.core.files.uploadedfile import SimpleUploadedFile
 from datetime import timedelta
-from teams.models import CustomUser, Student, Team, Assignment, TeamSubmission
+from apps.teams.models import CustomUser, Student, Team, Assignment, TeamSubmission
 
 @override_settings(DEFAULT_FILE_STORAGE='django.core.files.storage.FileSystemStorage')
 class AssignmentTests(TestCase):

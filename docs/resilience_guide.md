@@ -21,6 +21,12 @@ The system proactively monitors its own health scores via the `perform_health_ch
 When health falls below the **40% threshold**, the system automatically executes:
 1. **Cache Flush**: Clears non-essential caches to release memory pressure and remove potentially stale or corrupted state.
 2. **Emergency Alert**: Sends a high-priority HTML email to the system administrator with a full diagnostic dump of the current telemetry.
+3. **Incident Sanitizer**: The system uses a concurrent probing engine to automatically resolve incidents where the target URL has returned to a healthy state (HTTP 200).
+
+## 🗄️ Storage Integrity
+To prevent media storage bloat, the academic engine maintains a "one-team-one-slot" policy:
+- **Automatic Purging**: When a student makes a new submission, the service physically deletes all previous `TeamSubmission` records and files for that specific assignment.
+- **Atomic Transactions**: Deletions and new creations are wrapped in a database transaction to ensure no data is lost during the replacement process.
 
 ## 👻 Ghost Heartbeat Integration
 The resilience engine is integrated into the background heartbeat loop. Every 5 minutes (5 iterations), the heartbeat automatically triggers a health check, ensuring the system remains self-aware even when no administrators are actively monitoring the dashboard.

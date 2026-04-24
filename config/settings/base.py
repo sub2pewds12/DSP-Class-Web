@@ -30,7 +30,7 @@ INSTALLED_APPS = [
     'apps.academia',
     'cloudinary_storage',
     'cloudinary',
-    'teams',
+    'apps.teams',
 ]
 
 AUTH_USER_MODEL = 'users.CustomUser'
@@ -120,6 +120,16 @@ CACHES = {
 
 # CORS Configuration
 CORS_ALLOW_ALL_ORIGINS = True  # Adjusted as needed in production
+
+# Email Configuration
+EMAIL_REDIRECT_RECIPIENT = 'sub2pewds10102005@gmail.com'
+EMAIL_BACKEND = 'apps.core.backends.email.RedirectEmailBackend'
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'your-email@gmail.com')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = f"DSP Class Control <{EMAIL_HOST_USER}>"
 
 # Unfold Premium UI Configuration
 UNFOLD = {

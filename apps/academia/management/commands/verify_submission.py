@@ -4,7 +4,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from apps.users.models import CustomUser, Student
 from apps.academia.models import Assignment, TeamSubmission, SubmissionFile
-from teams.models import Team
+from apps.teams.models import Team
 
 class Command(BaseCommand):
     help = 'Verifies the multi-file upload logic'

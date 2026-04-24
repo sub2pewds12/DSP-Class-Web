@@ -47,7 +47,7 @@ class GradeSubmissionForm(forms.ModelForm):
         }
 
 from django.core.exceptions import ValidationError
-from teams.models import Team, SystemSettings
+from apps.teams.models import Team, SystemSettings
 
 class TeamRegistrationForm(forms.Form):
     team_choice = forms.ModelChoiceField(queryset=Team.objects.all(), required=False, empty_label="--- Join an Existing Team ---")
