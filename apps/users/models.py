@@ -11,6 +11,13 @@ class CustomUser(AbstractUser):
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='STUDENT')
     email = models.EmailField(unique=True)
     is_approved = models.BooleanField(default=True)
+
+    # Granular Permissions
+    can_grade = models.BooleanField(default=False)
+    can_manage_assignments = models.BooleanField(default=False)
+    can_manage_teams = models.BooleanField(default=False)
+    can_manage_system = models.BooleanField(default=False)
+
     
     class Meta:
         db_table = 'teams_customuser'
@@ -23,15 +30,35 @@ class CustomUser(AbstractUser):
             if self.role == 'DEV':
                 self.is_staff = True
                 self.is_superuser = True
+                # Devs get all permissions
+                self.can_grade = True
+                self.can_manage_assignments = True
+                self.can_manage_teams = True
+                self.can_manage_system = True
             elif self.role == 'LECTURER':
                 self.is_staff = True
                 self.is_superuser = False
+                # Lecturers get teaching/management permissions
+                self.can_grade = True
+                self.can_manage_assignments = True
+                self.can_manage_teams = True
+                self.can_manage_system = False
             else:
                 self.is_staff = False
                 self.is_superuser = False
+                # Students get no admin permissions by default
+                self.can_grade = False
+                self.can_manage_assignments = False
+                self.can_manage_teams = False
+                self.can_manage_system = False
         else:
             self.is_staff = False
             self.is_superuser = False
+            self.can_grade = False
+            self.can_manage_assignments = False
+            self.can_manage_teams = False
+            self.can_manage_system = False
+
         super().save(*args, **kwargs)
 
 class Student(models.Model):

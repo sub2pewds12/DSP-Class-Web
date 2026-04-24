@@ -8,11 +8,6 @@ import requests
 def health_check(request):
     """Lighweight endpoint for external monitoring services."""
     return HttpResponse("SYSTEM_OPERATIONAL", status=200)
-from django.core.mail import send_mail
-from django.template.loader import render_to_string
-from django.utils.html import strip_tags
-from django.utils import timezone
-import math, platform, sys, django, threading, psutil
 from .models import Student, Team, Lecturer, CustomUser, ClassDocument, TeamSubmission, Assignment, SystemSettings
 from apps.core.utils.email_service import send_html_email
 from apps.users.forms import UserRegistrationForm, StudentRoleForm
@@ -87,27 +82,15 @@ def dashboard_view(request, team_id=None):
                     messages.error(request, str(e))
                     return redirect('dashboard')
 
-    # Prepare Context
-    documents = ClassDocument.objects.all().order_by('-uploaded_at')
-    assignments = Assignment.objects.all().order_by('-deadline')
-
+    # Use Service Layer for Context
+    context = AssignmentService.get_student_dashboard_context(request.user, team=team)
+    
     if team:
-        # Optimize: Fetch submissions for this team in a single query
-        from django.db.models import Prefetch
-        team_subs = team.submissions.all().order_by('-submitted_at')
-        assignments = Assignment.objects.all().order_by('-deadline').prefetch_related(
-            Prefetch('submissions', queryset=team_subs, to_attr='team_assigned_subs')
-        )
-        
-        for a in assignments:
-            a.team_submission = a.team_assigned_subs[0] if a.team_assigned_subs else None
-            a.is_late = a.team_submission.is_late if a.team_submission else False
-            
         return render(request, 'teams/dashboard.html', {
             'student': student,
             'team': team,
-            'documents': documents,
-            'assignments': assignments,
+            'documents': context['documents'],
+            'assignments': context['assignments'],
             'project_form': TeamProjectForm(instance=team),
             'role_form': StudentRoleForm(instance=student),
             'assign_form': AssignmentSubmissionForm(),
@@ -116,7 +99,7 @@ def dashboard_view(request, team_id=None):
 
     return render(request, 'teams/register.html', {
         'form': TeamRegistrationForm(),
-        'documents': documents
+        'documents': context['documents']
     })
 
 def guide_view(request):
@@ -124,27 +107,11 @@ def guide_view(request):
 
 @login_required
 def teacher_dashboard(request):
-    if not getattr(request.user, 'is_approved', False):
-        return redirect('pending_approval')
-        
     if request.user.role not in ['LECTURER', 'DEV']:
         return redirect('dashboard')
-    
-    # Ensure lecturer profile exists
-    Lecturer.objects.get_or_create(user=request.user)
-    
-    # Prefetch with safer logic
-    teams = Team.objects.prefetch_related(
-        'members__user', 
-        'submissions__assignment',
-        'submissions__files'
-    ).all().order_by('name')
-    
-    documents = ClassDocument.objects.all().order_by('-uploaded_at')
-    assignments = Assignment.objects.all().order_by('-deadline')
-    
-    # Offload status mapping logic to service
-    teams = AssignmentService.get_team_status_matrix(teams, assignments)
+        
+    # Offload all dashboard context gathering to service
+    context = AssignmentService.get_teacher_dashboard_context(request.user)
 
     if request.method == 'POST':
         if 'create_assignment' in request.POST:
@@ -160,26 +127,16 @@ def teacher_dashboard(request):
                 messages.success(request, "Assignment created successfully.")
                 return redirect('teacher_dashboard')
         
-    # Only initialize new forms if they weren't already created (and potentially failed) during POST
-    if 'doc_form' not in locals(): doc_form = DocumentUploadForm()
-    if 'assign_form' not in locals(): assign_form = AssignmentForm()
-
-    # --- Submission Trends (Offloaded to Service) ---
-    trends = AssignmentService.get_submission_trends(days=14)
-    trend_labels = trends['labels']
-    trend_data = trends['data']
-    trend_details = trends['details']
-
     return render(request, 'teams/teacher_dashboard.html', {
-        'teams': teams, 
-        'assignments': assignments,
-        'doc_form': doc_form,
-        'assign_form': assign_form,
+        'teams': context['teams'], 
+        'assignments': context['assignments'],
+        'doc_form': DocumentUploadForm(),
+        'assign_form': AssignmentForm(),
         'grade_form': GradeSubmissionForm(),
-        'documents': documents,
-        'trend_labels': trend_labels,
-        'trend_data': trend_data,
-        'trend_details': trend_details
+        'documents': context['documents'],
+        'trend_labels': context['trend_labels'],
+        'trend_data': context['trend_data'],
+        'trend_details': context['trend_details']
     })
 
 
@@ -224,8 +181,7 @@ def release_grades(request, pk):
         return redirect('dashboard')
     
     assignment = get_object_or_404(Assignment, pk=pk)
-    assignment.grades_released = True
-    assignment.save()
+    AssignmentService.release_grades(assignment, request.user)
     messages.success(request, f"Grades for '{assignment.title}' have been released.")
     return redirect('teacher_dashboard')
 
@@ -272,174 +228,13 @@ def dev_dashboard(request):
     if request.user.role != 'DEV':
         return redirect('dashboard')
     
-    from django.db.models import Count, Q
-    from django.db.models.functions import TruncDate
-    from django.db import connection, OperationalError
-    from django.conf import settings
-    from .models import SystemPulse, SystemError
-    from apps.core.models import AuditLog
-    from django.core.management import call_command
-    from django.core.cache import cache
-    import platform
-    import sys
-    import django
-    import time
-    import os
-    import threading
-
-    # --- Ultra-Sync Trigger ---
-    sync_status = InfrastructureService.trigger_prod_sync()
-
-    # --- Pulse & Monitoring Logic (READ-ONLY) ---
-    last_pulse = SystemPulse.objects.first()
-
-    # Offload Analytics to Core Service
-    analytics = InfrastructureService.get_system_analytics(pulses_window=100)
-    
-    pulses_history = analytics['pulses']
-    graph_pulses = list(reversed(pulses_history)) 
-    recent_p = pulses_history # For histogram logic
-    advanced_insights = analytics['insights']
-    health_score = analytics['health']
-    momentum = analytics['momentum']
-    severity = analytics['severity']
-    analysis_msg = analytics['message']
-    
-    system_analysis = {
-        'message': analysis_msg,
-        'score': int(health_score),
-        'severity': severity,
-        'momentum': momentum,
-        'volatility': f"{analytics['volatility']:.1f}ms",
-        'consistency': f"{analytics['consistency']:.0f}%",
-        'insights': advanced_insights[:3] 
-    }
-    
-    # Rolling Uptime Calculation (Last 100 pulses in current cycle)
-    total_p_window = len(recent_p)
-    up_p_window = len([p for p in recent_p if p.status in ['OPERATIONAL', 'WARNING']])
-    uptime_pct = (up_p_window / total_p_window * 100) if total_p_window > 0 else 100
-
-    # Normalization for Logarithmic Histogram UI
-    window_max_latency = max([p.latency for p in recent_p] + [800]) 
-    # Use log10(val + 1) to handle 0ms latencies safely
-    log_max_latency = math.log10(window_max_latency + 1)
-    
-    # Log-calibrated Y-Axis benchmarks (Powers of 10)
-    log_benchmarks = [
-        {'label': f"{int(window_max_latency)}ms", 'pos': 100},
-        {'label': "100ms", 'pos': (math.log10(100+1) / log_max_latency * 100) if log_max_latency > 2 else 50},
-        {'label': "10ms", 'pos': (math.log10(10+1) / log_max_latency * 100) if log_max_latency > 1 else 10},
-        {'label': "0ms", 'pos': 0}
-    ]
-
-    # Pre-calculate logarithmic heights for template rendering
-    for p in recent_p:
-        if p.status == 'DOWN':
-            p.log_h = 100
-        else:
-            # log10(val+1) provides a safe lower bound for UI visibility
-            p.log_h = (math.log10(p.latency + 1) / log_max_latency) * 100
-
-    # Formatting for Chart.js
-    pulse_labels = []
-    pulse_data = []
-
-    # System Errors
     show_archive = request.GET.get('archive') == '1'
-    if show_archive:
-        system_errors = SystemError.objects.filter(is_resolved=True).order_by('-timestamp')[:50]
-    else:
-        system_errors = SystemError.objects.filter(is_resolved=False).order_by('-timestamp')[:25]
-        
-    unresolved_count = SystemError.objects.filter(is_resolved=False).count()
-
-    # 1. System Infrastructure Portals
-    portals = {
-        'admin': '/admin/',
-        'render': 'https://dashboard.render.com',
-        'cloudinary': f"https://cloudinary.com/console/cloud/{settings.CLOUDINARY_STORAGE['CLOUD_NAME']}/media_library",
-        'openapi': '/api/openapi.json',
-        'uptime_status': 'https://stats.uptimerobot.com/eX7GdUhav0',
-        'uptime_dashboard': 'https://dashboard.uptimerobot.com/monitors',
-    }
-
-    # 2. Optimized DB Telemetry
-    db_telemetry = {
-        'Team': Team.objects.count(), 
-        'Student': Student.objects.count(),
-        'Assignment': Assignment.objects.count(),
-        'Submission': TeamSubmission.objects.count(),
-        'Lecturer': Lecturer.objects.count(),
-        'ClassDocument': ClassDocument.objects.count(),
-        'User': CustomUser.objects.count(),
-        'db_engine': settings.DATABASES['default'].get('ENGINE', 'Unknown').split('.')[-1],
-        'db_host': settings.DATABASES['default'].get('HOST', 'localhost'),
-        'db_status': 'Connected' if last_pulse and last_pulse.status != 'DOWN' else 'Unknown',
-        'latency': round(last_pulse.latency, 1) if last_pulse else 0,
-        'sys_usage': {
-            'cpu': psutil.cpu_percent(),
-            'ram': psutil.virtual_memory().percent,
-            'disk': psutil.disk_usage('/').percent,
-            'load': os.getloadavg()[0] if hasattr(os, 'getloadavg') else 0,
-            'processes': len(psutil.pids()),
-            'net_io': round((psutil.net_io_counters().bytes_sent + psutil.net_io_counters().bytes_recv) / (1024 * 1024), 1),
-            'uptime': f"{int((time.time() - psutil.boot_time()) // 3600)}h {int(((time.time() - psutil.boot_time()) % 3600) // 60)}m"
-        }
-    }
-
-
-    # ... other stats ...
-
-    roles = CustomUser.objects.values('role').annotate(count=Count('id'))
-    role_labels = [r['role'] for r in roles]
-    role_data = [r['count'] for r in roles]
-
-    sys_info = {
-        'os': platform.system(),
-        'os_release': platform.release(),
-        'python_version': sys.version.split(' ')[0],
-        'django_version': django.get_version(),
-        'uptime_pct': f"{uptime_pct:.1f}%",
-        'unresolved_errors': unresolved_count,
-        'teams_count': Team.objects.count(),
-        'students_count': Student.objects.count(),
-        'submissions_count': TeamSubmission.objects.count(),
-        'docs_count': ClassDocument.objects.count(),
-    }
-
-    recent_activity = TeamSubmission.objects.select_related('team', 'submitted_by').all().order_by('-submitted_at')[:25]
     
-    audit_logs = AuditLog.objects.select_related('actor').all().order_by('-timestamp')[:25]
+    # Offload all monitoring logic to service
+    telemetry = InfrastructureService.get_dev_dashboard_telemetry(show_archive=show_archive)
+    telemetry['show_archive'] = show_archive
 
-    # Fetch pending access requests
-    pending_users = CustomUser.objects.filter(is_approved=False).order_by('-date_joined')
-
-    return render(request, 'teams/dev_dashboard.html', {
-        'trend_labels': [],
-        'trend_data': [],
-        'trend_details': [],
-        'role_labels': role_labels,
-        'role_data': role_data,
-        'sys_info': sys_info,
-        'recent_activity': recent_activity,
-        'settings': SystemSettings.objects.first(),
-        'portals': portals,
-        'db_telemetry': db_telemetry,
-        'pulses': pulses_history,
-        'pulse_labels': pulse_labels,
-        'pulse_data': pulse_data,
-        'window_max_latency': window_max_latency,
-        'log_max_latency': log_max_latency,
-        'log_benchmarks': log_benchmarks,
-        'system_errors': system_errors,
-        'show_archive': show_archive,
-        'sync_status': sync_status,
-        'current_status': last_pulse.status if last_pulse else 'UNKNOWN',
-        'system_analysis': system_analysis,
-        'pending_users': pending_users,
-        'audit_logs': audit_logs
-    })
+    return render(request, 'teams/dev_dashboard.html', telemetry)
 
 def gallery_view(request):
     if request.user.is_authenticated and not getattr(request.user, 'is_approved', False):

@@ -1,12 +1,14 @@
+import os
 from django.core.cache import cache
 from django.utils import timezone
 from django.db.models import Count
-from apps.core.models import SystemPulse, SystemError
+from apps.core.models import SystemError
 from apps.core.utils.email_service import send_html_email
 
 class InfrastructureService:
     """
     Handles system-level notifications, telemetry cleanup, and infrastructure health.
+    Leverages Prometheus metrics for real-time observability.
     """
     
     @staticmethod
@@ -120,137 +122,224 @@ class InfrastructureService:
         )
 
     @staticmethod
-    def get_system_analytics(pulses_window=100, bypass_cache=False):
-        """Calculates advanced metrics from system pulses and error logs with 5-minute caching."""
-        cache_key = f'system_analytics_{pulses_window}'
+    def get_system_analytics(bypass_cache=False):
+        """Calculates advanced metrics from Prometheus telemetry with 5-minute caching."""
+        from apps.core.services.telemetry_service import TelemetryService
+        cache_key = 'system_analytics_prometheus'
         
         if not bypass_cache:
             cached_data = cache.get(cache_key)
             if cached_data:
-                # We need to refresh the pulse objects since they might be stale in a different context,
-                # but for rapid dashboard refreshes, this is a massive performance win.
                 return cached_data
 
-        pulses = list(SystemPulse.objects.all()[:pulses_window])
+        metrics = TelemetryService.get_live_metrics()
         advanced_insights = []
         health_score = 100
         
-        if not pulses:
-            res = {
-                "pulses": [], 
-                "insights": [], 
-                "health": 100, 
-                "momentum": "UNKNOWN",
-                "severity": "success",
-                "message": "Collecting telemetry...",
-                "volatility": 0,
-                "consistency": 100
-            }
-            cache.set(cache_key, res, 300)
-            return res
-
-        # 1. Volatility Index (Jitter Detection)
-        latencies = [p.latency for p in pulses]
-        jitters = [abs(latencies[i] - latencies[i-1]) for i in range(1, len(latencies))]
-        avg_volatility = sum(jitters) / len(jitters) if jitters else 0
+        # 1. Error Rate Analysis
+        total_req = metrics.get('http_requests_total', 0)
+        status_codes = metrics.get('status_codes', {})
+        err_4xx = status_codes.get('4xx', 0)
+        err_5xx = status_codes.get('5xx', 0)
         
-        if avg_volatility > 200:
+        error_rate = ((err_4xx + err_5xx) / total_req * 100) if total_req > 0 else 0
+        
+        if error_rate > 5:
             advanced_insights.append({
-                "type": "volatility", 
-                "label": "High Volatility", 
-                "text": f"Response jitter is elevated ({avg_volatility:.1f}ms).", 
-                "icon": "bi-reception-2"
+                "type": "friction", 
+                "label": "High Error Rate", 
+                "text": f"System is experiencing a {error_rate:.1f}% error rate.", 
+                "icon": "bi-exclamation-triangle text-danger"
+            })
+            health_score -= (error_rate * 2)
+        else:
+            advanced_insights.append({
+                "type": "friction", 
+                "label": "Traffic Clean", 
+                "text": "HTTP status codes are within healthy thresholds.", 
+                "icon": "bi-shield-check text-success"
+            })
+
+        # 2. Latency Benchmarking
+        avg_latency = metrics.get('avg_latency_ms', 0)
+        if avg_latency > 500:
+            advanced_insights.append({
+                "type": "latency", 
+                "label": "Latency Spike", 
+                "text": f"Average response time is elevated ({avg_latency:.1f}ms).", 
+                "icon": "bi-hourglass-split text-warning"
             })
             health_score -= 15
         else:
             advanced_insights.append({
-                "type": "volatility", 
-                "label": "Signal Stable", 
-                "text": "Latency variance is within nominal limits.", 
-                "icon": "bi-reception-4 text-success"
+                "type": "latency", 
+                "label": "Low Latency", 
+                "text": f"System responsiveness is optimal ({avg_latency:.1f}ms).", 
+                "icon": "bi-lightning-charge text-success"
             })
 
-        # 2. Consistency Index
-        consistent_pulses = len([p for p in pulses if p.latency < 500 and p.status != 'DOWN'])
-        consistency_pct = (consistent_pulses / len(pulses)) * 100
-        
-        if consistency_pct < 90:
+        # 3. Database Pressure
+        db_queries = metrics.get('db_queries_total', 0)
+        if db_queries > 5000:
             advanced_insights.append({
-                "type": "consistency", 
-                "label": "Consistency Drop", 
-                "text": f"System fell below baseline for {100-consistency_pct:.0f}% of recent cycles.", 
-                "icon": "bi-activity text-warning"
-            })
-            health_score -= 20
-
-        # 3. Performance Momentum (Trend)
-        momentum = "STABLE"
-        current_window = latencies[:20]
-        baseline_window = latencies[20:100]
-        curr_avg = sum(current_window)/len(current_window) if current_window else 0
-        base_avg = sum(baseline_window)/len(baseline_window) if baseline_window else 0
-        if curr_avg < base_avg * 0.9: momentum = "IMPROVING"
-        elif curr_avg > base_avg * 1.1: momentum = "DEGRADING"
-        
-        # 4. Friction Analysis
-        hotspot = SystemError.objects.values('url').annotate(count=Count('id')).order_by('-count').first()
-        if hotspot and hotspot['count'] > 2:
-            advanced_insights.append({
-                "type": "friction", 
-                "label": "Service Friction", 
-                "text": f"Recurrent failures detected on endpoint: {hotspot['url']}.", 
-                "icon": "bi-exclamation-octagon text-danger"
+                "type": "db", 
+                "label": "DB Pressure", 
+                "text": "High volume of database operations detected.", 
+                "icon": "bi-database-exclamation text-warning"
             })
             health_score -= 10
 
-        # Final Scoring & Insights
         health_score = max(5, min(100, health_score))
         severity = "success"
-        if health_score < 70: severity = "warning"
-        if health_score < 40 or any(p.status == 'DOWN' for p in pulses[:5]): severity = "danger"
+        if health_score < 75: severity = "warning"
+        if health_score < 45: severity = "danger"
 
         analysis_msg = "Infrastructure is operating at peak efficiency."
-        if momentum == "DEGRADING" and health_score < 80:
-            analysis_msg = "Degradation trend detected. Resource scaling or error audit recommended."
-        elif health_score < 50:
-            analysis_msg = "Critical performance degradation. Immediate intervention required."
+        if health_score < 50:
+            analysis_msg = "Critical performance degradation. Prometheus telemetry indicates intervention required."
+        elif health_score < 80:
+            analysis_msg = "Minor anomalies detected. Performance trends are being monitored."
 
         result = {
-            "pulses": pulses,
+            "metrics": metrics,
             "insights": advanced_insights,
             "health": health_score,
-            "momentum": momentum,
+            "momentum": "LIVE",
             "severity": severity,
             "message": analysis_msg,
-            "volatility": avg_volatility,
-            "consistency": consistency_pct,
+            "volatility": 0,
+            "consistency": 100 if error_rate < 1 else 90,
             "cached_at": timezone.now()
         }
         
-        cache.set(cache_key, result, 300) # Cache for 5 minutes
+        cache.set(cache_key, result, 300)
         return result
+
+    @staticmethod
+    def get_dev_dashboard_telemetry(show_archive=False):
+        """Prepares the complete diagnostic context for the Developer Dashboard."""
+        import platform, sys, django, psutil, time, os
+        from django.conf import settings
+        from apps.teams.models import Team, Student, Lecturer, Assignment, TeamSubmission, ClassDocument
+        from apps.core.models import SystemSettings, SystemError, AuditLog
+        from django.contrib.auth import get_user_model
+        from apps.core.services.telemetry_service import TelemetryService
+        CustomUser = get_user_model()
+
+        # Telemetry from Prometheus
+        telemetry_ctx = TelemetryService.get_live_metrics()
+        
+        # System Analysis
+        system_analysis = InfrastructureService.get_system_analytics()
+        sync_status = InfrastructureService.trigger_prod_sync()
+
+        # Error Tracking
+        if show_archive:
+            system_errors = SystemError.objects.filter(is_resolved=True).order_by('-timestamp')[:50]
+        else:
+            system_errors = SystemError.objects.filter(is_resolved=False).order_by('-timestamp')[:25]
+        unresolved_count = SystemError.objects.filter(is_resolved=False).count()
+
+        # Infrastructure Portals
+        portals = {
+            'admin': '/admin/',
+            'render': 'https://dashboard.render.com',
+            'cloudinary': f"https://cloudinary.com/console/cloud/{settings.CLOUDINARY_STORAGE['CLOUD_NAME']}/media_library",
+            'sentry': 'https://sentry.io/organizations/o4511275058331648/projects/4511275065475152/',
+            'prometheus': os.getenv('GRAFANA_CLOUD_URL', 'https://sub2pewds12.grafana.net/') + 'explore',
+            'grafana': os.getenv('GRAFANA_CLOUD_URL', 'https://sub2pewds12.grafana.net/'),
+            'command_center': '/storage-analytics/',
+            'openapi': '/api/openapi.json',
+            'uptimerobot': 'https://stats.uptimerobot.com/eX7GdUhav0',
+            'uptime_config': 'https://dashboard.uptimerobot.com/monitors',
+        }
+
+        # DB Telemetry
+        db_telemetry = {
+            'Team': Team.objects.count(), 
+            'Student': Student.objects.count(),
+            'Assignment': Assignment.objects.count(),
+            'Submission': TeamSubmission.objects.count(),
+            'Lecturer': Lecturer.objects.count(),
+            'ClassDocument': ClassDocument.objects.count(),
+            'User': CustomUser.objects.count(),
+            'db_engine': settings.DATABASES['default'].get('ENGINE', 'Unknown').split('.')[-1],
+            'db_host': settings.DATABASES['default'].get('HOST', 'localhost'),
+            'db_status': 'Operational' if telemetry_ctx.get('summary', {}).get('db_queries_total', 0) >= 0 else 'Unknown',
+            'latency': round(telemetry_ctx.get('summary', {}).get('avg_latency', 0), 1),
+            'sys_usage': {
+                'cpu': psutil.cpu_percent(),
+                'ram': psutil.virtual_memory().percent,
+                'disk': psutil.disk_usage('/').percent,
+                'load': os.getloadavg()[0] if hasattr(os, 'getloadavg') else 0,
+                'processes': len(psutil.pids()),
+                'net_io': round((psutil.net_io_counters().bytes_sent + psutil.net_io_counters().bytes_recv) / (1024 * 1024), 1),
+                'uptime': f"{int((time.time() - psutil.boot_time()) // 3600)}h {int(((time.time() - psutil.boot_time()) % 3600) // 60)}m"
+            }
+        }
+
+        roles = CustomUser.objects.values('role').annotate(count=Count('id'))
+        role_labels = [r['role'] for r in roles]
+        role_data = [r['count'] for r in roles]
+
+        # Extract Prometheus-based context
+        summary = telemetry_ctx.get('summary', {})
+        
+        # Calculate live uptime percentage
+        total_req = summary.get('requests_total', 0)
+        success_req = sum(v for k, v in summary.get('responses_by_status', {}).items() if k.startswith('2'))
+        uptime_pct = "100%"
+        if total_req > 0:
+            uptime_pct = f"{round((success_req / total_req) * 100, 2)}%"
+
+        sys_info = {
+            'os': platform.system(),
+            'os_release': platform.release(),
+            'python_version': sys.version.split(' ')[0],
+            'django_version': django.get_version(),
+            'unresolved_errors': unresolved_count,
+            'uptime_pct': uptime_pct,
+        }
+
+        recent_activity = TeamSubmission.objects.select_related('team', 'submitted_by').all().order_by('-submitted_at')[:25]
+        audit_logs = AuditLog.objects.select_related('actor').all().order_by('-timestamp')[:25]
+        pending_users = CustomUser.objects.filter(is_approved=False).order_by('-date_joined')
+
+        return {
+            'role_labels': role_labels,
+            'role_data': role_data,
+            'sys_info': sys_info,
+            'recent_activity': recent_activity,
+            'settings': SystemSettings.objects.first(),
+            'portals': portals,
+            'db_telemetry': db_telemetry,
+            'system_errors': system_errors,
+            'sync_status': sync_status,
+            'current_status': system_analysis['severity'].upper(),
+            'system_analysis': system_analysis,
+            'pending_users': pending_users,
+            'audit_logs': audit_logs,
+            'telemetry_data': telemetry_ctx,
+            'pulses': telemetry_ctx.get('pulses', []),
+            'log_benchmarks': telemetry_ctx.get('log_benchmarks', [])
+        }
 
     @staticmethod
     def perform_health_check():
         """
-        Self-healing automated logic. 
-        Triggers emergency cleanup or alerts if health falls below threshold.
+        Self-healing automated logic based on Prometheus metrics.
         """
         analytics = InfrastructureService.get_system_analytics(bypass_cache=True)
         health_score = analytics['health']
         
-        # If health is critical, trigger an emergency recovery sequence
         if health_score < 40:
-            # 1. Clear session cache to prevent possible memory pressure or stale state leaks
             cache.clear()
-            
-            # 2. Trigger high-priority administrative notification
             send_html_email(
                 subject="URGENT: Automated System Recovery Triggered",
                 template_name='core/emails/emergency_alert.html',
                 context={
                     'health_score': health_score,
-                    'message': "The system's health dropped below the 40% threshold. Automated recovery (Cache Flush) has been executed.",
+                    'message': "System health dropped below threshold. Automated recovery executed.",
                     'timestamp': timezone.now(),
                     'analytics': analytics
                 },
@@ -265,32 +354,20 @@ class InfrastructureService:
         """Detects if the current database is a protected cloud environment."""
         from django.conf import settings
         db_config = settings.DATABASES.get('default', {})
-        db_url = db_config.get('NAME', '')
         db_host = db_config.get('HOST', '')
         
         protected_keywords = ['supabase', 'aws', 'rds', 'elephantsql', 'render', 'pooler']
-        
-        # Check both NAME and HOST
-        is_cloud = any(key in str(db_url).lower() for key in protected_keywords) or \
-                   any(key in str(db_host).lower() for key in protected_keywords)
-        
-        # Specifically check for supabase patterns
-        is_supabase = 'supabase.com' in str(db_host).lower() or 'supabase.co' in str(db_host).lower()
-        
-        return is_cloud or is_supabase
+        return any(key in str(db_host).lower() for key in protected_keywords)
 
     @staticmethod
     def validate_safe_operation(command_name):
-        """Raises PermissionError if a destructive command is run on a protected DB without bypass."""
+        """Raises PermissionError if a destructive command is run on a protected DB."""
         import os
         if InfrastructureService.is_protected_environment():
-            # List of dangerous commands to intercept
             destructive_commands = ['flush', 'reset_db', 'drop_schema', 'nuke']
             if command_name.lower() in destructive_commands:
                 if os.getenv('SAFETY_VALVE_OPEN') != 'True':
                     raise PermissionError(
                         f"\n[!!!] CRITICAL SAFETY VIOLATION [!!!]\n"
                         f"Attempted '{command_name}' on a PROTECTED CLOUD DATABASE.\n"
-                        f"Operation blocked by Infrastructure Sentinel.\n"
-                        f"To bypass, set environment variable SAFETY_VALVE_OPEN=True."
                     )

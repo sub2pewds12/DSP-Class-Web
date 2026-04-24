@@ -4,6 +4,7 @@ from django.db import transaction
 from apps.academia.models import Assignment, TeamSubmission, SubmissionFile, ClassDocument
 from apps.users.models import CustomUser
 from apps.core.services.audit_service import AuditService
+from django.core.cache import cache
 
 class SubmissionService:
     """
@@ -61,6 +62,8 @@ class SubmissionService:
                 metadata={"team_id": team.id, "files_count": len(files), "status": status}
             )
                 
+        # Invalidate dashboard caches
+        cache.delete_many(["dashboard_teacher", "dashboard_students"])
         return submission
 
     @staticmethod
@@ -77,6 +80,8 @@ class SubmissionService:
             description=f"Grade updated for {submission.team.name} on '{submission.assignment.title}'.",
             metadata={"grade": str(grade), "team": submission.team.name}
         )
+        # Invalidate teacher dashboard cache (student dashboard might also need it if grades released)
+        cache.delete_many(["dashboard_teacher", "dashboard_students"])
         return submission
 
     @staticmethod
@@ -94,12 +99,31 @@ class SubmissionService:
             description=f"Submission '{title}' for team '{team_name}' was deleted by {user_requesting.username}.",
             metadata={"team": team_name, "deleted_by": user_requesting.username}
         )
+        # Invalidate caches
+        cache.delete_many(["dashboard_teacher", "dashboard_students"])
         return title
 
 class AssignmentService:
     """
     Handles lecturer actions related to assignments and documents.
     """
+
+    @staticmethod
+    def release_grades(assignment: Assignment, user: CustomUser) -> Assignment:
+        """Releases grades for an assignment and logs the event."""
+        assignment.grades_released = True
+        assignment.save()
+
+        AuditService.log_event(
+            action="GRADES_RELEASED",
+            target_type="Assignment",
+            target_id=str(assignment.id),
+            description=f"Grades for '{assignment.title}' released by {user.username}.",
+            metadata={"title": assignment.title, "released_by": user.username}
+        )
+        # Invalidate student dashboard cache to show released grades
+        cache.delete("dashboard_students")
+        return assignment
     
     @staticmethod
     def get_team_status_matrix(teams, assignments):
@@ -145,6 +169,8 @@ class AssignmentService:
             description=f"New assignment '{title}' created by {user.username}.",
             metadata={"title": title, "deadline": str(deadline)}
         )
+        # Invalidate caches
+        cache.delete_many(["dashboard_teacher", "dashboard_students"])
         return assign
 
     @staticmethod
@@ -167,6 +193,8 @@ class AssignmentService:
             description=f"Document '{title}' uploaded by {user.username}.",
             metadata={"title": title}
         )
+        # Invalidate caches
+        cache.delete_many(["dashboard_teacher", "dashboard_students"])
         return doc
 
     @staticmethod
@@ -200,4 +228,69 @@ class AssignmentService:
             'labels': labels,
             'data': data,
             'details': details
+        }
+
+    @staticmethod
+    def get_teacher_dashboard_context(user: CustomUser):
+        """
+        Gathers all data needed for the lecturer dashboard (Cached).
+        """
+        def _get_context():
+            from apps.teams.models import Team, ClassDocument, Assignment, Lecturer
+            Lecturer.objects.get_or_create(user=user)
+
+            teams = Team.objects.prefetch_related(
+                'members__user',
+                'submissions__assignment',
+                'submissions__files'
+            ).all().order_by('name')
+
+            documents = ClassDocument.objects.all().order_by('-uploaded_at')
+            assignments = Assignment.objects.all().order_by('-deadline')
+            
+            trends = AssignmentService.get_submission_trends()
+            
+            # Offload status mapping logic to service
+            teams = AssignmentService.get_team_status_matrix(teams, assignments)
+
+            return {
+                'teams': teams,
+                'documents': list(documents),
+                'assignments': list(assignments),
+                'trend_labels': trends['labels'],
+                'trend_data': trends['data'],
+                'trend_details': trends['details'],
+            }
+
+        # Global cache for teacher dashboard (shared across lecturers)
+        return cache.get_or_set("dashboard_teacher", _get_context, timeout=300)
+
+    @staticmethod
+    def get_student_dashboard_context(user: CustomUser, team=None):
+        """
+        Gathers data for the student dashboard (Cached partially).
+        """
+        from apps.teams.models import ClassDocument, Assignment
+        from django.db.models import Prefetch
+
+        def _get_docs_and_assigns():
+            documents = ClassDocument.objects.all().order_by('-uploaded_at')
+            assignments = Assignment.objects.all().order_by('-deadline')
+            return list(documents), list(assignments)
+
+        # Cache global documents and assignments
+        documents, assignments = cache.get_or_set("dashboard_students", _get_docs_and_assigns, timeout=300)
+        
+        if team:
+            # Personal context cannot be globally cached easily, but we use optimized queries
+            team_subs = team.submissions.all().order_by('-submitted_at')
+            # Attach submissions to the cached assignments for THIS specific team
+            for a in assignments:
+                # Find matching submission from team_subs
+                matching_sub = next((s for s in team_subs if s.assignment_id == a.id), None)
+                a.team_submission = matching_sub
+
+        return {
+            'documents': documents,
+            'assignments': assignments,
         }

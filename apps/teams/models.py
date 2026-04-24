@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
-from apps.core.models import SystemSettings, SystemPulse, SystemError
+from apps.core.models import SystemSettings, SystemError
 
 # Proxy imports for backward compatibility during Phase 1
 from apps.users.models import CustomUser, Student, Lecturer, Developer

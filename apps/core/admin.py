@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import SystemSettings, SystemPulse, SystemError
+from .models import SystemSettings, SystemError
 
 @admin.register(SystemSettings)
 class SystemSettingsAdmin(admin.ModelAdmin):
@@ -9,11 +9,6 @@ class SystemSettingsAdmin(admin.ModelAdmin):
         if SystemSettings.objects.exists():
             return False
         return super().has_add_permission(request)
-
-@admin.register(SystemPulse)
-class SystemPulseAdmin(admin.ModelAdmin):
-    list_display = ('timestamp', 'status', 'latency')
-    list_filter = ('status',)
 
 @admin.register(SystemError)
 class SystemErrorAdmin(admin.ModelAdmin):

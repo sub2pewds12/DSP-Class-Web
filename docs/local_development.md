@@ -17,6 +17,7 @@ To prevent "Database is Locked" errors during local development (especially when
 
 - **Increased Timeout**: The database configuration should include `'timeout': 20` in its options.
 - **Session Persistence**: Set `SESSION_SAVE_EVERY_REQUEST = False`. This prevents redundant database writes on every GET request, which is critical for handling the multiple concurrent requests fired by the Swagger UI.
+- **Pooled Database Optimization**: When using Supabase Transaction Pooler (Port 6543), set `CONN_MAX_AGE = 0`. This ensures that connections are released back to the pool immediately, preventing connection exhaustion during development.
 
 ## 3. Activating the Virtual Environment
 If you want to use the virtual environment for other commands (like `pip install`), you might see an "Execution Policy" error. Use this command to bypass it for your current session:

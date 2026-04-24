@@ -16,10 +16,17 @@ DEBUG = True
 DATABASES = {
     'default': dj_database_url.config(
         default=raw_db_url or f"sqlite:///{BASE_DIR}/db.sqlite3",
-        conn_max_age=300,
+        conn_max_age=0,
         ssl_require=False
     )
 }
+
+# Instrument with Prometheus
+if DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
+    DATABASES['default']['ENGINE'] = 'django_prometheus.db.backends.sqlite3'
+elif DATABASES['default']['ENGINE'] == 'django.db.backends.postgresql':
+    DATABASES['default']['ENGINE'] = 'django_prometheus.db.backends.postgresql'
+
 DATABASES['default']['DISABLE_SERVER_SIDE_CURSORS'] = True
 
 # NUCLEAR OPTION: Explicitly remove 'pgbouncer' from OPTIONS to prevent driver crashes

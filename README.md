@@ -26,6 +26,8 @@ A comprehensive, production-ready platform designed to manage student team regis
 - **Scalable Dashboard Logic**: Optimized database prefetching solves N+1 performance bottlenecks for the student interface.
 - **Database Cloaking**: Row Level Security (RLS) enabled on all tables to prevent public API exposure.
 - **Dev Center Portals**: Deep-linked management tools for Render, Cloudinary, and UptimeRobot analytics.
+- **Cloud Command Center**: Integrated storage analytics portal for deep visibility into media integrity and Cloudinary usage patterns.
+- **Connection Resilience**: Engineered for Supabase Transaction Pooling with aggressive idle-connection pruning (`CONN_MAX_AGE=0`).
 - **Seed Engine**: Custom `seed_dsp` command for surgical test data management.
 
 ## 🛠️ Management Commands

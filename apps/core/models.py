@@ -22,21 +22,6 @@ class SystemSettings(models.Model):
         db_table = 'teams_systemsettings'
         verbose_name_plural = "System Settings"
 
-class SystemPulse(models.Model):
-    STATUS_CHOICES = (
-        ('OPERATIONAL', 'Operational'),
-        ('WARNING', 'Warning'),
-        ('CRITICAL', 'Critical'),
-        ('DOWN', 'Down'),
-    )
-    timestamp = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='OPERATIONAL')
-    latency = models.FloatField(help_text="Response time in ms")
-    info = models.TextField(blank=True)
-
-    class Meta:
-        ordering = ['-timestamp']
-        db_table = 'teams_systempulse'
 
 class SystemError(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)

@@ -2,6 +2,36 @@
 {% load static %}
 
 {% block content %}
+<style>
+    /* Search Bar Spinner */
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    .search-loading .fa-search {
+        animation: spin 1s linear infinite;
+        color: var(--primary-red) !important;
+    }
+    
+    /* Pulse animation for search highlight */
+    @keyframes pulse-highlight {
+        0% { background-color: transparent; }
+        50% { background-color: rgba(220, 53, 69, 0.2); }
+        100% { background-color: transparent; }
+    }
+    .highlight-pulse {
+        animation: pulse-highlight 2s ease-in-out;
+        border: 2px solid var(--primary-red) !important;
+    }
+    
+    .hover-bg-light:hover {
+        background-color: #f8f9fa;
+    }
+    .cursor-pointer {
+        cursor: pointer;
+    }
+</style>
+
 <div class="container mt-4 pb-5">
     <div class="bento-container">
     
@@ -12,7 +42,21 @@
                 <span class="text-muted small text-uppercase fw-bold ls-1">Instruction Management</span>
                 <h1 class="h2 text-main mt-1 fw-800">Lecturer Dashboard</h1>
             </div>
-            <div class="d-flex gap-3">
+        <div class="d-flex gap-3 align-items-center">
+            <!-- Global Search -->
+            <div class="search-wrapper position-relative" style="min-width: 350px;">
+                <div class="input-group">
+                    <span class="input-group-text border-0 bg-light rounded-start-pill ps-3">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input type="text" id="globalSearchInput" class="form-control border-0 bg-light rounded-end-pill py-2" placeholder="Search students, teams, assignments..." autocomplete="off">
+                </div>
+                <div id="searchDropdown" class="position-absolute w-100 bg-white shadow-xl rounded-4 mt-2 d-none overflow-hidden" style="z-index: 1050; border: 1px solid rgba(0,0,0,0.08);">
+                    <div id="searchResults" class="p-2">
+                        <!-- Results injected via JS -->
+                    </div>
+                </div>
+            </div>
                 <div class="text-center p-3 bg-soft rounded-4 border-0">
                     <div class="h3 fw-800 text-primary-red mb-0">{{ teams|length }}</div>
                     <div class="small text-muted text-uppercase fw-bold" style="font-size: 0.6rem;">Teams</div>
@@ -30,9 +74,15 @@
     <div class="bento-card">
         <h6 class="small fw-bold text-uppercase text-muted mb-3">Quick Actions</h6>
         <div class="d-grid gap-2">
+            {% if user.can_manage_assignments %}
             <button class="btn btn-primary-red w-100 py-2 rounded-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#assignmentModal">
                 <i class="bi bi-plus-lg me-2"></i> New Assignment
             </button>
+            {% else %}
+            <div class="p-3 bg-soft rounded-3 text-center border border-dashed border-soft">
+                <p class="small text-muted mb-0"><i class="bi bi-lock me-1"></i> Read-only Mode</p>
+            </div>
+            {% endif %}
             <div class="p-2 bg-soft rounded-3 text-center border-0 border-top mt-2">
                 <span class="badge text-main fw-bold">Management Mode</span>
             </div>
@@ -53,7 +103,7 @@
                 </thead>
                 <tbody class="border-0">
                     {% for team in teams %}
-                        <tr class="border-bottom border-soft">
+                        <tr id="team-{{ team.id }}" class="border-bottom border-soft transition-all">
                             <td class="py-4">
                                 <div class="fw-800 text-main">{{ team.name }}</div>
                                 <div class="small text-primary-red fw-600 text-truncate" style="max-width: 180px;">{{ team.project_name|default:"Project Name Unassigned" }}</div>
@@ -101,9 +151,15 @@
                                                     {% endif %}
                                                     
                                                     {% if sub %}
-                                                        <button class="btn btn-primary-red btn-sm rounded-pill px-3" style="font-size: 0.65rem;" data-bs-toggle="modal" data-bs-target="#gradeModal{{ sub.id }}">
-                                                            {% if sub.grade is not None %}Update Grade{% else %}Grade{% endif %}
-                                                        </button>
+                                                        {% if user.can_grade %}
+                                                            <button class="btn btn-primary-red btn-sm rounded-pill px-3 shadow-sm" style="font-size: 0.65rem;" data-bs-toggle="modal" data-bs-target="#gradeModal{{ sub.id }}">
+                                                                {% if sub.grade is not None %}Update Grade{% else %}Grade{% endif %}
+                                                            </button>
+                                                        {% else %}
+                                                            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3 disabled opacity-50" style="font-size: 0.65rem;">
+                                                                Grade
+                                                            </button>
+                                                        {% endif %}
                                                     {% else %}
                                                         <button class="btn btn-primary-red btn-sm rounded-pill px-3 disabled opacity-50" style="font-size: 0.65rem;">
                                                             Grade
@@ -175,7 +231,7 @@
         <h5 class="mb-4 fw-bold text-main"><i class="bi bi-calendar-event text-primary-red"></i> Course Assignments</h5>
         <div class="mission-list scroll-hide" style="overflow-y: auto;">
             {% for assign in assignments %}
-                <div class="p-3 bg-soft rounded-4 border-0 mb-3 shadow-sm">
+                <div id="assignment-{{ assign.id }}" class="p-3 bg-soft rounded-4 border-0 mb-3 shadow-sm transition-all">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <div class="fw-bold text-main">{{ assign.title }}</div>
                         {% if assign.grades_released %}
@@ -184,7 +240,11 @@
                     </div>
                     <div class="small text-muted mb-3">Due: {{ assign.deadline|date:"M d, H:i" }}</div>
                     <div class="d-flex justify-content-between align-items-center pt-2 border-top border-soft">
+                        {% if user.can_grade %}
                         <button onclick="releaseGrades({{ assign.id }})" class="btn btn-link p-0 text-primary-red text-decoration-none small fw-bold {% if assign.grades_released %}disabled opacity-50{% endif %}" {% if assign.grades_released %}disabled{% endif %}>Release Grades</button>
+                        {% else %}
+                        <span class="small text-muted"><i class="bi bi-lock"></i> Grades Locked</span>
+                        {% endif %}
                         {% if assign.instruction_file %}
                              <a href="{{ assign.instruction_file.url }}" target="_blank" class="btn btn-sm btn-primary-red rounded-pill px-3" style="font-size: 0.65rem;">View File</a>
                         {% endif %}
@@ -209,11 +269,14 @@
                         {% if doc.file %}
                             <a href="{{ doc.file.url }}" target="_blank" class="text-primary-red"><i class="bi bi-eye"></i></a>
                         {% endif %}
+                        {% if user.can_manage_assignments %}
                         <button onclick="deleteDocument({{ doc.pk }})" class="btn btn-link p-0 text-muted transition-all" title="Delete document"><i class="bi bi-trash"></i></button>
+                        {% endif %}
                     </div>
                 </div>
             {% endfor %}
         </div>
+        {% if user.can_manage_assignments %}
         <div class="mt-4 pt-3 border-top border-soft">
             <h6 class="small fw-bold text-uppercase text-muted mb-3">Upload Material</h6>
             {% if doc_form.errors %}
@@ -234,6 +297,7 @@
                 </div>
             </form>
         </div>
+        {% endif %}
     </div>
 
 </div>
@@ -350,5 +414,162 @@
         } catch (e) { }
     }
 </script>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('globalSearchInput');
+    const searchDropdown = document.getElementById('searchDropdown');
+    const searchResults = document.getElementById('searchResults');
+    let debounceTimer;
+
+    searchInput.addEventListener('input', function() {
+        clearTimeout(debounceTimer);
+        const query = this.value.trim();
+
+        if (query.length < 2) {
+            searchDropdown.classList.add('d-none');
+            return;
+        }
+
+        const searchWrapper = searchInput.closest('.search-wrapper');
+
+        debounceTimer = setTimeout(() => {
+            searchWrapper.classList.add('search-loading');
+            fetch(`/api/search/global?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    renderResults(data, query);
+                })
+                .catch(err => console.error('Search error:', err))
+                .finally(() => {
+                    searchWrapper.classList.remove('search-loading');
+                });
+        }, 300);
+    });
+
+    // Close dropdown on click outside
+    document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
+            searchDropdown.classList.add('d-none');
+        }
+    });
+
+    function renderResults(data, query) {
+        let html = '';
+        const hasResults = data.students.length > 0 || data.teams.length > 0 || data.assignments.length > 0;
+
+        if (!hasResults) {
+            html = `<div class="p-4 text-center text-muted">
+                        <i class="fas fa-search-minus mb-2 d-block fa-2x opacity-25"></i>
+                        No matches found for "${query}"
+                    </div>`;
+        } else {
+            // Students (Link to Team Row)
+            if (data.students.length > 0) {
+                html += `<div class="mb-2">
+                            <h6 class="px-3 py-2 bg-light rounded-2 small text-uppercase fw-bold text-muted mb-1">Students</h6>`;
+                data.students.forEach(s => {
+                    const targetId = s.team_id ? `team-${s.team_id}` : '';
+                    html += `<div class="px-3 py-2 hover-bg-light rounded-2 cursor-pointer" onclick="scrollToId('${targetId}')">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm bg-primary-soft text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 32px; height: 32px;">
+                                        <i class="fas fa-user small"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold text-dark small">${s.name}</div>
+                                        <div class="text-muted" style="font-size: 11px;">${s.team} • ${s.role}</div>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-muted opacity-25 small"></i>
+                                </div>
+                            </div>`;
+                });
+                html += `</div>`;
+            }
+
+            // Teams (Link to Team Row)
+            if (data.teams.length > 0) {
+                html += `<div class="mb-2">
+                            <h6 class="px-3 py-2 bg-light rounded-2 small text-uppercase fw-bold text-muted mb-1">Teams</h6>`;
+                data.teams.forEach(t => {
+                    html += `<div class="px-3 py-2 hover-bg-light rounded-2 cursor-pointer" onclick="scrollToId('team-${t.id}')">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm bg-success-soft text-success rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 32px; height: 32px;">
+                                        <i class="fas fa-users small"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold text-dark small">${t.name}</div>
+                                        <div class="text-muted" style="font-size: 11px;">Project: ${t.project} • Leader: ${t.leader}</div>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-muted opacity-25 small"></i>
+                                </div>
+                            </div>`;
+                });
+                html += `</div>`;
+            }
+
+            // Assignments (Link to Assignment Card)
+            if (data.assignments.length > 0) {
+                html += `<div class="mb-0">
+                            <h6 class="px-3 py-2 bg-light rounded-2 small text-uppercase fw-bold text-muted mb-1">Assignments</h6>`;
+                data.assignments.forEach(a => {
+                    html += `<div class="px-3 py-2 hover-bg-light rounded-2 cursor-pointer" onclick="scrollToId('assignment-${a.id}')">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm bg-warning-soft text-warning rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 32px; height: 32px;">
+                                        <i class="fas fa-file-alt small"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold text-dark small">${a.title}</div>
+                                        <div class="text-muted" style="font-size: 11px;">Deadline: ${a.deadline}</div>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-muted opacity-25 small"></i>
+                                </div>
+                            </div>`;
+                });
+                html += `</div>`;
+            }
+        }
+
+        searchResults.innerHTML = html;
+        searchDropdown.classList.remove('d-none');
+    }
+
+    window.scrollToId = function(id) {
+        if (!id) return;
+        const el = document.getElementById(id);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.classList.add('highlight-pulse');
+            setTimeout(() => el.classList.remove('highlight-pulse'), 2000);
+            searchDropdown.classList.add('d-none');
+            searchInput.value = '';
+        }
+    };
+});
+</script>
+
+<style>
+.highlight-pulse {
+    animation: highlight-animation 2s ease-out;
+}
+@keyframes highlight-animation {
+    0% { background-color: rgba(255, 61, 87, 0.2); }
+    100% { background-color: transparent; }
+}
+.hover-bg-light:hover {
+    background-color: #f8f9fa;
+    transition: background 0.2s;
+}
+.cursor-pointer {
+    cursor: pointer;
+}
+.shadow-xl {
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1) !important;
+}
+.bg-primary-soft { background-color: rgba(13, 110, 253, 0.1); }
+.bg-success-soft { background-color: rgba(25, 135, 84, 0.1); }
+.bg-warning-soft { background-color: rgba(255, 193, 7, 0.1); }
+</style>
 {% endblock %}
 

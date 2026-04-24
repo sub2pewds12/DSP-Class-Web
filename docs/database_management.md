@@ -9,7 +9,9 @@ The project uses a **dual-storage** strategy:
 
 The database backend is selected automatically via `dj-database-url`. Locally, it defaults to SQLite unless a `DATABASE_URL` is found in your `.env` file.
 
-**Supabase Production Connectivity**: Always use the **Transaction Pooler** (Port 6543) with `?pgbouncer=true`. This ensures compatibility with IPv4-only networks (like Render) and provides high-performance connection management.
+**Supabase Production Connectivity**: Always use the **Transaction Pooler** (Port 6543) with `?pgbouncer=true`. This ensures compatibility with IPv4-only networks (like Render) and provides high-performance connection management. 
+- **Pool Management**: In `settings.py`, ensure `CONN_MAX_AGE` is set appropriately for your environment. For serverless or high-concurrency scenarios (Render/Supabase), `CONN_MAX_AGE = 0` is recommended to prevent idle connection buildup.
+- **SSL Configuration**: Ensure `sslmode=require` is active to protect data in transit.
 
 **Cloudinary** handles all user-uploaded files (assignment instructions, team submissions, class documents) so they persist across deployments regardless of ephemeral hosting.
 

@@ -4,6 +4,19 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
+
+sentry_sdk.init(
+    dsn=os.environ.get("SENTRY_DSN", ""),
+    integrations=[DjangoIntegration()],
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
+    # If you wish to associate users to errors (recommended)
+    send_default_pii=True,
+)
+
 # BASE_DIR is now 3 levels up since this file is in config/settings/
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -31,6 +44,7 @@ INSTALLED_APPS = [
     'cloudinary_storage',
     'cloudinary',
     'apps.teams',
+    'django_prometheus',
 ]
 
 AUTH_USER_MODEL = 'users.CustomUser'
@@ -41,6 +55,7 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 MIDDLEWARE = [
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -53,6 +68,7 @@ MIDDLEWARE = [
     'apps.core.middleware.AuditContextMiddleware',
     'apps.core.middleware.ErrorMonitoringMiddleware',
     'apps.core.middleware.ActivityTrackingMiddleware',
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'

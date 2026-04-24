@@ -8,3 +8,9 @@ class CoreConfig(AppConfig):
 
     def ready(self):
         import apps.core.signals
+        
+        # Start the Grafana Cloud Heartbeat (only in the main process)
+        import os
+        if os.environ.get('RUN_MAIN') == 'true' or os.getenv('KUBERNETES_SERVICE_HOST'):
+            from apps.core.services.monitoring_service import MonitoringService
+            MonitoringService.start_heartbeat()

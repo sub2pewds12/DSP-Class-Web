@@ -38,10 +38,16 @@ if raw_db_url and 'pgbouncer' in raw_db_url:
 DATABASES = {
     'default': dj_database_url.config(
         default=raw_db_url or f"sqlite:///{BASE_DIR}/db.sqlite3",
-        conn_max_age=600,
+        conn_max_age=0,
         ssl_require=not DEBUG
     )
 }
+
+# Instrument with Prometheus
+if DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
+    DATABASES['default']['ENGINE'] = 'django_prometheus.db.backends.sqlite3'
+elif DATABASES['default']['ENGINE'] == 'django.db.backends.postgresql':
+    DATABASES['default']['ENGINE'] = 'django_prometheus.db.backends.postgresql'
 
 # NUCLEAR OPTION: Explicitly remove 'pgbouncer' from OPTIONS to prevent driver crashes
 if 'pgbouncer' in DATABASES['default'].get('OPTIONS', {}):

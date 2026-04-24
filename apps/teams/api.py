@@ -14,6 +14,7 @@ from .models import Team
 from apps.academia.services import SubmissionService, AssignmentService
 from apps.users.services import UserService
 from apps.core.services.audit_service import AuditService
+from apps.core.services.search_service import SearchService
 from apps.core.utils.email_service import send_html_email
 
 api = NinjaAPI(
@@ -54,6 +55,32 @@ class AssignmentSchema(Schema):
 class DocumentSchema(Schema):
     title: str
 
+# --- Search Schemas ---
+
+class SearchStudentSchema(Schema):
+    id: int
+    name: str
+    username: str
+    team: str
+    team_id: Optional[int]
+    role: str
+
+class SearchTeamSchema(Schema):
+    id: int
+    name: str
+    project: str
+    leader: str
+
+class SearchAssignmentSchema(Schema):
+    id: int
+    title: str
+    deadline: str
+
+class SearchResponse(Schema):
+    students: List[SearchStudentSchema]
+    teams: List[SearchTeamSchema]
+    assignments: List[SearchAssignmentSchema]
+
 # --- System & Incident Management (Dev) ---
 
 @api.get("/health", tags=["System"])
@@ -64,8 +91,8 @@ def health_check_api(request):
 @api.post("/incident/{error_id}/resolve", response=SuccessResponse, tags=["Incidents"])
 def resolve_incident(request, error_id: int):
     """Resolves a single incident by ID."""
-    if getattr(request.user, 'role', '') != 'DEV':
-        return 403, {"status": "error", "message": "Unauthorized"}
+    if not getattr(request.user, 'can_manage_system', False):
+        return 403, {"status": "error", "message": "Unauthorized: Requires System Management permission."}
         
     error = get_object_or_404(SystemError, id=error_id)
     error.is_resolved = True
@@ -75,8 +102,8 @@ def resolve_incident(request, error_id: int):
 @api.post("/incident/bulk-resolve", response=SuccessResponse, tags=["Incidents"])
 def bulk_resolve_incidents(request, data: BulkResolveSchema):
     """Resolves all unresolved incidents where the message contains the specified pattern."""
-    if getattr(request.user, 'role', '') != 'DEV':
-        return 403, {"status": "error", "message": "Unauthorized"}
+    if not getattr(request.user, 'can_manage_system', False):
+        return 403, {"status": "error", "message": "Unauthorized: Requires System Management permission."}
         
     updated_count = SystemError.objects.filter(
         is_resolved=False, 
@@ -88,8 +115,8 @@ def bulk_resolve_incidents(request, data: BulkResolveSchema):
 @api.post("/incident/sanitize", response=SuccessResponse, tags=["Incidents"])
 def sanitize_logs_api(request):
     """Automated log cleanup via concurrent URL probing."""
-    if getattr(request.user, 'role', '') != 'DEV':
-        return 403, {"status": "error", "message": "Unauthorized"}
+    if not getattr(request.user, 'can_manage_system', False):
+        return 403, {"status": "error", "message": "Unauthorized: Requires System Management permission."}
         
     unresolved = list(SystemError.objects.filter(is_resolved=False).order_by('-timestamp')[:100])
     url_to_errors = {}
@@ -187,8 +214,8 @@ def submit_assignment_api(request, assignment_id: int, files: List[UploadedFile]
 @api.post("/lecturer/create-assignment", response=SuccessResponse, tags=["Lecturer"])
 def create_assignment_api(request, data: AssignmentSchema, instr_file: Optional[UploadedFile] = File(None)):
     """Create a new course assignment."""
-    if request.user.role not in ['LECTURER', 'DEV']:
-        return 403, {"status": "error", "message": "Unauthorized"}
+    if not getattr(request.user, 'can_manage_assignments', False):
+        return 403, {"status": "error", "message": "Unauthorized: Requires Assignment Management permission."}
     
     # Simple deadline parsing
     assign = AssignmentService.create_assignment(
@@ -203,8 +230,8 @@ def create_assignment_api(request, data: AssignmentSchema, instr_file: Optional[
 @api.post("/lecturer/upload-document", response=SuccessResponse, tags=["Lecturer"])
 def upload_document_api(request, title: str, file: UploadedFile = File(...)):
     """Upload a new material for the class."""
-    if request.user.role not in ['LECTURER', 'DEV']:
-        return 403, {"status": "error", "message": "Unauthorized"}
+    if not getattr(request.user, 'can_manage_assignments', False):
+        return 403, {"status": "error", "message": "Unauthorized: Requires Assignment Management permission."}
     
     doc = AssignmentService.upload_document(
         user=request.user,
@@ -216,8 +243,8 @@ def upload_document_api(request, title: str, file: UploadedFile = File(...)):
 @api.post("/lecturer/grade-submission/{sub_id}", response=SuccessResponse, tags=["Lecturer"])
 def grade_submission_api(request, sub_id: int, data: GradeUpdateSchema):
     """Assign/Update a grade and feedback for a team submission."""
-    if request.user.role not in ['LECTURER', 'DEV']:
-        return 403, {"status": "error", "message": "Unauthorized"}
+    if not getattr(request.user, 'can_grade', False):
+        return 403, {"status": "error", "message": "Unauthorized: Requires Grading permission."}
     
     submission = get_object_or_404(TeamSubmission, pk=sub_id)
     SubmissionService.grade_submission(
@@ -231,8 +258,8 @@ def grade_submission_api(request, sub_id: int, data: GradeUpdateSchema):
 @api.post("/lecturer/release-grades/{assign_id}", response=SuccessResponse, tags=["Lecturer"])
 def release_grades_api(request, assign_id: int):
     """Release grades for an assignment, making them visible to students."""
-    if request.user.role not in ['LECTURER', 'DEV']:
-        return 403, {"status": "error", "message": "Unauthorized"}
+    if not getattr(request.user, 'can_grade', False):
+        return 403, {"status": "error", "message": "Unauthorized: Requires Grading permission."}
     
     assignment = get_object_or_404(Assignment, pk=assign_id)
     assignment.grades_released = True
@@ -250,8 +277,8 @@ def release_grades_api(request, assign_id: int):
 @api.post("/lecturer/delete-document/{doc_id}", response=SuccessResponse, tags=["Lecturer"])
 def delete_document_api(request, doc_id: int):
     """Permanently delete a class document."""
-    if request.user.role not in ['LECTURER', 'DEV']:
-        return 403, {"status": "error", "message": "Unauthorized"}
+    if not getattr(request.user, 'can_manage_assignments', False):
+        return 403, {"status": "error", "message": "Unauthorized: Requires Assignment Management permission."}
     
     doc = get_object_or_404(ClassDocument, pk=doc_id)
     title = doc.title
@@ -263,8 +290,8 @@ def delete_document_api(request, doc_id: int):
 @api.post("/dev/approve-user/{user_id}", response=SuccessResponse, tags=["Dev"])
 def approve_user_api(request, user_id: int):
     """Approve a pending user registration and notify them via email."""
-    if getattr(request.user, 'role', '') != 'DEV':
-        return 403, {"status": "error", "message": "Unauthorized"}
+    if not getattr(request.user, 'can_manage_teams', False):
+        return 403, {"status": "error", "message": "Unauthorized: Requires Team Management permission."}
         
     user = get_object_or_404(CustomUser, id=user_id)
     UserService.approve_user(user_id, request)
@@ -274,8 +301,8 @@ def approve_user_api(request, user_id: int):
 @api.post("/dev/deny-user/{user_id}", response=SuccessResponse, tags=["Dev"])
 def deny_user_api(request, user_id: int):
     """Deny and delete a pending user registration."""
-    if getattr(request.user, 'role', '') != 'DEV':
-        return 403, {"status": "error", "message": "Unauthorized"}
+    if not getattr(request.user, 'can_manage_teams', False):
+        return 403, {"status": "error", "message": "Unauthorized: Requires Team Management permission."}
         
     user = get_object_or_404(CustomUser, id=user_id)
     name = UserService.deny_user(user_id)
@@ -285,8 +312,8 @@ def deny_user_api(request, user_id: int):
 @api.get("/dev/supabase-status", tags=["Dev"])
 def get_supabase_status(request):
     """Asynchronous heartbeat for the Supabase platform."""
-    if getattr(request.user, 'role', '') != 'DEV':
-        return 403, {"status": "error", "message": "Unauthorized"}
+    if not getattr(request.user, 'can_manage_system', False):
+        return 403, {"status": "error", "message": "Unauthorized: Requires System Management permission."}
         
     from apps.core.supabase_service import SupabaseService
     return SupabaseService.check_connection()
@@ -302,8 +329,19 @@ def delete_submission_api(request, sub_id: int):
                  request.user.student_profile.team == submission.team and 
                  submission.team.leader == request.user.student_profile)
     
-    if request.user.role in ['LECTURER', 'DEV'] or is_leader:
+    if getattr(request.user, 'can_manage_assignments', False) or is_leader:
         title = SubmissionService.delete_submission(submission, request.user)
         return {"status": "success", "message": f"Submission '{title}' removed."}
     
     return 403, {"status": "error", "message": "Unauthorized to delete this submission."}
+
+@api.get("/search/global", response=SearchResponse, tags=["General"])
+def global_search_api(request, q: str):
+    """
+    Universal search bar endpoint.
+    Requires at least 2 characters.
+    """
+    if not q or len(q) < 2:
+        return {"students": [], "teams": [], "assignments": []}
+    
+    return SearchService.global_search(q)

@@ -30,3 +30,10 @@ To prevent media storage bloat, the academic engine maintains a "one-team-one-sl
 
 ## 👻 Ghost Heartbeat Integration
 The resilience engine is integrated into the background heartbeat loop. Every 5 minutes (5 iterations), the heartbeat automatically triggers a health check, ensuring the system remains self-aware even when no administrators are actively monitoring the dashboard.
+
+## 🗄️ Database Connection Management
+To prevent connection exhaustion on pooled database services (like Supabase Transaction Pooler), we implement strict session management:
+
+- **Short-Lived Connections**: In high-density environments, we set `CONN_MAX_AGE = 0` to ensure Django closes database connections immediately after each request. This prevents "Idle" connections from filling the pool.
+- **PGBouncer Compatibility**: The system is optimized for transaction-level pooling, ensuring high availability even under concurrent API bursts.
+- **Latency Tracking**: Every connection attempt is timed by the heartbeat to detect networking jitter before it impacts end-user experience.

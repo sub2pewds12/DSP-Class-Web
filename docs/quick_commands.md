@@ -9,6 +9,7 @@ A one-page cheat sheet for common commands and essential links.
 | **Student Dashboard** | [http://127.0.0.1:8000/hub/](http://127.0.0.1:8000/hub/) |
 | **Lecturer Dashboard** | [http://127.0.0.1:8000/teacher/](http://127.0.0.1:8000/teacher/) |
 | **Dev Dashboard** | [http://127.0.0.1:8000/dev-dashboard/](http://127.0.0.1:8000/dev-dashboard/) |
+| **Cloud Command Center** | [http://127.0.0.1:8000/storage-analytics/](http://127.0.0.1:8000/storage-analytics/) |
 | **Public Gallery** | [http://127.0.0.1:8000/gallery/](http://127.0.0.1:8000/gallery/) |
 | **User Guide** | [http://127.0.0.1:8000/guide/](http://127.0.0.1:8000/guide/) |
 | **Admin Panel** | [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/) |

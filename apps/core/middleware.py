@@ -1,5 +1,6 @@
 import traceback
 import threading
+import os
 from django.core.mail import send_mail
 from django.conf import settings
 from .models import SystemError
@@ -40,14 +41,25 @@ class ErrorMonitoringMiddleware:
                 user=user
             )
 
-            # 4. Smart Notification Check
+            # 4. Sentry Enrichment
+            from sentry_sdk import set_tag, set_user, capture_exception
+            if user:
+                set_user({"id": user.id, "email": user.email, "username": user.username})
+                set_tag("user_role", user.role)
+            set_tag("path", path)
+            
+            # Explicitly capture to ensure delivery even if signals are missed locally
+            capture_exception(exception)
+
+            # 5. Smart Notification Check
             # We use a 10-minute cooldown for the exact same error message
             if NotificationService.should_throttle('critical_error', msg, cooldown_minutes=10):
                 return None # Silence! 
 
-            # 5. Send Email Alert
-            subject = f"CRITICAL: Fatal Error at {path}"
-            body = f"""A fatal system error has occurred.
+            # 6. Send Email Alert (Silence if Sentry is configured to avoid double-alerting)
+            if settings.DEBUG or not os.environ.get('SENTRY_DSN'):
+                subject = f"CRITICAL: Fatal Error at {path}"
+                body = f"""A fatal system error has occurred.
 
 Error: {msg}
 URL: {path}
@@ -60,16 +72,16 @@ Timestamp: {error_log.timestamp}
 Log ID: {error_log.id}
 Resolve here: {request.build_absolute_uri('/dev-dashboard/')}
 """
-            recipient = getattr(settings, 'EMAIL_HOST_USER', 'sub2pewds10102005@gmail.com')
-            
-            from django.core.mail import send_mail
-            send_mail(
-                subject,
-                body,
-                settings.DEFAULT_FROM_EMAIL,
-                [recipient],
-                fail_silently=True,
-            )
+                recipient = getattr(settings, 'EMAIL_HOST_USER', 'sub2pewds10102005@gmail.com')
+                
+                from django.core.mail import send_mail
+                send_mail(
+                    subject,
+                    body,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [recipient],
+                    fail_silently=True,
+                )
             
         except Exception as e:
             # Prevent the logger itself from crashing the app
@@ -85,19 +97,26 @@ class ActivityTrackingMiddleware:
         # Update the system activity timestamp in cache
         from django.core.cache import cache
         from django.utils import timezone
-        from .utils.monitoring import start_ghost_heartbeat
+        import time
+        from .services.telemetry_service import TelemetryService
         
-        # We track any request as 'activity' to keep the monitoring alive during use
+        # 1. Start timer
+        start_time = time.time()
+        
+        # 2. Track activity
         cache.set('last_system_activity', timezone.now(), 86400)
         
-        # Ensure the 'Ghost Heartbeat' thread is running (Free tier background worker)
-        # This is non-blocking and self-shuts-down after 30 mins of idle time.
-        try:
-            start_ghost_heartbeat()
-        except:
-            pass # Never let monitoring fail the main request
+        # 3. Get response
+        response = self.get_response(request)
         
-        return self.get_response(request)
+        # 4. Calculate latency and record pulse
+        duration_ms = (time.time() - start_time) * 1000
+        
+        # We don't record the telemetry endpoint itself to avoid noise
+        if not request.path.startswith('/internal/telemetry/'):
+            TelemetryService.record_pulse(response.status_code, duration_ms)
+            
+        return response
 
 class AuditContextMiddleware:
     def __init__(self, get_response):
