@@ -2,6 +2,7 @@ from django.db import transaction
 from django.contrib.auth import login
 from apps.users.models import CustomUser, Student, Lecturer, Developer
 from apps.core.utils.email_service import send_html_email
+from apps.core.services.audit_service import AuditService
 
 class UserService:
     """
@@ -49,6 +50,14 @@ class UserService:
                     recipient_list=[user.email]
                 )
 
+                AuditService.log_event(
+                    action="AUTO_APPROVAL",
+                    target_type="User",
+                    target_id=str(user.id),
+                    description=f"Student '{user.get_full_name()}' auto-approved upon registration.",
+                    metadata={"email": user.email}
+                )
+
                 if request:
                     login(request, user, backend='apps.users.backends.CaseInsensitiveModelBackend')
                 return user, True # (user, is_auto_approved)
@@ -84,6 +93,14 @@ class UserService:
             },
             recipient_list=[user.email]
         )
+        
+        AuditService.log_event(
+            action="USER_APPROVAL",
+            target_type="User",
+            target_id=str(user_id),
+            description=f"{user.get_role_display()} '{user.get_full_name()}' approved by administrative action.",
+            metadata={"email": user.email, "role": user.role}
+        )
         return user
 
     @staticmethod
@@ -102,6 +119,14 @@ class UserService:
                 template_name='teams/emails/user_denied.html',
                 context={'user_name': name, 'role_name': role},
                 recipient_list=[email]
+            )
+
+            AuditService.log_event(
+                action="USER_DENIAL",
+                target_type="User",
+                target_id=str(user_id),
+                description=f"{role} '{name}' denied and removed by administrative action.",
+                metadata={"email": email}
             )
             return name
         except CustomUser.DoesNotExist:

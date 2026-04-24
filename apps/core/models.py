@@ -49,3 +49,18 @@ class SystemError(models.Model):
     class Meta:
         ordering = ['-timestamp']
         db_table = 'teams_systemerror'
+
+class AuditLog(models.Model):
+    timestamp = models.DateTimeField(auto_now_add=True)
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    action = models.CharField(max_length=100)  # e.g., 'GRADE_CHANGE', 'USER_APPROVAL'
+    target_type = models.CharField(max_length=100) # e.g., 'Assignment', 'User'
+    target_id = models.CharField(max_length=100, blank=True)
+    description = models.TextField()
+    metadata = models.JSONField(default=dict, blank=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+        db_table = 'teams_auditlog'

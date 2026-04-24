@@ -23,6 +23,7 @@ from apps.academia.forms import (
 from apps.academia.services import SubmissionService, AssignmentService
 from apps.users.services import UserService
 from apps.core.services import InfrastructureService
+from .services import TeamService
 
 
 @login_required
@@ -74,21 +75,17 @@ def dashboard_view(request, team_id=None):
         elif not team:
             form = TeamRegistrationForm(request.POST)
             if form.is_valid():
-                from django.db import IntegrityError
                 try:
-                    if team_choice: team = team_choice
-                    else: team = Team.objects.create(name=form.cleaned_data['new_team_name'])
-                except IntegrityError:
-                    messages.error(request, f"Team name '{form.cleaned_data['new_team_name']}' is already taken. Please choose a unique name.")
+                    team = TeamService.join_or_create_team(
+                        student=student,
+                        team_choice=form.cleaned_data.get('team_choice'),
+                        new_team_name=form.cleaned_data.get('new_team_name')
+                    )
+                    messages.success(request, f"Joined {team.name}")
                     return redirect('dashboard')
-                
-                student.team = team
-                student.save()
-                if team.members.count() == 1:
-                    team.leader = student
-                    team.save()
-                messages.success(request, f"Joined {team.name}")
-                return redirect('dashboard')
+                except (ValueError, IntegrityError) as e:
+                    messages.error(request, str(e))
+                    return redirect('dashboard')
 
     # Prepare Context
     documents = ClassDocument.objects.all().order_by('-uploaded_at')
@@ -167,29 +164,11 @@ def teacher_dashboard(request):
     if 'doc_form' not in locals(): doc_form = DocumentUploadForm()
     if 'assign_form' not in locals(): assign_form = AssignmentForm()
 
-    # --- Submission Trends (for Activity Chart) ---
-    last_14_days = timezone.now() - timezone.timedelta(days=14)
-    trends_raw = TeamSubmission.objects.filter(submitted_at__gte=last_14_days).select_related('team').order_by('submitted_at')
-    
-    trends_map = {}
-    for sub in trends_raw:
-        d = sub.submitted_at.date()
-        if d not in trends_map:
-            trends_map[d] = {'count': 0, 'teams': set()}
-        trends_map[d]['count'] += 1
-        trends_map[d]['teams'].add(sub.team.name)
-
-    sorted_dates = sorted(trends_map.keys())
-    trend_labels = [d.strftime('%b %d') for d in sorted_dates]
-    trend_data = [trends_map[d]['count'] for d in sorted_dates]
-    
-    trend_details = []
-    for d in sorted_dates:
-        teams_list = list(trends_map[d]['teams'])
-        detail = ", ".join(teams_list[:3])
-        if len(teams_list) > 3:
-            detail += f" and {len(teams_list) - 3} more..."
-        trend_details.append(detail)
+    # --- Submission Trends (Offloaded to Service) ---
+    trends = AssignmentService.get_submission_trends(days=14)
+    trend_labels = trends['labels']
+    trend_data = trends['data']
+    trend_details = trends['details']
 
     return render(request, 'teams/teacher_dashboard.html', {
         'teams': teams, 
@@ -210,11 +189,11 @@ def teacher_dashboard(request):
 def delete_submission(request, pk):
     submission = get_object_or_404(TeamSubmission, pk=pk)
     # Only the team leader or a lecturer can delete a submission
-    is_leader = hasattr(request.user, 'student_profile') and request.user.student_profile.team == submission.team and submission.team.leader == request.user.student_profile
+    is_leader = hasattr(request.user, 'student_profile') and \
+                submission.team.leader == request.user.student_profile
     
     if request.user.role in ['LECTURER', 'DEV'] or is_leader:
-        title = submission.title
-        submission.delete()
+        title = SubmissionService.delete_submission(submission, request.user)
         messages.success(request, f"Submission '{title}' removed.")
     else:
         messages.error(request, "You do not have permission to delete this submission.")
@@ -231,9 +210,11 @@ def grade_submission(request, pk):
     if request.method == 'POST':
         form = GradeSubmissionForm(request.POST)
         if form.is_valid():
-            submission.grade = form.cleaned_data['grade']
-            submission.feedback = form.cleaned_data['feedback']
-            submission.save()
+            SubmissionService.grade_submission(
+                submission=submission,
+                grade=form.cleaned_data['grade'],
+                feedback=form.cleaned_data['feedback']
+            )
             messages.success(request, f"Submission for {submission.team.name} graded.")
     return redirect('teacher_dashboard')
 
@@ -296,6 +277,7 @@ def dev_dashboard(request):
     from django.db import connection, OperationalError
     from django.conf import settings
     from .models import SystemPulse, SystemError
+    from apps.core.models import AuditLog
     from django.core.management import call_command
     from django.core.cache import cache
     import platform
@@ -306,25 +288,7 @@ def dev_dashboard(request):
     import threading
 
     # --- Ultra-Sync Trigger ---
-    sync_status = "idle"
-    if os.getenv('PROD_DB_URL'):
-        # Only check/sync every 5 minutes to avoid overloading production
-        last_sync = cache.get('last_prod_sync_time')
-        now = timezone.now()
-        
-        if not last_sync or (now - last_sync).total_seconds() > 300:
-            def run_sync():
-                try:
-                    call_command('sync_prod')
-                    cache.set('last_prod_sync_time', timezone.now(), 3600)
-                    cache.set('last_sync_result', 'success', 3600)
-                except Exception as e:
-                    cache.set('last_sync_result', f'failed: {str(e)}', 3600)
-
-            threading.Thread(target=run_sync, daemon=True).start()
-            sync_status = "syncing"
-        else:
-            sync_status = cache.get('last_sync_result', 'idle')
+    sync_status = InfrastructureService.trigger_prod_sync()
 
     # --- Pulse & Monitoring Logic (READ-ONLY) ---
     last_pulse = SystemPulse.objects.first()
@@ -386,7 +350,7 @@ def dev_dashboard(request):
     if show_archive:
         system_errors = SystemError.objects.filter(is_resolved=True).order_by('-timestamp')[:50]
     else:
-        system_errors = SystemError.objects.filter(is_resolved=False).order_by('-timestamp')[:20]
+        system_errors = SystemError.objects.filter(is_resolved=False).order_by('-timestamp')[:25]
         
     unresolved_count = SystemError.objects.filter(is_resolved=False).count()
 
@@ -444,7 +408,9 @@ def dev_dashboard(request):
         'docs_count': ClassDocument.objects.count(),
     }
 
-    recent_activity = TeamSubmission.objects.select_related('team', 'submitted_by').all().order_by('-submitted_at')[:15]
+    recent_activity = TeamSubmission.objects.select_related('team', 'submitted_by').all().order_by('-submitted_at')[:25]
+    
+    audit_logs = AuditLog.objects.select_related('actor').all().order_by('-timestamp')[:25]
 
     # Fetch pending access requests
     pending_users = CustomUser.objects.filter(is_approved=False).order_by('-date_joined')
@@ -471,7 +437,8 @@ def dev_dashboard(request):
         'sync_status': sync_status,
         'current_status': last_pulse.status if last_pulse else 'UNKNOWN',
         'system_analysis': system_analysis,
-        'pending_users': pending_users
+        'pending_users': pending_users,
+        'audit_logs': audit_logs
     })
 
 def gallery_view(request):
@@ -489,75 +456,10 @@ def storage_analytics_view(request):
     if request.user.role != 'DEV':
         return redirect('dashboard')
         
-    from .models import ClassDocument, TeamSubmission, SubmissionFile, Assignment
-    from django.conf import settings
-    import cloudinary.api
-    import os
+    storage_stats = InfrastructureService.get_storage_analytics()
     
-    # Configure Cloudinary
-    os.environ['CLOUDINARY_URL'] = f"cloudinary://{settings.CLOUDINARY_STORAGE['API_KEY']}:{settings.CLOUDINARY_STORAGE['API_SECRET']}@{settings.CLOUDINARY_STORAGE['CLOUD_NAME']}"
-    
-    storage_stats = {
-        'total_files': 0,
-        'breakdown': {'Images': 0, 'Documents': 0, 'Others': 0},
-        'usage': {'used': 0, 'limit': 1000, 'pct': 0},
-        'bandwidth': {'used': 0, 'limit': 1000, 'pct': 0},
-        'resources': 0,
-        'plan': 'N/A'
-    }
-    
-    # 1. Fetch Cloudinary SDK Stats
-    try:
-        usage = cloudinary.api.usage()
-        storage_stats['plan'] = usage.get('plan', 'Cloudinary Free')
-        
-        # Storage (Convert to MB/GB if needed, assuming bytes for now)
-        storage = usage.get('storage', {})
-        storage_stats['usage']['used'] = round(storage.get('usage', 0) / (1024 * 1024), 2) # MB
-        storage_stats['usage']['limit'] = round(storage.get('limit', 0) / (1024 * 1024), 2) # MB
-        storage_stats['usage']['pct'] = storage.get('used_percent', 0)
-        
-        # Bandwidth
-        bandwidth = usage.get('bandwidth', {})
-        storage_stats['bandwidth']['used'] = round(bandwidth.get('usage', 0) / (1024 * 1024), 2) # MB
-        storage_stats['bandwidth']['limit'] = round(bandwidth.get('limit', 0) / (1024 * 1024), 2) # MB
-        storage_stats['bandwidth']['pct'] = bandwidth.get('used_percent', 0)
-        
-        storage_stats['resources'] = usage.get('resources', 0)
-    except Exception as e:
-        # Graceful failure - log error but keep moving
-        pass
-        
-    # 2. Local Database Overlay
-    doc_count = ClassDocument.objects.count()
-    # Count both multi-file model and main submission field
-    sub_count = SubmissionFile.objects.count()
-    main_sub_count = TeamSubmission.objects.exclude(file='').count()
-    assign_count = Assignment.objects.exclude(instruction_file='').count()
-    
-    storage_stats['total_files'] = doc_count + sub_count + main_sub_count + assign_count
-    
-    # Calculate Local Storage Size (Fallback for Cloudinary)
-    local_size_mb = 0
-    media_root = settings.MEDIA_ROOT
-    if os.path.exists(media_root):
-        for dirpath, dirnames, filenames in os.walk(media_root):
-            for f in filenames:
-                fp = os.path.join(dirpath, f)
-                local_size_mb += os.path.getsize(fp)
-    
-    local_size_mb = local_size_mb / (1024 * 1024)
-    # If size is > 0 but < 0.1, show 3 decimals to ensure visibility, otherwise 2
-    local_size_mb = round(local_size_mb, 3) if 0 < local_size_mb < 0.1 else round(local_size_mb, 2)
-    
-    # Overlay local stats if cloud stats are empty
-    if storage_stats['usage']['used'] == 0:
-        storage_stats['usage']['used'] = local_size_mb
-        storage_stats['usage']['pct'] = min(100, round((local_size_mb / storage_stats['usage']['limit']) * 100, 1))
-
-    # 3. Recent Assets (Aggregated)
+    # 3. Recent Assets (Aggregated for UI)
     recent_docs = list(ClassDocument.objects.order_by('-uploaded_at')[:5])
-    # Fetch from both models for a complete view
     recent_subs = list(TeamSubmission.objects.exclude(file='').select_related('team').order_by('-submitted_at')[:5])
     
     def get_human_size(file_obj):
@@ -571,14 +473,11 @@ def storage_analytics_view(request):
     for doc in recent_docs: doc.file_size = get_human_size(doc.file)
     for sub in recent_subs: sub.file_size = get_human_size(sub.file)
     
-    # 4. External Portal URL (Direct to Media Library)
-    cloudinary_portal = f"https://cloudinary.com/console/cloud/{settings.CLOUDINARY_STORAGE['CLOUD_NAME']}/media_library"
-    
     return render(request, 'teams/storage_analytics.html', {
         'stats': storage_stats,
         'recent_docs': recent_docs,
         'recent_subs': recent_subs,
-        'cloudinary_portal': cloudinary_portal
+        'cloudinary_portal': storage_stats['portal_url']
     })
 
 @login_required

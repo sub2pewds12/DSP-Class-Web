@@ -15,6 +15,25 @@ def main():
             "available on your PYTHONPATH environment variable? Did you "
             "forget to activate a virtual environment?"
         ) from exc
+
+    # [SENTINEL] Safety Guard Injection
+    if len(sys.argv) > 1:
+        command = sys.argv[1].lower()
+        destructive_commands = ['flush', 'reset_db', 'drop_schema', 'nuke']
+        
+        if command in destructive_commands:
+            try:
+                import django
+                django.setup()
+                from apps.core.services.infrastructure import InfrastructureService
+                InfrastructureService.validate_safe_operation(command)
+            except PermissionError as e:
+                print(str(e))
+                sys.exit(1)
+            except Exception:
+                # If django setup fails here, execute_from_command_line will report it properly
+                pass
+
     execute_from_command_line(sys.argv)
 
 

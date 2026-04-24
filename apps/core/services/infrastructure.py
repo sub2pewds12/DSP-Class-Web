@@ -10,6 +10,92 @@ class InfrastructureService:
     """
     
     @staticmethod
+    def trigger_prod_sync():
+        """Triggers a background production data sync if on Render."""
+        import os
+        import threading
+        from django.core.cache import cache
+        from django.core.management import call_command
+        from django.utils import timezone
+        
+        if not os.getenv('PROD_DB_URL'):
+            return "idle"
+            
+        last_sync = cache.get('last_prod_sync_time')
+        now = timezone.now()
+        
+        if not last_sync or (now - last_sync).total_seconds() > 300:
+            def run_sync():
+                try:
+                    call_command('sync_prod')
+                    cache.set('last_prod_sync_time', timezone.now(), 3600)
+                    cache.set('last_sync_result', 'success', 3600)
+                except Exception as e:
+                    cache.set('last_sync_result', f'failed: {str(e)}', 3600)
+
+            threading.Thread(target=run_sync, daemon=True).start()
+            return "syncing"
+        
+        return cache.get('last_sync_result', 'idle')
+
+    @staticmethod
+    def get_storage_analytics():
+        """Aggregates Cloudinary and local storage statistics."""
+        from django.conf import settings
+        from apps.academia.models import ClassDocument, TeamSubmission, SubmissionFile
+        import cloudinary.api
+        import os
+
+        # Initialize with defaults
+        stats = {
+            'total_files': 0,
+            'usage': {'used': 0, 'limit': 1000, 'pct': 0},
+            'bandwidth': {'used': 0, 'limit': 1000, 'pct': 0},
+            'resources': 0,
+            'plan': 'N/A',
+            'portal_url': f"https://cloudinary.com/console/cloud/{settings.CLOUDINARY_STORAGE['CLOUD_NAME']}/media_library"
+        }
+
+        # 1. Cloudinary SDK Stats
+        try:
+            os.environ['CLOUDINARY_URL'] = f"cloudinary://{settings.CLOUDINARY_STORAGE['API_KEY']}:{settings.CLOUDINARY_STORAGE['API_SECRET']}@{settings.CLOUDINARY_STORAGE['CLOUD_NAME']}"
+            usage = cloudinary.api.usage()
+            stats['plan'] = usage.get('plan', 'Cloudinary Free')
+            
+            # Storage (MB)
+            storage = usage.get('storage', {})
+            stats['usage']['used'] = round(storage.get('usage', 0) / (1024 * 1024), 2)
+            stats['usage']['limit'] = round(storage.get('limit', 0) / (1024 * 1024), 2)
+            stats['usage']['pct'] = storage.get('used_percent', 0)
+            
+            # Bandwidth (MB)
+            bw = usage.get('bandwidth', {})
+            stats['bandwidth']['used'] = round(bw.get('usage', 0) / (1024 * 1024), 2)
+            stats['bandwidth']['limit'] = round(bw.get('limit', 0) / (1024 * 1024), 2)
+            stats['bandwidth']['pct'] = bw.get('used_percent', 0)
+            
+            stats['resources'] = usage.get('resources', 0)
+        except:
+            # Fallback to local size calculation
+            local_size_mb = 0
+            if os.path.exists(settings.MEDIA_ROOT):
+                for dp, dn, filenames in os.walk(settings.MEDIA_ROOT):
+                    for f in filenames:
+                        local_size_mb += os.path.getsize(os.path.join(dp, f))
+            local_size_mb /= (1024 * 1024)
+            stats['usage']['used'] = round(local_size_mb, 2)
+            stats['usage']['pct'] = min(100, round((local_size_mb / stats['usage']['limit']) * 100, 1))
+
+        # 2. File Count Aggregation
+        doc_count = ClassDocument.objects.count()
+        sub_count = SubmissionFile.objects.count()
+        main_sub_count = TeamSubmission.objects.exclude(file='').count()
+        
+        stats['total_files'] = doc_count + sub_count + main_sub_count
+        
+        return stats
+    
+    @staticmethod
     def send_system_error_alert(error_instance):
         """Sends an HTML email alert when a system error occurs with smart throttling."""
         from apps.core.services.notification_service import NotificationService
@@ -173,3 +259,38 @@ class InfrastructureService:
             return "emergency_recovery_triggered"
             
         return "system_healthy"
+
+    @staticmethod
+    def is_protected_environment():
+        """Detects if the current database is a protected cloud environment."""
+        from django.conf import settings
+        db_config = settings.DATABASES.get('default', {})
+        db_url = db_config.get('NAME', '')
+        db_host = db_config.get('HOST', '')
+        
+        protected_keywords = ['supabase', 'aws', 'rds', 'elephantsql', 'render', 'pooler']
+        
+        # Check both NAME and HOST
+        is_cloud = any(key in str(db_url).lower() for key in protected_keywords) or \
+                   any(key in str(db_host).lower() for key in protected_keywords)
+        
+        # Specifically check for supabase patterns
+        is_supabase = 'supabase.com' in str(db_host).lower() or 'supabase.co' in str(db_host).lower()
+        
+        return is_cloud or is_supabase
+
+    @staticmethod
+    def validate_safe_operation(command_name):
+        """Raises PermissionError if a destructive command is run on a protected DB without bypass."""
+        import os
+        if InfrastructureService.is_protected_environment():
+            # List of dangerous commands to intercept
+            destructive_commands = ['flush', 'reset_db', 'drop_schema', 'nuke']
+            if command_name.lower() in destructive_commands:
+                if os.getenv('SAFETY_VALVE_OPEN') != 'True':
+                    raise PermissionError(
+                        f"\n[!!!] CRITICAL SAFETY VIOLATION [!!!]\n"
+                        f"Attempted '{command_name}' on a PROTECTED CLOUD DATABASE.\n"
+                        f"Operation blocked by Infrastructure Sentinel.\n"
+                        f"To bypass, set environment variable SAFETY_VALVE_OPEN=True."
+                    )

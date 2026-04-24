@@ -13,6 +13,7 @@ from apps.academia.models import Assignment, TeamSubmission, SubmissionFile, Cla
 from .models import Team
 from apps.academia.services import SubmissionService, AssignmentService
 from apps.users.services import UserService
+from apps.core.services.audit_service import AuditService
 from apps.core.utils.email_service import send_html_email
 
 api = NinjaAPI(
@@ -170,7 +171,7 @@ def submit_assignment_api(request, assignment_id: int, files: List[UploadedFile]
             return 400, {"status": "error", "message": f"File type '{ext}' not allowed."}
 
     try:
-        sub = SubmissionService.create_submission(
+        SubmissionService.create_submission(
             user=request.user,
             assignment=assignment,
             title=f"Submission for {assignment.title}",
@@ -178,12 +179,8 @@ def submit_assignment_api(request, assignment_id: int, files: List[UploadedFile]
         )
     except ValueError as e:
         return 400, {"status": "error", "message": str(e)}
-    
-    status = "on time"
-    if sub.submitted_at and assignment.deadline and sub.submitted_at > assignment.deadline:
-        status = "LATE"
         
-    return {"status": "success", "message": f"Successfully submitted {len(files)} files ({status})."}
+    return {"status": "success", "message": f"Successfully submitted {len(files)} files."}
 
 # --- Lecturer Actions ---
 
@@ -223,9 +220,11 @@ def grade_submission_api(request, sub_id: int, data: GradeUpdateSchema):
         return 403, {"status": "error", "message": "Unauthorized"}
     
     submission = get_object_or_404(TeamSubmission, pk=sub_id)
-    submission.grade = data.grade
-    submission.feedback = data.feedback
-    submission.save()
+    SubmissionService.grade_submission(
+        submission=submission,
+        grade=data.grade,
+        feedback=data.feedback
+    )
     
     return {"status": "success", "message": f"Grade updated for {submission.team.name}."}
 
@@ -238,6 +237,13 @@ def release_grades_api(request, assign_id: int):
     assignment = get_object_or_404(Assignment, pk=assign_id)
     assignment.grades_released = True
     assignment.save()
+    
+    AuditService.log_event(
+        action="GRADES_RELEASE",
+        target_type="Assignment",
+        target_id=str(assign_id),
+        description=f"Grades released for assignment '{assignment.title}'."
+    )
     
     return {"status": "success", "message": f"Grades released for '{assignment.title}'."}
 
@@ -262,6 +268,7 @@ def approve_user_api(request, user_id: int):
         
     user = get_object_or_404(CustomUser, id=user_id)
     UserService.approve_user(user_id, request)
+    
     return {"status": "success", "message": f"User '{user.get_full_name()}' approved."}
 
 @api.post("/dev/deny-user/{user_id}", response=SuccessResponse, tags=["Dev"])
@@ -271,8 +278,8 @@ def deny_user_api(request, user_id: int):
         return 403, {"status": "error", "message": "Unauthorized"}
         
     user = get_object_or_404(CustomUser, id=user_id)
-    name = user.get_full_name()
-    UserService.deny_user(user_id)
+    name = UserService.deny_user(user_id)
+    
     return {"status": "success", "message": f"User '{name}' denied and removed."}
 
 @api.get("/dev/supabase-status", tags=["Dev"])
@@ -296,8 +303,7 @@ def delete_submission_api(request, sub_id: int):
                  submission.team.leader == request.user.student_profile)
     
     if request.user.role in ['LECTURER', 'DEV'] or is_leader:
-        title = submission.title
-        submission.delete()
+        title = SubmissionService.delete_submission(submission, request.user)
         return {"status": "success", "message": f"Submission '{title}' removed."}
     
     return 403, {"status": "error", "message": "Unauthorized to delete this submission."}

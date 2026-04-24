@@ -5,3 +5,6 @@ class CoreConfig(AppConfig):
     name = 'apps.core'
     label = 'core'
     verbose_name = 'System Infrastructure'
+
+    def ready(self):
+        import apps.core.signals
