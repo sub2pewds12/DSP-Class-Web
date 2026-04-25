@@ -8,34 +8,25 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write(self.style.NOTICE('Checking for migration drift...'))
         
-        # Mapping of app to a table that indicates it was already applied
-        drift_check = {
-            'contenttypes': 'django_content_type',
-            'auth': 'auth_user',
-            'admin': 'django_admin_log',
-            'sessions': 'django_session',
-            'users': 'users_customuser',
-            'teams': 'teams_team',
-            'academia': 'teams_assignment',
-        }
-
         with connection.cursor() as cursor:
-            for app, table in drift_check.items():
-                # Check if the app is already in django_migrations
-                cursor.execute("SELECT 1 FROM django_migrations WHERE app = %s LIMIT 1;", [app])
-                already_recorded = cursor.fetchone()
+            # 1. Check Academia App (Problematic 'is_active' column)
+            cursor.execute("SELECT 1 FROM django_migrations WHERE app = 'academia' AND name = '0003_assignment_is_active' LIMIT 1;")
+            if not cursor.fetchone():
+                cursor.execute("SELECT 1 FROM information_schema.columns WHERE table_name='teams_assignment' AND column_name='is_active' LIMIT 1;")
+                if cursor.fetchone():
+                    self.stdout.write(self.style.WARNING("Detected 'is_active' column in 'teams_assignment' without migration record. Faking 'academia'..."))
+                    call_command('migrate', 'academia', fake=True, interactive=False, verbosity=1)
 
-                if not already_recorded:
-                    # App is not recorded. Check if its table exists.
-                    cursor.execute("SELECT to_regclass(%s);", [table])
-                    table_exists = cursor.fetchone()[0]
+            # 2. Check Users App (Problematic 'can_grade' column)
+            cursor.execute("SELECT 1 FROM django_migrations WHERE app = 'users' AND name = '0002_customuser_can_grade_and_more' LIMIT 1;")
+            if not cursor.fetchone():
+                cursor.execute("SELECT 1 FROM information_schema.columns WHERE table_name='users_customuser' AND column_name='can_grade' LIMIT 1;")
+                if cursor.fetchone():
+                    self.stdout.write(self.style.WARNING("Detected 'can_grade' column in 'users_customuser' without migration record. Faking 'users'..."))
+                    call_command('migrate', 'users', fake=True, interactive=False, verbosity=1)
 
-                    if table_exists:
-                        self.stdout.write(self.style.WARNING(f"App '{app}' has existing tables but no migration history. Syncing (faking)..."))
-                        call_command('migrate', app, fake=True, interactive=False, verbosity=1)
-                    else:
-                        self.stdout.write(f"App '{app}' is new or table-less. Standard migration will handle it.")
-                else:
-                    self.stdout.write(self.style.SUCCESS(f"App '{app}' is already in sync."))
+            # 3. Standard Fake Initial for all apps (safely handles new tables)
+            self.stdout.write("Running fake-initial for all apps...")
+            call_command('migrate', fake_initial=True, interactive=False, verbosity=1)
 
         self.stdout.write(self.style.SUCCESS("Migration sync check complete."))
