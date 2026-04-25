@@ -1,5 +1,7 @@
 asgiref==3.11.1
 Django==5.0.3
+sentry-sdk==2.22.0
+django-prometheus==2.3.1
 django-environ==0.13.0
 gunicorn==25.3.0
 packaging==26.0
