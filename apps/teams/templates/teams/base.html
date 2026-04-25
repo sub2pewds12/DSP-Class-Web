@@ -40,6 +40,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'guide' %}">Guide</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="https://dspclassweb.statuspage.io/" target="_blank">Status</a>
+                    </li>
                     <!-- Theme Toggle in Nav -->
                     <li class="nav-item px-2">
                         <button class="nav-theme-toggle" id="theme-toggle-btn" type="button" title="Toggle Visual Mode">
@@ -94,7 +97,7 @@
                 <strong class="me-auto" id="toast-title">System Notification</strong>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" onclick="hideToast()"></button>
             </div>
-            <div class="toast-body py-4 px-4 bg-white text-dark fw-500" id="toast-message">
+            <div class="toast-body py-4 px-4 bg-surface text-main fw-500" id="toast-message">
                 Message content goes here...
             </div>
             <div class="toast-progress-bar" id="toast-progress"></div>
@@ -103,7 +106,59 @@
 
     {% block content %}{% endblock %}
 
-    <!-- Footer-level JS initialization removed from here -->
+    <!-- Premium Footer -->
+    <footer class="mt-auto py-5 border-top bg-secondary-soft">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <div class="navbar-brand fw-800 text-primary-red d-flex align-items-center gap-2 mb-3">
+                        <div class="brand-dot"></div>
+                        DSP Project Registration
+                    </div>
+                    <p class="text-muted small">A specialized platform for the Digital Signal Processing course, facilitating team formation and project management with a focus on integrity and collaboration.</p>
+                </div>
+                <div class="col-6 col-lg-2 ms-lg-auto">
+                    <h6 class="fw-700 text-main mb-3">Resources</h6>
+                    <ul class="list-unstyled small">
+                        <li class="mb-2"><a href="{% url 'gallery' %}" class="text-muted text-decoration-none hover-red">Project Gallery</a></li>
+                        <li class="mb-2"><a href="{% url 'guide' %}" class="text-muted text-decoration-none hover-red">User Guide</a></li>
+                        <li class="mb-2"><a href="https://dspclassweb.statuspage.io/" target="_blank" class="text-muted text-decoration-none hover-red">System Status</a></li>
+                    </ul>
+                </div>
+                <div class="col-6 col-lg-2">
+                    <h6 class="fw-700 text-main mb-3">Dashboards</h6>
+                    <ul class="list-unstyled small">
+                        <li class="mb-2"><a href="{% url 'dashboard' %}" class="text-muted text-decoration-none hover-red">Student Hub</a></li>
+                        {% if user.role == 'LECTURER' or user.role == 'DEV' %}
+                            <li class="mb-2"><a href="{% url 'teacher_dashboard' %}" class="text-muted text-decoration-none hover-red">Lecturer View</a></li>
+                        {% endif %}
+                        {% if user.role == 'DEV' %}
+                            <li class="mb-2"><a href="{% url 'dev_dashboard' %}" class="text-muted text-decoration-none hover-red">Dev Center</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+                <div class="col-lg-3">
+                    <h6 class="fw-700 text-main mb-3">Health & Uptime</h6>
+                    <div class="d-flex align-items-center gap-2 p-3 bg-soft border border-soft border-opacity-10 rounded-4 shadow-sm">
+                        <div class="status-dot pulse-green"></div>
+                        <div class="flex-grow-1">
+                            <div class="small fw-700 text-main line-height-1">All Systems Operational</div>
+                            <a href="https://dspclassweb.statuspage.io/" target="_blank" class="x-small text-muted text-decoration-none mt-1 d-block">View real-time status →</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-5 opacity-10">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                <div class="text-muted small">Digital Signal Processing Class. All rights reserved.</div>
+                <div class="d-flex gap-4">
+                    <a href="#" class="text-muted small text-decoration-none hover-red">Privacy</a>
+                    <a href="#" class="text-muted small text-decoration-none hover-red">Terms</a>
+                    <a href="https://manage.statuspage.io/pages/88ml9sy0fwxn/" target="_blank" class="text-muted small text-decoration-none hover-red">Internal Portal</a>
+                </div>
+            </div>
+        </div>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>

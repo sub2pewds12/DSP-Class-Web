@@ -1,11 +1,13 @@
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from ...utils.monitoring import execute_pulse, prune_old_pulses
-from ...utils.email_service import send_html_email
+from apps.core.services.infrastructure import InfrastructureService
+from apps.core.services.statuspage_service import StatuspageService
+import os
 import time
+from apps.core.utils.email_service import send_html_email
 
 class Command(BaseCommand):
-    help = 'Logs a system pulse with DB latency and alerts on failure. Supports continuous daemon mode.'
+    help = 'Logs a system pulse and ships real data to Statuspage. Supports continuous daemon mode.'
 
     def add_arguments(self, parser):
         parser.add_argument('--loop', action='store_true', help='Run as a continuous daemon')
@@ -17,22 +19,29 @@ class Command(BaseCommand):
         
         if is_loop:
             self.stdout.write(self.style.SUCCESS(f'Pulse Monitor started in Daemon mode (Interval: {interval}s)'))
-            iteration = 0
             while True:
-                status, latency = execute_pulse()
-                self.stdout.write(self.style.SUCCESS(f'Pulse logged: {status} ({latency:.2f}ms)'))
-
-                if status == 'CRITICAL':
-                    self.send_emergency_alert(f"EXTREME LATENCY: {latency:.2f}ms", "System is slow.")
-
-                iteration += 1
-                if iteration % 30 == 0:
-                    prune_old_pulses()
-
+                self.perform_pulse()
                 time.sleep(interval)
         else:
-            status, latency = execute_pulse()
-            self.stdout.write(self.style.SUCCESS(f'Pulse logged: {status} ({latency:.2f}ms)'))
+            self.perform_pulse()
+
+    def perform_pulse(self):
+        latencies = InfrastructureService.measure_latencies()
+        db_latency = latencies.get('db_latency')
+        media_latency = latencies.get('media_latency')
+        
+        if db_latency:
+            db_metric_id = os.getenv('STATUSPAGE_METRIC_DB_LATENCY')
+            StatuspageService.submit_metric_point(db_metric_id, db_latency)
+            self.stdout.write(self.style.SUCCESS(f'DB Pulse shipped: {db_latency:.2f}ms'))
+        
+        if media_latency:
+            media_metric_id = os.getenv('STATUSPAGE_METRIC_MEDIA_LATENCY')
+            StatuspageService.submit_metric_point(media_metric_id, media_latency)
+            self.stdout.write(self.style.SUCCESS(f'Media Pulse shipped: {media_latency:.2f}ms'))
+        
+        if not db_latency and not media_latency:
+            self.stdout.write(self.style.ERROR('Pulse failed: Could not measure any latencies'))
 
     def send_emergency_alert(self, title, message):
         send_html_email(

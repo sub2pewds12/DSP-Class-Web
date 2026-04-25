@@ -6,6 +6,8 @@ import logging
 from datetime import datetime
 from django.conf import settings
 from apps.core.services.telemetry_service import TelemetryService
+from apps.core.services.statuspage_service import StatuspageService
+from apps.core.services.infrastructure import InfrastructureService
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +50,8 @@ class MonitoringService:
         while not cls._stop_event.is_set():
             try:
                 cls.ship_metrics()
+                # Automated Health Check, Metrics Shipping, and Statuspage Sync
+                InfrastructureService.perform_health_check()
             except Exception as e:
                 logger.error(f"Grafana Cloud Ship Failed: {str(e)}")
             

@@ -12,6 +12,9 @@
     --text-muted: #666666;
     --bg-main: #f8f9fa;
     --bg-soft: #f1f3f5;
+    --bg-surface: #ffffff;
+    --hover-color: #f8f9fa;
+    --border-color: rgba(0, 0, 0, 0.08);
     --card-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
     --card-glow: none;
     --bento-gap: 1.5rem;
@@ -41,6 +44,9 @@
     --text-muted: #94A3B8;
     --bg-main: #0f172a;
     --bg-soft: #1e293b;
+    --bg-surface: #1e293b;
+    --hover-color: rgba(255, 255, 255, 0.05);
+    --border-color: rgba(255, 255, 255, 0.1);
     --card-shadow: none;
     --card-glow: 0 0 20px rgba(255, 82, 82, 0.1);
     
@@ -68,10 +74,12 @@ body {
 /* --- Theme-Adaptive Utility Classes --- */
 .bg-main { background-color: var(--bg-main) !important; }
 .bg-soft { background-color: var(--bg-soft) !important; }
+.bg-surface { background-color: var(--bg-surface) !important; }
 .text-main { color: var(--text-main) !important; }
 .text-primary-red { color: var(--primary-red) !important; }
 .bg-primary-red { background-color: var(--primary-red) !important; }
 .border-soft { border-color: var(--glass-border) !important; }
+.border-main { border-color: var(--border-color) !important; }
 
 /* --- Global Navbar Rebrand --- */
 .navbar-crimson {
@@ -376,3 +384,37 @@ body {
     border-left: 4px solid var(--primary-red) !important;
     background: linear-gradient(to right, var(--primary-red-glow), transparent);
 }
+
+/* --- Footer & Status Utilities --- */
+.bg-secondary-soft {
+    background-color: var(--bg-soft) !important;
+}
+
+.hover-red:hover {
+    color: var(--primary-red) !important;
+    transition: var(--transition-fast);
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.pulse-green {
+    background-color: #10b981;
+    box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
+    animation: pulse-green 2s infinite;
+}
+
+@keyframes pulse-green {
+    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.x-small { font-size: 0.75rem; }
+.fw-700 { font-weight: 700; }
+.fw-800 { font-weight: 800; }
+.line-height-1 { line-height: 1; }

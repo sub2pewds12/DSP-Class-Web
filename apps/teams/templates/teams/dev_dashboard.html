@@ -34,10 +34,9 @@
     }
 
     .glass-card {
-        background: rgba(var(--dash-card-bg-rgb), 0.7) !important;
+        background: rgba(var(--dash-card-bg-rgb), 0.4) !important;
         backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid var(--dash-card-border);
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
     }
 
     .metric-value {
@@ -173,9 +172,9 @@
 
     .pulse-tick {
         flex: 1;
-        min-width: 2px;
-        border-radius: 1px 1px 0 0;
-        opacity: 0.85;
+        min-width: 3px;
+        border-radius: 0;
+        opacity: 1;
         transition: all 0.2s ease;
         position: relative;
         z-index: 3;
@@ -475,7 +474,7 @@
 
     .db-grid-val {
         border: 1px solid rgba(255, 255, 255, 0.05);
-        background: rgba(255, 255, 255, 0.02);
+        background: var(--glass-bg);
         transition: all 0.3s ease;
     }
 
@@ -488,6 +487,19 @@
         background: rgba(255, 255, 255, 0.15) !important;
         color: white !important;
         box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-soft-dark:hover i {
+        transform: rotate(180deg);
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        color: var(--primary-red) !important;
+    }
+
+    /* Fix for invisible dropdown options in dark mode */
+    #pulse-range-select option, 
+    #pulse-cap-select option {
+        background-color: #212529 !important;
+        color: white !important;
     }
 </style>
 {% endblock %}
@@ -617,6 +629,12 @@
                         <a href="/api/docs" target="_blank" class="portal-tile">
                             <i class="bi bi-braces h4 mb-0 text-primary-red"></i>
                             <span class="small fw-bold">API Docs</span>
+                        </a>
+                    </div>
+                    <div class="col-4">
+                        <a href="https://manage.statuspage.io/pages/88ml9sy0fwxn/" target="_blank" class="portal-tile">
+                            <i class="bi bi-broadcast-pin h4 mb-0 text-primary-red"></i>
+                            <span class="small fw-bold">Status Admin</span>
                         </a>
                     </div>
                 </div>
@@ -1006,13 +1024,38 @@
             </div>
 
             <!-- Traffic Pulse Histogram -->
-            <div class="mt-4 pt-4 border-top border-light border-opacity-10">
+            <div class="mt-4 pt-4 border-top border-soft border-opacity-10">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div class="d-flex align-items-center gap-3">
                         <h6 class="small fw-800 text-muted text-uppercase mb-0 ls-2"><i class="bi bi-pulse me-2"></i>Traffic Pulse</h6>
                         <div class="scale-toggle d-flex bg-dark bg-opacity-25 rounded-pill p-1" style="font-size: 0.55rem; border: 1px solid rgba(255,255,255,0.05);">
                             <button class="btn btn-sm py-0 px-2 rounded-pill border-0 text-white active-scale" id="toggle-log" onclick="setPulseScale('log')" style="font-size: 0.55rem; height: 18px;">LOG</button>
                             <button class="btn btn-sm py-0 px-2 rounded-pill border-0 text-muted" id="toggle-lin" onclick="setPulseScale('lin')" style="font-size: 0.55rem; height: 18px;">LIN</button>
+                        </div>
+                        <button class="btn btn-sm btn-soft-dark rounded-circle p-0 d-flex align-items-center justify-content-center me-2" 
+                                onclick="window.location.reload()" 
+                                style="width: 26px; height: 26px; border: 1px solid rgba(255,255,255,0.05);"
+                                title="Reload Dashboard Data">
+                            <i class="bi bi-arrow-clockwise small text-muted"></i>
+                        </button>
+                        <div class="d-flex align-items-center bg-dark bg-opacity-25 rounded-pill px-2 border border-white border-opacity-10 me-2" style="height: 26px;">
+                            <span class="x-small text-muted me-2" style="font-size: 0.5rem; letter-spacing: 0.5px;">VIEW:</span>
+                            <select id="pulse-range-select" onchange="updatePulseRange(this.value)" class="bg-transparent border-0 text-white x-small p-0 fw-bold" style="font-size: 0.55rem; outline: none; cursor: pointer; color-scheme: dark;">
+                                <option value="50">50 pts</option>
+                                <option value="100" selected>100 pts</option>
+                                <option value="250">250 pts</option>
+                                <option value="500">500 pts</option>
+                            </select>
+                        </div>
+                        <div class="d-flex align-items-center bg-dark bg-opacity-25 rounded-pill px-2 border border-white border-opacity-10" style="height: 26px;">
+                            <span class="x-small text-muted me-2" style="font-size: 0.5rem; letter-spacing: 0.5px;">CAP:</span>
+                            <select id="pulse-cap-select" onchange="updatePulseCap(this.value)" class="bg-transparent border-0 text-white x-small p-0 fw-bold" style="font-size: 0.55rem; outline: none; cursor: pointer; color-scheme: dark;">
+                                <option value="250">250ms</option>
+                                <option value="500">500ms</option>
+                                <option value="1000" selected>1s</option>
+                                <option value="2000">2s</option>
+                                <option value="5000">5s</option>
+                            </select>
                         </div>
                     </div>
                     <div class="d-flex gap-4 flex-wrap">
@@ -1066,7 +1109,8 @@
                             <div class="pulse-tick status-{{ pulse.status|lower }}" 
                                  data-log-h="{{ pulse.log_h }}"
                                  data-lin-h="{{ pulse.lin_h }}"
-                                 style="height: {{ pulse.log_h }}%; background: linear-gradient(to top, {{ pulse.base_color }}, {{ pulse.color }}); border: 1px solid rgba(255,255,255,0.05); border-bottom: none;"
+                                 data-latency="{{ pulse.latency }}"
+                                 style="height: {{ pulse.log_h }}%; background: {{ pulse.color }};"
                                  title="{{ pulse.latency }}ms | {{ pulse.status_code }} @ {{ pulse.timestamp|date:'H:i:s' }}">
                             </div>
                             {% endfor %}
@@ -1346,15 +1390,62 @@
         try { await apiCall(`/api/dev/deny-user/${id}`); location.reload(); } catch (e) { }
     }
 
-    // --- PULSE SCALE TOGGLE ---
+    // --- PULSE SCALE TOGGLE & DYNAMIC SCALING ---
+    let currentPulseMode = 'log';
+    let currentPulseCap = 1000;
+    let currentPulseRange = 100;
+
+    function updatePulseRange(val) {
+        currentPulseRange = parseInt(val);
+        const ticks = document.querySelectorAll('.pulse-tick');
+        const count = ticks.length;
+        
+        ticks.forEach((t, i) => {
+            if (i < count - currentPulseRange) {
+                t.style.display = 'none';
+            } else {
+                t.style.display = 'block';
+            }
+        });
+    }
+
+    function updatePulseCap(val) {
+        currentPulseCap = parseInt(val);
+        
+        // Update LIN Axis Labels
+        const linLabels = document.querySelectorAll('#y-axis-lin .y-label');
+        const benchmarks = [0, 0.25, 0.5, 0.75, 1];
+        linLabels.forEach((label, i) => {
+            const ms = Math.round(benchmarks[i] * currentPulseCap);
+            label.textContent = ms >= 1000 ? (ms/1000).toFixed(1) + 's' : ms + 'ms';
+        });
+
+        if (currentPulseMode === 'lin') {
+            refreshPulseHeights();
+        }
+    }
+
+    function refreshPulseHeights() {
+        const ticks = document.querySelectorAll('.pulse-tick');
+        ticks.forEach(t => {
+            const latency = parseFloat(t.dataset.latency);
+            if (currentPulseMode === 'log') {
+                t.style.height = t.dataset.logH + '%';
+            } else {
+                const h = Math.max(2, Math.min(100, (latency / currentPulseCap) * 100));
+                t.style.height = h + '%';
+            }
+        });
+    }
+
     function setPulseScale(mode) {
+        currentPulseMode = mode;
         const logBtn = document.getElementById('toggle-log');
         const linBtn = document.getElementById('toggle-lin');
         const logAxis = document.getElementById('y-axis-log');
         const linAxis = document.getElementById('y-axis-lin');
         const logGrid = document.getElementById('grid-log');
         const linGrid = document.getElementById('grid-lin');
-        const ticks = document.querySelectorAll('.pulse-tick');
 
         if (mode === 'log') {
             logBtn.classList.add('active-scale', 'text-white');
@@ -1366,10 +1457,6 @@
             linAxis.classList.add('d-none');
             logGrid.classList.remove('d-none');
             linGrid.classList.add('d-none');
-
-            ticks.forEach(t => {
-                t.style.height = t.dataset.logH + '%';
-            });
         } else {
             linBtn.classList.add('active-scale', 'text-white');
             linBtn.classList.remove('text-muted');
@@ -1380,19 +1467,14 @@
             logAxis.classList.add('d-none');
             linGrid.classList.remove('d-none');
             logGrid.classList.add('d-none');
-
-            ticks.forEach(t => {
-                t.style.height = t.dataset.linH + '%';
-            });
         }
+        refreshPulseHeights();
     }
 
     // --- INITIALIZATION ---
-
-
     document.addEventListener('DOMContentLoaded', () => {
         initCharts();
-        
+        updatePulseRange(100); // Default to 100
 
         // Tooltip Init
         const tooltips = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));

@@ -25,7 +25,7 @@
     }
     
     .hover-bg-light:hover {
-        background-color: #f8f9fa;
+        background-color: var(--hover-color);
     }
     .cursor-pointer {
         cursor: pointer;
@@ -46,12 +46,12 @@
             <!-- Global Search -->
             <div class="search-wrapper position-relative" style="min-width: 350px;">
                 <div class="input-group">
-                    <span class="input-group-text border-0 bg-light rounded-start-pill ps-3">
+                    <span class="input-group-text border-0 bg-soft rounded-start-pill ps-3">
                         <i class="fas fa-search text-muted"></i>
                     </span>
-                    <input type="text" id="globalSearchInput" class="form-control border-0 bg-light rounded-end-pill py-2" placeholder="Search students, teams, assignments..." autocomplete="off">
+                    <input type="text" id="globalSearchInput" class="form-control border-0 bg-soft rounded-end-pill py-2" placeholder="Search students, teams, assignments..." autocomplete="off">
                 </div>
-                <div id="searchDropdown" class="position-absolute w-100 bg-white shadow-xl rounded-4 mt-2 d-none overflow-hidden" style="z-index: 1050; border: 1px solid rgba(0,0,0,0.08);">
+                <div id="searchDropdown" class="position-absolute w-100 bg-surface shadow-xl rounded-4 mt-2 d-none overflow-hidden" style="z-index: 1050; border: 1px solid var(--border-color);">
                     <div id="searchResults" class="p-2">
                         <!-- Results injected via JS -->
                     </div>
@@ -61,9 +61,9 @@
                     <div class="h3 fw-800 text-primary-red mb-0">{{ teams|length }}</div>
                     <div class="small text-muted text-uppercase fw-bold" style="font-size: 0.6rem;">Teams</div>
                 </div>
-                <div class="text-center p-3 bg-primary-red text-white rounded-4 shadow">
-                    <div class="h3 fw-800 mb-0 text-white">{{ assignments|length }}</div>
-                    <div class="small opacity-75 text-uppercase fw-bold" style="font-size: 0.6rem;">Assignments</div>
+                <div class="text-center p-3 bg-soft text-main border border-soft rounded-4 shadow-sm">
+                    <div class="h3 fw-800 mb-0 text-primary-red">{{ assignments|length }}</div>
+                    <div class="small text-muted text-uppercase fw-bold" style="font-size: 0.6rem;">Assignments</div>
                 </div>
             </div>
         </div>
@@ -469,7 +469,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Students (Link to Team Row)
             if (data.students.length > 0) {
                 html += `<div class="mb-2">
-                            <h6 class="px-3 py-2 bg-light rounded-2 small text-uppercase fw-bold text-muted mb-1">Students</h6>`;
+                            <h6 class="px-3 py-2 bg-soft rounded-2 small text-uppercase fw-bold text-muted mb-1">Students</h6>`;
                 data.students.forEach(s => {
                     const targetId = s.team_id ? `team-${s.team_id}` : '';
                     html += `<div class="px-3 py-2 hover-bg-light rounded-2 cursor-pointer" onclick="scrollToId('${targetId}')">
@@ -491,7 +491,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Teams (Link to Team Row)
             if (data.teams.length > 0) {
                 html += `<div class="mb-2">
-                            <h6 class="px-3 py-2 bg-light rounded-2 small text-uppercase fw-bold text-muted mb-1">Teams</h6>`;
+                            <h6 class="px-3 py-2 bg-soft rounded-2 small text-uppercase fw-bold text-muted mb-1">Teams</h6>`;
                 data.teams.forEach(t => {
                     html += `<div class="px-3 py-2 hover-bg-light rounded-2 cursor-pointer" onclick="scrollToId('team-${t.id}')">
                                 <div class="d-flex align-items-center">
@@ -512,7 +512,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Assignments (Link to Assignment Card)
             if (data.assignments.length > 0) {
                 html += `<div class="mb-0">
-                            <h6 class="px-3 py-2 bg-light rounded-2 small text-uppercase fw-bold text-muted mb-1">Assignments</h6>`;
+                            <h6 class="px-3 py-2 bg-soft rounded-2 small text-uppercase fw-bold text-muted mb-1">Assignments</h6>`;
                 data.assignments.forEach(a => {
                     html += `<div class="px-3 py-2 hover-bg-light rounded-2 cursor-pointer" onclick="scrollToId('assignment-${a.id}')">
                                 <div class="d-flex align-items-center">
@@ -558,7 +558,7 @@ document.addEventListener('DOMContentLoaded', function() {
     100% { background-color: transparent; }
 }
 .hover-bg-light:hover {
-    background-color: #f8f9fa;
+    background-color: var(--hover-color);
     transition: background 0.2s;
 }
 .cursor-pointer {

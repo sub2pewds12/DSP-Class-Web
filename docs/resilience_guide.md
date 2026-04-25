@@ -12,20 +12,24 @@ The **Developer Dashboard** and **System Analytics** endpoints utilize a 5-minut
 ## 📊 Traffic Pulse & NOC Telemetry
 The **Traffic Pulse** histogram provides a high-density, real-time visualization of every request processed by the platform. This NOC-style view allows for immediate identification of performance jitter and "bursty" traffic patterns.
 
-### 1. Dual-Scale Visualization
-Administrators can toggle between two scaling modes to suit different diagnostic needs:
-- **Linear Mode (LIN)**: Maps latency directly (0ms - 1000ms). Best for identifying small fluctuations in healthy traffic.
-- **Logarithmic Mode (LOG)**: Uses a base-10 scale to visualize latencies from 1ms up to 10 seconds. This is the preferred mode for "hunting" high-latency outliers (spikes) that would otherwise disappear on a linear scale.
+### 1. Advanced Scaling Controls
+Administrators can surgically adjust the visualization depth and bounds via integrated header controls:
+- **VIEW (X-Axis)**: Toggle history density between **50, 100, 250, or 500 pulses**. Defaults to 100 for clarity, but supports 500-point forensic deep-dives.
+- **CAP (Y-Axis)**: Scale the vertical linear range between **250ms, 500ms, 1s, 2s, or 5s**. This allows for high-resolution monitoring of high-performance endpoints.
+- **Dual Mode**: Seamlessly switch between **Linear (LIN)** and **Logarithmic (LOG)** scales. LOG mode visualizations cover 1ms to 10s on a base-10 scale.
 
-### 2. Heatmap Engine
-The bars are dynamically color-coded based on severity:
-- **Emerald Green**: Healthy, fast responses (< 200ms).
-- **Amber/Orange**: Elevated latency (500ms - 900ms).
-- **Vibrant Red**: Performance bottleneck (> 1000ms).
-- **Blue Tint**: System requests (heartbeats/telemetry) are often filtered or tinted to reduce noise.
+### 2. High-Fidelity Heatmap
+The bars use a continuous HSL hue interpolation engine:
+- **Green (120°)**: Healthy (< 100ms).
+- **Yellow (60°)**: Trending elevated (250ms - 500ms).
+- **Red (0°)**: Critical bottleneck (> 1000ms).
+- **Interpolation**: Colors transition smoothly through the spectrum based on actual latency, providing immediate intuitive feedback on performance "drift."
 
-### 3. Real-time Middleware
-The `ActivityTrackingMiddleware` records the duration and status of every request (excluding `/static/` assets and the telemetry endpoint itself) into a rolling 100-pulse buffer. This buffer is stored in the cache for maximum speed and zero database overhead.
+### 3. Real-time Middleware & Buffer
+The `ActivityTrackingMiddleware` records the duration and status of every request into a high-capacity rolling **500-pulse buffer**. 
+- **Storage**: In-memory cache for sub-millisecond overhead.
+- **Exclusion**: Static assets and telemetry requests are filtered to maintain data purity.
+- **Persistence**: Data is retained as long as the cache survives, providing historical context across administrative sessions.
 
 ## 🦾 Self-Healing Engine
 The system proactively monitors its own health scores via the `perform_health_check` logic.

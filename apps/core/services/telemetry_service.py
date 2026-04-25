@@ -41,7 +41,7 @@ class TelemetryService:
                     # Some versions use 'status', some use 'status_code'
                     status = sample.labels.get('status') or sample.labels.get('status_code') or 'unknown'
                     data['responses_by_status'][status] = data['responses_by_status'].get(status, 0) + sample.value
-
+        
             # 3. Latency (Histogram)
             if m.name in ['django_http_requests_latency_seconds_by_view_method', 'django_http_requests_latency_including_middlewares_seconds']:
                 # For histograms, prometheus_client returns samples with suffixes like _sum and _count
@@ -81,31 +81,34 @@ class TelemetryService:
         elif latency_ms > 1000:
             status = 'CRITICAL'
             
-        # Intensity for coloring (0 = Green, 100 = Red)
+        # Intensity for coloring
         if status_code >= 500 or status == 'CRITICAL':
             intensity = 100
         elif status_code >= 400:
-            intensity = 60 # Amber-ish
+            intensity = 60
         elif status_code == 204:
-            intensity = 30 # Sky Blue intensity
+            intensity = 30
         else:
-            # Scale latency 0-1000ms to intensity 0-100
             intensity = min(100, (latency_ms / 1000) * 100)
 
-        # Calculate HSL color based on intensity
-        # 140 (Green) -> 0 (Red)
-        hue = max(0, 140 - (1.4 * intensity))
-        color = f"hsl({hue}, 80%, 50%)"
+        # Calculate HSL color based on continuous gradient (ms value determines hue)
+        # Green (140) -> Yellow (60) -> Red (0)
+        if latency_ms < 250:
+            hue = 140 - (latency_ms / 250 * 80)
+        elif latency_ms < 750:
+            hue = 60 - ((latency_ms - 250) / 500 * 60)
+        else:
+            hue = 0
+        
+        color = f"hsl({int(hue)}, 90%, 55%)"
         base_color = f"hsl({hue}, 40%, 20%)"
 
         # Logarithmic height for histogram (1ms to 10s range)
-        # 1ms=0%, 10ms=25%, 100ms=50%, 1000ms=75%, 10000ms=100%
         if latency_ms <= 1:
             log_h = 2
             lin_h = 2
         else:
             log_h = max(2, min(100, math.log10(latency_ms) * 25))
-            # Linear height (0ms to 1000ms)
             lin_h = max(2, min(100, (latency_ms / 1000) * 100))
 
         new_pulse = {
@@ -120,15 +123,11 @@ class TelemetryService:
             'base_color': base_color
         }
         
-        # Use a more robust cache interaction (atomic-ish)
         pulses.append(new_pulse)
-        # Keep only the last 100 pulses
-        if len(pulses) > 100:
-            pulses = pulses[-100:]
+        if len(pulses) > 500:
+            pulses = pulses[-500:]
             
-        cache.set(cache_key, pulses, 86400) # Keep for 24h
-        
-        # Also update a 'last_updated' timestamp for the frontend
+        cache.set(cache_key, pulses, 86400)
         cache.set('telemetry_last_updated', timezone.now(), 86400)
 
     @staticmethod
@@ -145,26 +144,30 @@ class TelemetryService:
             if not settings.DEBUG:
                 return []
                 
-            # Seed with 100 mock pulses representing a healthy system
             seed_pulses = []
             now = timezone.now()
-            for i in range(100):
-                latency = random.uniform(20, 150) # Mostly fast
-                if i % 20 == 0: latency = random.uniform(300, 800) # Occasional slow
+            for i in range(500):
+                latency = random.uniform(20, 150)
+                if i % 20 == 0: latency = random.uniform(300, 800)
                 
-                # Use the same logic as record_pulse
                 import math
                 log_h = min(100, max(5, math.log10(max(1, latency)) * 25))
                 
                 intensity = min(100, (latency / 1000) * 100)
                 if latency > 1000: intensity = 100
 
-                hue = max(0, 140 - (1.4 * intensity))
-                color = f"hsl({hue}, 80%, 50%)"
+                if latency < 250:
+                    hue = 140 - (latency / 250 * 80)
+                elif latency < 750:
+                    hue = 60 - ((latency - 250) / 500 * 60)
+                else:
+                    hue = 0
+
+                color = f"hsl({int(hue)}, 90%, 55%)"
                 base_color = f"hsl({hue}, 40%, 20%)"
 
                 seed_pulses.append({
-                    'timestamp': now - timezone.timedelta(minutes=(100-i)),
+                    'timestamp': now - timezone.timedelta(minutes=(500-i)),
                     'status': 'OPERATIONAL' if latency < 1000 else 'CRITICAL',
                     'latency': latency,
                     'log_h': min(100, max(5, math.log10(max(1, latency)) * 25)),
@@ -184,13 +187,12 @@ class TelemetryService:
         """Returns a structure optimized for Chart.js in dev_dashboard.html"""
         metrics = TelemetryService.get_live_metrics()
         
-        # Standard status categories for a "full" legend
         standard_categories = [
-            ('200 Success', '#10b981'),  # Emerald
-            ('201 Created', '#059669'),  # Dark Green
-            ('204 No Content', '#0ea5e9'), # Sky Blue (Distinct from Emerald)
-            ('4xx Client Error', '#f59e0b'), # Amber
-            ('5xx Server Error', '#ef4444'), # Red
+            ('200 Success', '#10b981'),
+            ('201 Created', '#059669'),
+            ('204 No Content', '#0ea5e9'),
+            ('4xx Client Error', '#f59e0b'),
+            ('5xx Server Error', '#ef4444'),
         ]
 
         status_labels = []
@@ -199,7 +201,6 @@ class TelemetryService:
 
         resp_map = metrics.get('responses_by_status', {})
 
-        # Populate standard categories
         for label, color in standard_categories:
             val = 0
             if '200' in label: val = resp_map.get('200', 0)
@@ -212,14 +213,12 @@ class TelemetryService:
             status_values.append(val)
             colors.append(color)
 
-        # Add "Other" if there are any other status codes recorded
         other_val = sum(v for k, v in resp_map.items() if k not in ['200', '201', '204'] and not k.startswith('4') and not k.startswith('5'))
         if other_val > 0:
             status_labels.append('Other')
             status_values.append(other_val)
             colors.append('#6b7280')
 
-        # Add "In Flight" if requests > responses
         status_total = sum(status_values)
         if metrics['requests_total'] > status_total:
             pending = metrics['requests_total'] - status_total
@@ -227,7 +226,6 @@ class TelemetryService:
             status_values.append(pending)
             colors.append('#94a3b8')
 
-        # X-Axis Time Labels
         pulses = TelemetryService.get_recent_pulses()
         time_labels = []
         if pulses:

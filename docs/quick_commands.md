@@ -41,8 +41,8 @@ A one-page cheat sheet for common commands and essential links.
 ## 🦾 Resilience & Health
 | Action | Description |
 | :--- | :--- |
-| **Reset Health** | Delete old pulses: `python manage.py prune_pulses` |
-| **Bypass Cache** | Force real-time telemetry via dashboard "Refresh" |
+| **Adjust Range** | Use **VIEW** (50-500) and **CAP** (250ms-5s) dropdowns for real-time chart scaling |
+| **Bypass Cache** | Force real-time telemetry via dashboard "Reload" button |
 | **Recovery Test** | Health Score < 40 triggers automated cache flush |
 | **Fix Execution Policy** | `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process` |
 | **Activate Venv** | `.\.venv\Scripts\activate` |
