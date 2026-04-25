@@ -88,61 +88,7 @@ def health_check_api(request):
     """Lighweight endpoint for external monitoring services."""
     return {"status": "OK", "message": "SYSTEM_OPERATIONAL"}
 
-@api.post("/incident/{error_id}/resolve", response=SuccessResponse, tags=["Incidents"])
-def resolve_incident(request, error_id: int):
-    """Resolves a single incident by ID."""
-    if not getattr(request.user, 'can_manage_system', False):
-        return 403, {"status": "error", "message": "Unauthorized: Requires System Management permission."}
-        
-    error = get_object_or_404(SystemError, id=error_id)
-    error.is_resolved = True
-    error.save()
-    return {"status": "success", "message": f"Incident {error_id} resolved."}
 
-@api.post("/incident/bulk-resolve", response=SuccessResponse, tags=["Incidents"])
-def bulk_resolve_incidents(request, data: BulkResolveSchema):
-    """Resolves all unresolved incidents where the message contains the specified pattern."""
-    if not getattr(request.user, 'can_manage_system', False):
-        return 403, {"status": "error", "message": "Unauthorized: Requires System Management permission."}
-        
-    updated_count = SystemError.objects.filter(
-        is_resolved=False, 
-        message__icontains=data.pattern
-    ).update(is_resolved=True)
-    
-    return {"status": "success", "message": f"Bulk resolved {updated_count} incidents matching '{data.pattern}'."}
-
-@api.post("/incident/sanitize", response=SuccessResponse, tags=["Incidents"])
-def sanitize_logs_api(request):
-    """Automated log cleanup via concurrent URL probing."""
-    if not getattr(request.user, 'can_manage_system', False):
-        return 403, {"status": "error", "message": "Unauthorized: Requires System Management permission."}
-        
-    unresolved = list(SystemError.objects.filter(is_resolved=False).order_by('-timestamp')[:100])
-    url_to_errors = {}
-    for err in unresolved:
-        if err.url:
-            if err.url not in url_to_errors: url_to_errors[err.url] = []
-            url_to_errors[err.url].append(err)
-            
-    if not url_to_errors:
-        return {"status": "success", "message": "No unique URLs found in logs."}
-        
-    def check_url(url):
-        try:
-            resp = requests.get(request.build_absolute_uri(url), timeout=1.5, verify=False)
-            if resp.status_code < 400: return url
-        except: pass
-        return None
-
-    with ThreadPoolExecutor(max_workers=10) as executor:
-        results = list(executor.map(check_url, url_to_errors.keys()))
-        
-    resolved_ids = [err.id for url in results if url for err in url_to_errors[url]]
-    if resolved_ids:
-        SystemError.objects.filter(id__in=resolved_ids).update(is_resolved=True)
-                
-    return {"status": "success", "message": f"Processed top 100. {len(resolved_ids)} incidents auto-resolved."}
 
 # --- Student Actions ---
 

@@ -228,11 +228,8 @@ def dev_dashboard(request):
     if request.user.role != 'DEV':
         return redirect('dashboard')
     
-    show_archive = request.GET.get('archive') == '1'
-    
     # Offload all monitoring logic to service
-    telemetry = InfrastructureService.get_dev_dashboard_telemetry(show_archive=show_archive)
-    telemetry['show_archive'] = show_archive
+    telemetry = InfrastructureService.get_dev_dashboard_telemetry()
 
     return render(request, 'teams/dev_dashboard.html', telemetry)
 

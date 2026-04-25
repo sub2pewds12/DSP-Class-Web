@@ -195,6 +195,10 @@
     .status-operational {
         background: #2ecc71;
     }
+    
+    .status-no_content {
+        background: #3498db;
+    }
 
     .status-warning {
         background: #f1c40f;
@@ -479,6 +483,12 @@
         background: rgba(255, 255, 255, 0.05);
         border-color: rgba(var(--dash-accent-rgb), 0.3);
     }
+
+    .active-scale {
+        background: rgba(255, 255, 255, 0.15) !important;
+        color: white !important;
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
 </style>
 {% endblock %}
 
@@ -498,151 +508,49 @@
         </div>
     </div>
 
-    <!-- Uptime History Bar -->
-    <div class="stat-card mb-5">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="text-muted small text-uppercase fw-bold mb-0">90-Day Uptime Performance</h6>
-            <div class="d-flex align-items-center gap-2">
-                {% if pulses.0.timestamp and pulses.0.timestamp|timesince == '0 minutes' or pulses.0.timestamp|timesince == '1 minute' %}
-                <span class="badge bg-success-soft text-success border border-success border-opacity-25 rounded-pill d-flex align-items-center gap-1" style="font-size: 0.7rem;">
-                    <span class="spinner-grow spinner-grow-sm" style="width: 8px; height: 8px;"></span>
-                    Heartbeat Active
-                </span>
-                {% endif %}
-                <span class="small text-muted">Last check: {{ pulses.0.timestamp|timesince }} ago • <span class="fw-bold text-main">{{ db_telemetry.latency }}ms</span></span>
-            </div>
-        </div>
-        <div class="histogram-layout">
-            <!-- Y-Axis Labels (Log-Scaled) -->
-            <div class="y-axis">
-                {% for mark in log_benchmarks %}
-                <span class="y-label" style="bottom: {{ mark.pos }}%;">{{ mark.label }}</span>
-                {% endfor %}
-            </div>
-
-            <div class="uptime-bar-container">
-                <!-- Grid Lines (Log-Scaled) -->
-                <div class="grid-lines">
-                    {% for mark in log_benchmarks %}
-                    <div class="grid-line" style="bottom: {{ mark.pos }}%;"></div>
-                    {% endfor %}
-                </div>
-
-                <!-- Histogram Bars -->
-                <div class="uptime-bar">
-                    {% for pulse in pulses reversed %}
-                    <div class="pulse-tick status-{{ pulse.status|lower }} {% if pulse.status != 'OPERATIONAL' %}incident{% endif %}"
-                        style="height: {{ pulse.log_h|floatformat:2 }}%; min-height: 4px;" data-bs-toggle="tooltip"
-                        title="{{ pulse.timestamp|date:'M d, H:i:s' }}: {{ pulse.latency|floatformat:1 }}ms ({{ pulse.status }})"
-                        {% if pulse.status != 'OPERATIONAL' %}
-                        onclick="alert('INCIDENT DIAGNOSTICS\n\nTimestamp: {{ pulse.timestamp|date:'Y-m-d H:i:s' }}\nStatus: {{ pulse.status }}\nLatency: {{ pulse.latency }}ms\n\nRoot Cause: {{ pulse.info|default:'No specific error log available'|escapejs }}')"
-                        {% endif %}></div>
-                    {% endfor %}
+    <!-- Phase 2: System Health -->
+    <div class="row g-4 mb-5">
+        <!-- Health Status Card -->
+        <div class="col-lg-4">
+            <div class="stat-card glass-card d-flex flex-column justify-content-center text-center p-4">
+                <div class="small text-muted fw-800 text-uppercase tracking-widest mb-2">System Health Index</div>
+                <div class="metric-value mb-1">{{ system_analysis.health }}<span class="fs-4 text-muted">/100</span></div>
+                <div class="d-flex align-items-center justify-content-center gap-2">
+                    <span class="badge {% if current_status == 'SUCCESS' %}bg-success{% elif current_status == 'WARNING' %}bg-warning{% else %}bg-danger{% endif %} rounded-pill px-3 py-1">
+                        <i class="bi bi-shield-check me-1"></i>{{ current_status }}
+                    </span>
+                    <span class="small text-muted fw-bold">{{ sys_info.uptime_pct }} Uptime</span>
                 </div>
             </div>
         </div>
-        <div class="d-flex justify-content-between mt-2 small text-muted">
-            <span>100 pulses ago</span>
-            <span>Rolling Uptime: {{ sys_info.uptime_pct }}</span>
-            <span>Just now</span>
-        </div>
 
-        <!-- Legend -->
-        <div class="mt-3 d-flex flex-wrap gap-3 justify-content-center border-top pt-3">
-            <div class="d-flex align-items-center gap-2 small text-muted">
-                <div class="status-operational rounded-circle" style="width: 8px; height: 8px;"></div>
-                <span>Operational</span>
-            </div>
-            <div class="d-flex align-items-center gap-2 small text-muted">
-                <div class="status-warning rounded-circle" style="width: 8px; height: 8px;"></div>
-                <span>Warning</span>
-            </div>
-            <div class="d-flex align-items-center gap-2 small text-muted">
-                <div class="status-critical rounded-circle" style="width: 8px; height: 8px;"></div>
-                <span>Degraded</span>
-            </div>
-            <div class="d-flex align-items-center gap-2 small text-muted">
-                <div class="status-down rounded-circle" style="width: 8px; height: 8px;"></div>
-                <span>Down</span>
-            </div>
-        </div>
-
-        <!-- Advanced Infrastructure Analytics Block -->
-        <div class="mt-4 p-4 rounded-4 bg-soft border-0 animate__animated animate__fadeIn">
-            <div class="d-flex align-items-start gap-3 mb-4">
-                <div class="flex-shrink-0">
-                    <div class="bg-{{ system_analysis.severity }} rounded-circle d-flex align-items-center justify-content-center shadow-lg"
-                        style="width: 50px; height: 50px;">
-                        <i class="bi bi-cpu-fill text-white h4 mb-0"></i>
+        <!-- Real-time Performance Metrics -->
+        <div class="col-lg-8">
+            <div class="stat-card">
+                <div class="row h-100 align-items-center">
+                    <div class="col-md-4 text-center border-end border-light border-opacity-10">
+                        <div class="small text-muted fw-bold text-uppercase mb-1" style="font-size: 0.65rem;">Total Requests</div>
+                        <div class="h3 fw-800 mb-0">{{ telemetry_data.requests_total|default:"0" }}</div>
+                        <div class="small text-success mt-1" style="font-size: 0.6rem;"><i class="bi bi-graph-up me-1"></i>Last 24h</div>
                     </div>
-                </div>
-                <div class="flex-grow-1">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span
-                            class="small fw-800 text-uppercase tracking-wider text-{{ system_analysis.severity }}">Advanced
-                            Diagnostic Insight</span>
-                        <div class="d-flex align-items-center gap-2">
-                            <span
-                                class="badge bg-{{ system_analysis.severity }}-soft text-{{ system_analysis.severity }} border border-{{ system_analysis.severity }} border-opacity-25 rounded-pill"
-                                style="font-size: 0.75rem;">Health Index: {{ system_analysis.score }}/100</span>
-                            <span
-                                class="badge {% if system_analysis.momentum == 'IMPROVING' %}bg-success-soft text-success{% elif system_analysis.momentum == 'DEGRADING' %}bg-danger-soft text-danger{% else %}bg-secondary-soft text-muted{% endif %} rounded-pill"
-                                style="font-size: 0.65rem;">{{ system_analysis.momentum }}</span>
-                        </div>
+                    <div class="col-md-4 text-center border-end border-light border-opacity-10">
+                        <div class="small text-muted fw-bold text-uppercase mb-1" style="font-size: 0.65rem;">Avg Latency</div>
+                        <div class="h3 fw-800 mb-0 text-primary-red">{{ telemetry_data.avg_latency|default:"0" }}ms</div>
+                        <div class="small text-muted" style="font-size: 0.6rem;">Optimal: < 200ms</div>
                     </div>
-                    <p class="mb-0 text-main fw-600 h5">{{ system_analysis.message }}</p>
-                </div>
-            </div>
-
-            <!-- Technical Metrics Grid -->
-            <div class="row g-3 mb-4">
-                <div class="col-md-4">
-                    <div class="p-3 bg-secondary-soft rounded-4 text-center border border-light border-opacity-10">
-                        <div class="small text-muted mb-1 text-uppercase fw-bold" style="font-size: 0.6rem;">System
-                            Volatility</div>
-                        <div class="h4 fw-800 text-main mb-0">{{ system_analysis.volatility }}</div>
+                    <div class="col-md-4 text-center">
+                        <div class="small text-muted fw-bold text-uppercase mb-1" style="font-size: 0.65rem;">Stability Index</div>
+                        <div class="h3 fw-800 mb-0 {% if system_analysis.consistency > 95 %}text-success{% else %}text-warning{% endif %}">{{ system_analysis.consistency }}%</div>
+                        <div class="small text-muted" style="font-size: 0.6rem;">Reliability Score</div>
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="p-3 bg-secondary-soft rounded-4 text-center border border-light border-opacity-10">
-                        <div class="small text-muted mb-1 text-uppercase fw-bold" style="font-size: 0.6rem;">Consistency
-                            Index</div>
-                        <div class="h4 fw-800 text-main mb-0">{{ system_analysis.consistency }}</div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="p-3 bg-secondary-soft rounded-4 text-center border border-light border-opacity-10">
-                        <div class="small text-muted mb-1 text-uppercase fw-bold" style="font-size: 0.6rem;">Node Status
-                        </div>
-                        <div class="h4 fw-800 text-{{ system_analysis.severity }} mb-0 text-uppercase"
-                            style="font-size: 0.9rem;">{{ system_analysis.severity }}</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Diagnostic Details -->
-            <div class="diagnostic-details border-top pt-4">
-                <h6 class="small fw-800 text-muted text-uppercase mb-3 tracking-widest">Technical Observations</h6>
-                <div class="row g-3">
-                    {% for insight in system_analysis.insights %}
-                    <div class="col-md-12">
-                        <div
-                            class="d-flex align-items-center gap-3 p-3 rounded-4 bg-secondary-soft border border-light border-opacity-10">
-                            <i class="bi {{ insight.icon }} h5 mb-0 text-{{ system_analysis.severity }}"></i>
-                            <div>
-                                <div class="fw-bold text-main small">{{ insight.label }}</div>
-                                <div class="text-muted" style="font-size: 0.75rem;">{{ insight.text }}</div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
                 </div>
             </div>
         </div>
     </div>
 
+
     <!-- Phase 3: Integrated Operations Hub -->
-    <div class="operations-hub mb-5 shadow-sm animate__animated animate__fadeInUp">
+    <div class="operations-hub mb-5 shadow-sm">
         <div class="row g-0">
             <!-- Left Pane: Infrastructure Gateway -->
             <div class="col-lg-5 hub-pane-portal">
@@ -657,7 +565,6 @@
                     </div>
                 </div>
                 <div class="row g-3">
-                    <!-- Row 1: Primary Control -->
                     <div class="col-4">
                         <a href="{{ portals.admin }}" class="portal-tile">
                             <i class="bi bi-shield-lock-fill h4 mb-0 text-primary-red"></i>
@@ -670,8 +577,6 @@
                             <span class="small fw-bold">Swagger</span>
                         </a>
                     </div>
-
-                    <!-- Row 2: Infrastructure & Monitoring -->
                     <div class="col-4">
                         <a href="{{ portals.command_center }}" class="portal-tile">
                             <i class="bi bi-images h4 mb-0 text-primary-red"></i>
@@ -702,11 +607,16 @@
                             <span class="small fw-bold">Grafana</span>
                         </a>
                     </div>
-
                     <div class="col-4">
                         <a href="{{ portals.uptime_config }}" target="_blank" class="portal-tile">
                             <i class="bi bi-gear-wide-connected h4 mb-0 text-primary-red"></i>
                             <span class="small fw-bold">Uptime Config</span>
+                        </a>
+                    </div>
+                    <div class="col-4">
+                        <a href="/api/docs" target="_blank" class="portal-tile">
+                            <i class="bi bi-braces h4 mb-0 text-primary-red"></i>
+                            <span class="small fw-bold">API Docs</span>
                         </a>
                     </div>
                 </div>
@@ -761,83 +671,9 @@
                     </div>
                 </div>
             </div>
-        </div>
     </div>
 </div>
 
-
-<!-- System Incident Log -->
-<div class="row mb-5">
-    <div class="col-12">
-        <div class="stat-card glass-card">
-            {% if user.can_manage_system %}
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div class="d-flex align-items-center gap-3">
-                    <h5 class="fw-bold mb-0"><i class="bi bi-exclamation-triangle-fill text-primary-red me-2"></i>Fatal Error & Incident Log</h5>
-                    <button class="btn btn-sm btn-outline-success rounded-pill px-3" id="sanitizeBtn" onclick="sanitizeLogs()">
-                        <i class="bi bi-shield-check me-1"></i>Verify & Sanitize
-                    </button>
-                    <button class="btn btn-sm {% if show_archive %}btn-primary{% else %}btn-outline-primary{% endif %} rounded-pill px-3" onclick="toggleArchive()">
-                        <i class="bi {% if show_archive %}bi-lightning-fill{% else %}bi-clock-history{% endif %} me-1"></i>
-                        {% if show_archive %}View Active Incidents{% else %}View Historical Archive{% endif %}
-                    </button>
-                    <a href="/api/docs" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill px-3">
-                        <i class="bi bi-code-square me-1"></i>Interactive API Explorer
-                    </a>
-                </div>
-                <span class="badge bg-danger rounded-pill" id="unresolvedBadge">{{ sys_info.unresolved_errors }} Unresolved</span>
-            </div>
-            <div class="table-responsive system-log-scroll">
-                <table class="table table-hover align-middle">
-                    <thead class="small text-muted text-uppercase">
-                        <tr>
-                            <th>Timestamp</th>
-                            <th>Error Message</th>
-                            <th>URL</th>
-                            <th>User</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for error in system_errors %}
-                        <tr class="{% if error.is_resolved %}error-resolved{% else %}error-row{% endif %}" id="error-{{ error.id }}">
-                            <td class="small">{{ error.timestamp|date:"M d, H:i" }}</td>
-                            <td class="fw-bold text-main" style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ error.message }}">
-                                {{ error.message }}
-                            </td>
-                            <td><code>{{ error.url }}</code></td>
-                            <td><span class="badge bg-secondary-soft text-main">{{ error.user.username|default:"Guest" }}</span></td>
-                            <td>
-                                <div class="d-flex gap-2">
-                                    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="alert('Traceback (Log ID: {{ error.id }}):\n\n{{ error.stack_trace|escapejs|truncatechars:2000 }}')">View Stack</button>
-                                    {% if not error.is_resolved %}
-                                    <button class="btn btn-sm btn-success rounded-pill px-3" onclick="resolveError({{ error.id }})">Resolve</button>
-                                    <button class="btn btn-sm btn-outline-primary rounded-pill px-2" data-bs-toggle="tooltip" title="Resolve all similar" onclick="bulkResolve('{{ error.message|escapejs }}')"><i class="bi bi-stack"></i></button>
-                                    {% endif %}
-                                </div>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="5" class="text-center py-5 text-muted">
-                                <i class="bi bi-check-circle-fill text-success d-block h1 mb-3"></i>
-                                No system incidents recorded. All systems green.
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <div class="text-center py-5 opacity-50">
-                <i class="bi bi-shield-lock h1 d-block mb-3"></i>
-                <h5 class="fw-bold">Incident Log Restricted</h5>
-                <p class="small text-muted">Requires 'System Management' permission to view platform error telemetry.</p>
-            </div>
-            {% endif %}
-        </div>
-    </div>
-</div>
 
 <!-- Pending Access Requests Workflow (Full Width) -->
 <div class="row g-4 mb-4">
@@ -986,108 +822,6 @@
     </div>
 {% endif %}
 
-    <!-- System Infrastructure Command Center (Extended) -->
-    <div class="col-md-8">
-        <div class="stat-card glass-card">
-            {% if user.can_manage_system %}
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-cpu-fill text-primary-red h5 mb-0"></i>
-                    <h5 class="fw-800 mb-0">Infrastructure Command Center</h5>
-                </div>
-                <div class="d-flex align-items-center gap-3">
-                    <span class="badge bg-soft text-main border-0 rounded-pill px-3">NODE: {{ db_telemetry.db_host|default:"LOCAL" }}</span>
-                    <div class="db-status-chip text-primary-red">Live Sync</div>
-                </div>
-            </div>
-
-            <div class="row g-4">
-                <!-- Left: Dynamic Telemetry -->
-                <div class="col-lg-7 border-end border-light border-opacity-10 pe-lg-4">
-                    <h6 class="small fw-800 text-muted text-uppercase mb-3 ls-1">Real-time Performance</h6>
-                    <div class="d-flex flex-column gap-3">
-                        <!-- CPU -->
-                        <div class="db-grid-val p-3 rounded-4">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="status-{% if db_telemetry.sys_usage.cpu < 70 %}operational{% else %}critical{% endif %} rounded-circle"
-                                        style="width: 8px; height: 8px;"></div>
-                                    <span class="small fw-bold">CPU LOAD</span>
-                                </div>
-                                <span class="small fw-800">{{ db_telemetry.sys_usage.cpu }}%</span>
-                            </div>
-                            <div class="progress"
-                                style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 10px;">
-                                <div class="progress-bar {% if db_telemetry.sys_usage.cpu < 70 %}bg-success{% else %}bg-danger{% endif %}"
-                                    style="width: {{ db_telemetry.sys_usage.cpu }}%;"></div>
-                            </div>
-                        </div>
-                        <!-- RAM -->
-                        <div class="db-grid-val p-3 rounded-4">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="status-operational rounded-circle" style="width: 8px; height: 8px;">
-                                    </div>
-                                    <span class="small fw-bold">MEMORY UTILIZATION</span>
-                                </div>
-                                <span class="small fw-800">{{ db_telemetry.sys_usage.ram }}%</span>
-                            </div>
-                            <div class="progress"
-                                style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 10px;">
-                                <div class="progress-bar bg-info" style="width: {{ db_telemetry.sys_usage.ram }}%;">
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Disk -->
-                        <div class="db-grid-val p-3 rounded-4">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="small fw-bold text-uppercase" style="font-size: 0.65rem;">Storage
-                                    Cluster</span>
-                                <span class="small fw-800">{{ db_telemetry.sys_usage.disk }}% CAPACITY</span>
-                            </div>
-                            <div class="progress"
-                                style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 10px;">
-                                <div class="progress-bar bg-secondary"
-                                    style="width: {{ db_telemetry.sys_usage.disk }}%;"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right: System Specs & Diagnostics -->
-                <div class="col-lg-5">
-                    <h6 class="small fw-800 text-muted text-uppercase mb-3 ls-1">Environment Specs</h6>
-                    <div class="d-flex flex-column gap-2">
-                        <div class="db-grid-val p-3 rounded-4">
-                            <div class="small text-muted fw-bold mb-1" style="font-size: 0.55rem;">OS ARCHITECTURE</div>
-                            <div class="fw-800 text-main">{{ platform_info.os_release }}</div>
-                        </div>
-                        <div class="db-grid-val p-3 rounded-4">
-                            <div class="small text-muted fw-bold mb-1" style="font-size: 0.55rem;">RUNTIME ENGINE</div>
-                            <div class="fw-800 text-main">{{ platform_info.python_version }}</div>
-                            <div class="small text-muted fw-bold mt-1" style="font-size: 0.55rem;">DJANGO v{{ platform_info.django_version }}</div>
-                        </div>
-                        <div class="db-grid-val p-3 rounded-4">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div class="d-flex flex-column">
-                                    <span class="small text-muted fw-bold" style="font-size: 0.55rem;">SYSTEM UPTIME</span>
-                                    <span class="fw-800 text-primary-red">{{ db_telemetry.sys_usage.uptime }} Days</span>
-                                </div>
-                                <i class="bi bi-clock-history text-muted h4 mb-0 opacity-25"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% else %}
-            <div class="text-center py-5 opacity-50">
-                <i class="bi bi-activity h1 d-block mb-3 text-primary-red"></i>
-                <h5 class="fw-bold">Infrastructure Diagnostics Restricted</h5>
-                <p class="small text-muted">Requires 'System Management' permission to monitor server vitals and environment specs.</p>
-            </div>
-            {% endif %}
-        </div>
-    </div>
 </div>
 
 <!-- Platform Audit Trail -->
@@ -1170,15 +904,197 @@
             <p class="small text-muted">Requires 'System Management' permission to view security and event logs.</p>
         </div>
         {% endif %}
-    </div>
+        </div>
     </div>
 </div>
 
-<!-- Activity Trends Row -->
-<div class="row g-4 mt-2">
+<!-- Infrastructure Hub (Full Width) -->
+<div class="row g-4 mt-4">
+    <div class="col-12">
+        <div class="stat-card glass-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <h5 class="fw-800 mb-0"><i class="bi bi-diagram-3-fill me-2 text-primary-red"></i>Infrastructure Command Center</h5>
+                    <div class="d-flex align-items-center gap-1 ms-2">
+                        <span class="status-operational rounded-circle animate-pulse" style="width: 6px; height: 6px;"></span>
+                        <span class="small text-muted fw-bold" style="font-size: 0.6rem; letter-spacing: 1px;">ACTIVE TELEMETRY</span>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="badge bg-soft text-main border-0 rounded-pill px-3 py-2 fw-bold" style="font-size: 0.6rem;">NODE: {{ db_telemetry.db_host }}</span>
+                    <span class="small text-primary-red fw-800 ls-1">LIVE SYNC</span>
+                </div>
+            </div>
+            
+            <div class="row g-4">
+                <!-- Left: Real-time Performance -->
+                <div class="col-lg-8 border-end border-light border-opacity-10 pe-lg-4">
+                    <h6 class="small fw-800 text-muted text-uppercase mb-3 ls-1">Real-time Performance</h6>
+                    <div class="d-flex flex-column gap-3">
+                        <!-- CPU -->
+                        <div class="db-grid-val p-3 rounded-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="status-{% if db_telemetry.sys_usage.cpu < 70 %}operational{% else %}critical{% endif %} rounded-circle"
+                                        style="width: 8px; height: 8px;"></div>
+                                    <span class="small fw-bold">CPU LOAD</span>
+                                </div>
+                                <span class="small fw-800">{{ db_telemetry.sys_usage.cpu }}%</span>
+                            </div>
+                            <div class="progress"
+                                style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 10px;">
+                                <div class="progress-bar {% if db_telemetry.sys_usage.cpu < 70 %}bg-success{% else %}bg-danger{% endif %}"
+                                    style="width: {{ db_telemetry.sys_usage.cpu }}%;"></div>
+                            </div>
+                        </div>
+                        <!-- RAM -->
+                        <div class="db-grid-val p-3 rounded-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="status-operational rounded-circle" style="width: 8px; height: 8px;">
+                                    </div>
+                                    <span class="small fw-bold">MEMORY UTILIZATION</span>
+                                </div>
+                                <span class="small fw-800">{{ db_telemetry.sys_usage.ram }}%</span>
+                            </div>
+                            <div class="progress"
+                                style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 10px;">
+                                <div class="progress-bar bg-info" style="width: {{ db_telemetry.sys_usage.ram }}%;">
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Disk -->
+                        <div class="db-grid-val p-3 rounded-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="small fw-bold text-uppercase" style="font-size: 0.65rem;">Storage
+                                    Cluster</span>
+                                <span class="small fw-800">{{ db_telemetry.sys_usage.disk }}% CAPACITY</span>
+                            </div>
+                            <div class="progress"
+                                style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 10px;">
+                                <div class="progress-bar bg-secondary"
+                                    style="width: {{ db_telemetry.sys_usage.disk }}%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Environment Specs -->
+                <div class="col-lg-4">
+                    <h6 class="small fw-800 text-muted text-uppercase mb-3 ls-1">Environment Specs</h6>
+                    <div class="d-flex flex-column gap-3">
+                        <div class="db-grid-val p-3 rounded-4">
+                            <div class="small text-muted fw-bold mb-1" style="font-size: 0.55rem;">OS ARCHITECTURE</div>
+                            <div class="fw-800 text-main">{{ platform_info.os }} {{ platform_info.os_release }}</div>
+                        </div>
+                        <div class="db-grid-val p-3 rounded-4">
+                            <div class="small text-muted fw-bold mb-1" style="font-size: 0.55rem;">RUNTIME ENGINE</div>
+                            <div class="fw-800 text-main">{{ platform_info.python_version }}</div>
+                            <div class="small text-muted fw-bold mt-1" style="font-size: 0.55rem;">DJANGO v{{ platform_info.django_version }}</div>
+                        </div>
+                        <div class="db-grid-val p-3 rounded-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="d-flex flex-column">
+                                    <span class="small text-muted fw-bold" style="font-size: 0.55rem;">SYSTEM UPTIME</span>
+                                    <span class="fw-800 text-primary-red">{{ db_telemetry.sys_usage.uptime }}</span>
+                                </div>
+                                <i class="bi bi-clock-history text-muted opacity-25"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Traffic Pulse Histogram -->
+            <div class="mt-4 pt-4 border-top border-light border-opacity-10">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <h6 class="small fw-800 text-muted text-uppercase mb-0 ls-2"><i class="bi bi-pulse me-2"></i>Traffic Pulse</h6>
+                        <div class="scale-toggle d-flex bg-dark bg-opacity-25 rounded-pill p-1" style="font-size: 0.55rem; border: 1px solid rgba(255,255,255,0.05);">
+                            <button class="btn btn-sm py-0 px-2 rounded-pill border-0 text-white active-scale" id="toggle-log" onclick="setPulseScale('log')" style="font-size: 0.55rem; height: 18px;">LOG</button>
+                            <button class="btn btn-sm py-0 px-2 rounded-pill border-0 text-muted" id="toggle-lin" onclick="setPulseScale('lin')" style="font-size: 0.55rem; height: 18px;">LIN</button>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-4 flex-wrap">
+                        <div class="d-flex align-items-center gap-1">
+                            <div class="rounded-circle status-operational" style="width: 8px; height: 8px;"></div>
+                            <span class="small text-muted" style="font-size: 0.6rem;">Operational (200/201)</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-1">
+                            <div class="rounded-circle status-no_content" style="width: 8px; height: 8px;"></div>
+                            <span class="small text-muted" style="font-size: 0.6rem;">No Content (204)</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-1">
+                            <div class="rounded-circle status-warning" style="width: 8px; height: 8px;"></div>
+                            <span class="small text-muted" style="font-size: 0.6rem;">Warning (4xx)</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-1">
+                            <div class="rounded-circle status-critical" style="width: 8px; height: 8px;"></div>
+                            <span class="small text-muted" style="font-size: 0.6rem;">Critical (Latency)</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-1">
+                            <div class="rounded-circle status-down" style="width: 8px; height: 8px;"></div>
+                            <span class="small text-muted" style="font-size: 0.6rem;">Down (5xx)</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="histogram-layout">
+                    <div class="y-axis" id="y-axis-log">
+                        {% for benchmark in telemetry_data.log_benchmarks %}
+                        <div class="y-label" style="bottom: {{ benchmark.pos }}%;">{{ benchmark.label }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="y-axis d-none" id="y-axis-lin">
+                        {% for benchmark in telemetry_data.lin_benchmarks %}
+                        <div class="y-label" style="bottom: {{ benchmark.pos }}%;">{{ benchmark.label }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="uptime-bar-container">
+                        <div class="grid-lines" id="grid-log">
+                            {% for benchmark in telemetry_data.log_benchmarks %}
+                            <div class="grid-line" style="bottom: {{ benchmark.pos }}%;"></div>
+                            {% endfor %}
+                        </div>
+                        <div class="grid-lines d-none" id="grid-lin">
+                            {% for benchmark in telemetry_data.lin_benchmarks %}
+                            <div class="grid-line" style="bottom: {{ benchmark.pos }}%;"></div>
+                            {% endfor %}
+                        </div>
+                        <div class="uptime-bar">
+                            {% for pulse in telemetry_data.pulses %}
+                            <div class="pulse-tick status-{{ pulse.status|lower }}" 
+                                 data-log-h="{{ pulse.log_h }}"
+                                 data-lin-h="{{ pulse.lin_h }}"
+                                 style="height: {{ pulse.log_h }}%; background: linear-gradient(to top, {{ pulse.base_color }}, {{ pulse.color }}); border: 1px solid rgba(255,255,255,0.05); border-bottom: none;"
+                                 title="{{ pulse.latency }}ms | {{ pulse.status_code }} @ {{ pulse.timestamp|date:'H:i:s' }}">
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <!-- X-Axis Time Labels -->
+                        <div class="d-flex justify-content-between mt-2 px-1 opacity-50">
+                            {% if telemetry_data.time_labels %}
+                                {% for label in telemetry_data.time_labels %}
+                                    <span style="font-size: 0.55rem; font-family: var(--font-mono);">{{ label|date:"H:i:s" }}</span>
+                                {% endfor %}
+                            {% else %}
+                                <span style="font-size: 0.55rem; font-family: var(--font-mono);">--:--</span>
+                                <span style="font-size: 0.55rem; font-family: var(--font-mono);">--:--</span>
+                                <span style="font-size: 0.55rem; font-family: var(--font-mono);">--:--</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Feeds Row -->
+<div class="row g-4 mt-4">
     <!-- Live Traffic Feed -->
     <div class="col-md-4">
-        <div class="stat-card">
+        <div class="stat-card glass-card h-100">
             <h5 class="fw-bold mb-4"><i class="bi bi-activity me-2"></i>Live Activity Feed</h5>
             <div class="activity-feed-scroll">
                 {% for sub in recent_activity %}
@@ -1199,21 +1115,14 @@
         </div>
     </div>
 
-    <!-- System API Registry & Cache -->
+    <!-- Infrastructure Portals (Moved from Column 1 of Hub) -->
     <div class="col-md-8">
         <div class="stat-card glass-card h-100">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <div class="d-flex align-items-center gap-3">
-                    <h5 class="fw-bold mb-0"><i class="bi bi-diagram-3-fill me-2 text-primary-red"></i>Infrastructure Hub</h5>
-                    <div class="d-flex align-items-center gap-1 ms-2">
-                        <span class="status-operational rounded-circle animate-pulse" style="width: 6px; height: 6px;"></span>
-                        <span class="small text-muted fw-bold" style="font-size: 0.6rem; letter-spacing: 1px;">ACTIVE TELEMETRY</span>
-                    </div>
-                </div>
-                <span class="badge bg-soft text-main border-0 rounded-pill px-3">System Healthy</span>
+                <h5 class="fw-bold mb-0"><i class="bi bi-diagram-3-fill me-2 text-primary-red"></i>Infrastructure Portals</h5>
             </div>
             <div class="row g-4">
-                <!-- Column 1: API Status -->
+                <!-- API Status -->
                 <div class="col-md-4">
                     <h6 class="small fw-bold text-muted text-uppercase mb-3 ls-1" style="font-size: 0.65rem;">Registry Status</h6>
                     <div class="d-flex flex-column gap-1">
@@ -1246,16 +1155,6 @@
                                 <span class="h5 fw-800 mb-0 text-main">{{ db_telemetry.sys_usage.load }}</span>
                             </div>
                         </div>
-                        <div class="pt-2 border-top border-light border-opacity-10 d-flex justify-content-between">
-                            <div class="d-flex flex-column">
-                                <span class="small text-muted fw-bold" style="font-size: 0.55rem;">NET IO</span>
-                                <span class="small fw-800 text-main">{{ db_telemetry.sys_usage.net_io }}MB</span>
-                            </div>
-                            <div class="d-flex flex-column text-end">
-                                <span class="small text-muted fw-bold" style="font-size: 0.55rem;">THREADS</span>
-                                <span class="small fw-800 text-main">{{ db_telemetry.sys_usage.processes }}</span>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
@@ -1270,222 +1169,250 @@
                         <div class="progress" style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 4px;">
                             <div class="progress-bar bg-info shadow-sm" style="width: 94%;"></div>
                         </div>
-                        <p class="small text-muted mt-2 mb-0 italic" style="font-size: 0.6rem; line-height: 1.2;">Redis cache is optimizing session & trend distribution.</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-</div>
+
+<style>
+    /* CORE DASHBOARD STYLES */
+    .incident-log-card {
+        position: relative;
+        z-index: 1000 !important;
+        pointer-events: auto !important;
+    }
+    
+    #sanitizeBtn, .btn-success.rounded-pill, .resolve-btn {
+        position: relative;
+        z-index: 1100 !important;
+        pointer-events: auto !important;
+    }
+
+    .hover-bg:hover {
+        background: rgba(var(--primary-red-rgb, 211, 47, 47), 0.05);
+    }
+</style>
 
 <script>
-    function getThemeTokens() {
-        const style = getComputedStyle(document.documentElement);
-        return {
-            grid: style.getPropertyValue('--chart-grid').trim() || 'rgba(128,128,128,0.1)',
-            text: style.getPropertyValue('--chart-text').trim() || '#888',
-            accent: style.getPropertyValue('--dash-accent').trim() || '#d32f2f',
-            cyan: style.getPropertyValue('--dash-cyan').trim() || '#0dcaf0'
+    // --- GLOBAL UTILITIES ---
+    async function apiCall(url, method = 'POST', body = null) {
+        console.log(`[System] API Request: ${method} ${url}`);
+        const options = {
+            method,
+            headers: {
+                'X-CSRFToken': "{{ csrf_token }}"
+            }
         };
+        if (body) {
+            options.headers['Content-Type'] = 'application/json';
+            options.body = JSON.stringify(body);
+        }
+        try {
+            const response = await fetch(url, options);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return response.json();
+        } catch (err) {
+            console.error('[System] API Error:', err);
+            throw err;
+        }
     }
 
+    // --- CHART TELEMETRY ---
     function initCharts() {
-        const tokens = getThemeTokens();
-        
-        // Role Distribution Chart
-        const roleCtx = document.getElementById('roleChart').getContext('2d');
-        new Chart(roleCtx, {
-            type: 'doughnut',
-            data: {
-                labels: {{ role_labels| safe }},
-                datasets: [{
-                    data: {{ role_data| safe }},
-                    backgroundColor: [tokens.accent, tokens.cyan, '#8b5cf6', '#10b981'],
-                    borderWidth: 0,
-                    cutout: '75%'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'bottom', labels: { color: tokens.text, boxWidth: 8, padding: 10, font: { size: 10 } } }
-                }
-            }
-        });
+        const style = getComputedStyle(document.documentElement);
+        const tokens = {
+            accent: style.getPropertyValue('--dash-accent').trim() || '#d32f2f',
+            cyan: style.getPropertyValue('--dash-cyan').trim() || '#0dcaf0',
+            text: style.getPropertyValue('--text-main').trim() || '#000'
+        };
 
-        // Status Distribution Chart (Prometheus)
-        const statusCtx = document.getElementById('statusChart').getContext('2d');
-        new Chart(statusCtx, {
-            type: 'doughnut',
-            data: {
-                labels: {{ telemetry_data.charts.status_distribution.labels|safe }},
-                datasets: [{
-                    data: {{ telemetry_data.charts.status_distribution.data|safe }},
-                    backgroundColor: {{ telemetry_data.charts.status_distribution.colors|safe }},
-                    borderWidth: 0,
-                    cutout: '75%'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'bottom', labels: { color: tokens.text, boxWidth: 8, padding: 10, font: { size: 10 } } }
-                }
-            }
-        });
-    }
+        // Custom Plugin for Center Text
+        const centerTextPlugin = {
+            id: 'centerText',
+            afterDraw: (chart) => {
+                if (chart.config.options.plugins.centerText) {
+                    const { ctx, chartArea: { top, bottom, left, right, width, height } } = chart;
+                    ctx.save();
+                    const text = chart.config.options.plugins.centerText.text;
+                    const subtext = chart.config.options.plugins.centerText.subtext || '';
+                    
+                    ctx.font = 'bold 2rem Inter, sans-serif';
+                    ctx.fillStyle = tokens.text;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(text, left + width / 2, top + height / 2 - (subtext ? 10 : 0));
 
-    function updateCharts() {
-        const tokens = getThemeTokens();
-        // Since trendsChart moved, we only update roleChart if it's dynamic
-        // But for simplicity, we can just reload on theme change if needed
-    }
-
-    async function resolveError(id) {
-        try {
-            const data = await apiCall(`/api/incident/${id}/resolve`);
-            const row = document.getElementById(`error-${id}`);
-            if (row) {
-                // Apply vanish animation
-                row.classList.add('vanish-out');
-
-                // Update counter immediately
-                updateUnresolvedCount(-1);
-
-                // Remove from DOM after animation
-                setTimeout(() => {
-                    row.remove();
-                    // Check if table is empty to show checkmark
-                    const tbody = document.querySelector('#incidentTable tbody');
-                    if (tbody && tbody.children.length === 0) {
-                        location.reload(); // Refresh to show the "All Systems Green" state
+                    if (subtext) {
+                        ctx.font = '600 0.7rem Inter, sans-serif';
+                        ctx.fillStyle = '#6c757d';
+                        ctx.fillText(subtext, left + width / 2, top + height / 2 + 20);
                     }
-                }, 500);
+                    ctx.restore();
+                }
             }
-        } catch (e) { }
-    }
+        };
+        Chart.register(centerTextPlugin);
 
-    function toggleArchive() {
-        const url = new URL(window.location.href);
-        if (url.searchParams.get('archive') === '1') {
-            url.searchParams.delete('archive');
-        } else {
-            url.searchParams.set('archive', '1');
+        const roleCtx = document.getElementById('roleChart')?.getContext('2d');
+        if (roleCtx) {
+            const totalUsers = {{ db_telemetry.User|default:0 }};
+            
+            new Chart(roleCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: {{ role_labels|safe }},
+                    datasets: [{
+                        data: {{ role_data|safe }},
+                        backgroundColor: [tokens.accent, tokens.cyan, '#8b5cf6', '#10b981'],
+                        hoverOffset: 15,
+                        borderWidth: 0,
+                        cutout: '80%'
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { 
+                        legend: { 
+                            display: true, 
+                            position: 'bottom',
+                            labels: {
+                                color: tokens.text,
+                                usePointStyle: true,
+                                padding: 20,
+                                font: { size: 11, weight: '600' }
+                            }
+                        },
+                        centerText: {
+                            text: totalUsers.toString(),
+                            subtext: 'TOTAL USERS'
+                        }
+                    } 
+                }
+            });
         }
-        window.location.href = url.toString();
-    }
 
-    async function bulkResolve(pattern) {
-        if (!confirm(`Resolve ALL incidents matching: "${pattern}"?`)) return;
-        try {
-            await apiCall('/api/incident/bulk-resolve', 'POST', { pattern });
-            location.reload();
-        } catch (e) { }
-    }
+        const statusCtx = document.getElementById('statusChart')?.getContext('2d');
+        if (statusCtx) {
+            const totalReq = {{ telemetry_data.http_requests_total|default:0 }};
 
-    async function sanitizeLogs() {
-        const btn = document.getElementById('sanitizeBtn');
-        const originalHtml = btn.innerHTML;
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Verifying...';
-
-        try {
-            const data = await apiCall('/api/incident/sanitize');
-            alert(data.message);
-            location.reload();
-        } catch (e) {
-            btn.disabled = false;
-            btn.innerHTML = originalHtml;
+            new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: {{ telemetry_data.charts.status_distribution.labels|safe }},
+                    datasets: [{
+                        data: {{ telemetry_data.charts.status_distribution.data|safe }},
+                        backgroundColor: {{ telemetry_data.charts.status_distribution.colors|safe }},
+                        hoverOffset: 15,
+                        borderWidth: 0,
+                        cutout: '80%'
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { 
+                        legend: { 
+                            display: true, 
+                            position: 'bottom',
+                            labels: {
+                                color: tokens.text,
+                                usePointStyle: true,
+                                padding: 20,
+                                font: { size: 11, weight: '600' }
+                            }
+                        },
+                        centerText: {
+                            text: totalReq.toString(),
+                            subtext: 'REQUESTS'
+                        }
+                    } 
+                }
+            });
         }
     }
 
+
+    // --- ACCESS REQUESTS ---
     async function approveUser(id) {
-        if (!confirm('Approve this user access request?')) return;
-        const btn = document.getElementById(`btn-approve-${id}`);
-        const originalHtml = btn.innerHTML;
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Processing...';
-
-        try {
-            await apiCall(`/api/dev/approve-user/${id}`);
-            location.reload();
-        } catch (e) {
-            btn.disabled = false;
-            btn.innerHTML = originalHtml;
-        }
+        if (!confirm('Approve this access request?')) return;
+        try { await apiCall(`/api/dev/approve-user/${id}`); location.reload(); } catch (e) { }
     }
 
     async function denyUser(id) {
-        if (!confirm('Permanently deny and delete this request?')) return;
-        const btn = document.getElementById(`btn-deny-${id}`);
-        const originalHtml = btn.innerHTML;
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Processing...';
+        if (!confirm('Deny this access request?')) return;
+        try { await apiCall(`/api/dev/deny-user/${id}`); location.reload(); } catch (e) { }
+    }
 
-        try {
-            await apiCall(`/api/dev/deny-user/${id}`);
-            location.reload();
-        } catch (e) {
-            btn.disabled = false;
-            btn.innerHTML = originalHtml;
+    // --- PULSE SCALE TOGGLE ---
+    function setPulseScale(mode) {
+        const logBtn = document.getElementById('toggle-log');
+        const linBtn = document.getElementById('toggle-lin');
+        const logAxis = document.getElementById('y-axis-log');
+        const linAxis = document.getElementById('y-axis-lin');
+        const logGrid = document.getElementById('grid-log');
+        const linGrid = document.getElementById('grid-lin');
+        const ticks = document.querySelectorAll('.pulse-tick');
+
+        if (mode === 'log') {
+            logBtn.classList.add('active-scale', 'text-white');
+            logBtn.classList.remove('text-muted');
+            linBtn.classList.remove('active-scale', 'text-white');
+            linBtn.classList.add('text-muted');
+            
+            logAxis.classList.remove('d-none');
+            linAxis.classList.add('d-none');
+            logGrid.classList.remove('d-none');
+            linGrid.classList.add('d-none');
+
+            ticks.forEach(t => {
+                t.style.height = t.dataset.logH + '%';
+            });
+        } else {
+            linBtn.classList.add('active-scale', 'text-white');
+            linBtn.classList.remove('text-muted');
+            logBtn.classList.remove('active-scale', 'text-white');
+            logBtn.classList.add('text-muted');
+
+            linAxis.classList.remove('d-none');
+            logAxis.classList.add('d-none');
+            linGrid.classList.remove('d-none');
+            logGrid.classList.add('d-none');
+
+            ticks.forEach(t => {
+                t.style.height = t.dataset.linH + '%';
+            });
         }
     }
 
-    function updateUnresolvedCount(delta) {
-        const badge = document.getElementById('unresolvedBadge');
-        if (badge) {
-            let count = parseInt(badge.textContent) || 0;
-            count += delta;
-            badge.textContent = `${count} Unresolved`;
-            if (count === 0) badge.className = 'badge bg-success rounded-pill';
-        }
-    }
+    // --- INITIALIZATION ---
+
 
     document.addEventListener('DOMContentLoaded', () => {
         initCharts();
+        
 
         // Tooltip Init
-        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-        tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl)
-        });
-    });
+        const tooltips = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltips.map(t => new bootstrap.Tooltip(t));
 
-    window.addEventListener('themeChanged', () => setTimeout(updateCharts, 50));
+        // Supabase Badge Status
+        const sBadge = document.getElementById('supabase-badge');
+        if (sBadge) {
+            fetch('/api/dev/supabase-status').then(r => r.json()).then(data => {
+                sBadge.className = `badge bg-${data.severity}-soft text-${data.severity} rounded-pill px-3`;
+                sBadge.innerHTML = `<i class="bi bi-gear-wide-connected me-1"></i>Supabase: ${data.status}`;
+            }).catch(() => {});
+        }
 
-    // Smart Heartbeat: Auto-refresh data every 60 seconds
-    setInterval(() => {
-        console.log("Hifi-Heartbeat: Refreshing telemetry...");
-        location.reload();
-    }, 60000);
-</script>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const badge = document.getElementById('supabase-badge');
-        fetch('/api/dev/supabase-status')
-            .then(response => {
-                if (!response.ok) throw new Error('API Error');
-                return response.json();
-            })
-            .then(data => {
-                badge.classList.remove('bg-secondary-soft', 'text-secondary', 'animate-pulse');
-                badge.classList.add(`bg-${data.severity}-soft`, `text-${data.severity}`);
-                badge.innerHTML = `<i class="bi bi-gear-wide-connected me-1"></i>Supabase Engine: ${data.status}`;
-            })
-            .catch(error => {
-                badge.classList.remove('animate-pulse');
-                badge.classList.add('bg-danger-soft', 'text-danger');
-                badge.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-1"></i>Supabase Engine: ERROR`;
-            });
+        console.log('[System] Dashboard Live');
     });
 </script>
 
 {% if sync_status == 'syncing' %}
-<div class="sync-toast animate__animated animate__fadeInRight" id="syncToast">
+<div class="sync-toast" id="syncToast">
     <div class="spinner-border spinner-border-sm text-primary-red" role="status"></div>
     <span class="small fw-bold">Syncing with Production...</span>
 </div>
@@ -1494,16 +1421,8 @@
     <i class="bi bi-patch-check-fill text-success" style="font-size: 1.2rem;"></i>
     <span class="small fw-bold">Real-time Parity Achieved ✨</span>
 </div>
-<script>
-    setTimeout(() => {
-        const toast = document.getElementById('syncToast');
-        if (toast) {
-            toast.style.transition = 'opacity 0.5s ease-out';
-            toast.style.opacity = '0';
-            setTimeout(() => toast.remove(), 500);
-        }
-    }, 5000);
-</script>
 {% endif %}
+
+
 </div>
 {% endblock %}

@@ -21,7 +21,7 @@ A comprehensive, production-ready platform designed to manage student team regis
 - **Result Release Control**: Grades are kept private until deliberately released.
 - **Resource Repository**: Central hub for class materials and PDFs.
 - **Role-Based Approval**: Secure gatekeeping where Lecturers and Admins require manual verification.
-- **NOC-Style System Telemetry**: High-density real-time tracking of DB latency, system load, and runtime errors with automated emergency alerting.
+- **NOC-Style System Telemetry**: High-density real-time tracking of DB latency, system load, and runtime errors with automated emergency alerting. Includes a new **Traffic Pulse** histogram with dual-scale (LIN/LOG) visualization and a heatmap engine for immediate bottleneck detection.
 - **Automated Storage Maintenance**: Submission engine automatically purges old records and files when students upload replacements, preventing database bloat.
 - **Scalable Dashboard Logic**: Optimized database prefetching solves N+1 performance bottlenecks for the student interface.
 - **Database Cloaking**: Row Level Security (RLS) enabled on all tables to prevent public API exposure.

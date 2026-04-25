@@ -90,3 +90,16 @@ The project includes an autonomous "Ghost Heartbeat" monitor that tracks databas
   ```powershell
   python manage.py log_pulse --loop --interval 60
   ```
+
+## 8. Telemetry Simulation & Real-time Capture
+The **Developer Dashboard** includes a real-time traffic pulse histogram. To facilitate development, the system behaves differently depending on your environment:
+
+### Simulation Baseline
+When `DEBUG=True` and your telemetry cache is empty, the system automatically seeds **100 mock pulses**. This ensures you have a visual baseline to test the dashboard's toggles (Linear vs. Logarithmic) and heatmap colors immediately upon startup.
+
+### Verifying Real-time Capture
+To verify that the middleware is correctly capturing your activity:
+1. Open the **Dev Dashboard**.
+2. In a separate tab, navigate around the site (e.g., visit the Admin panel, the Hub, or a Team page).
+3. Refresh the Dev Dashboard. You will see your actual requests appearing as new bars on the right side of the "Traffic Pulse" graph.
+4. **Note**: Static files (`/static/`) and the telemetry endpoint itself are filtered out to keep the graph focused on functional app logic.

@@ -9,6 +9,24 @@ The **Developer Dashboard** and **System Analytics** endpoints utilize a 5-minut
 - **Implementation**: `InfrastructureService.get_system_analytics` checks for a cached result before querying models.
 - **Manual Bypass**: Administrators can bypass the cache for a "real-time" view by clicking the "Refresh" button (which triggers the API with `bypass_cache=True`).
 
+## 📊 Traffic Pulse & NOC Telemetry
+The **Traffic Pulse** histogram provides a high-density, real-time visualization of every request processed by the platform. This NOC-style view allows for immediate identification of performance jitter and "bursty" traffic patterns.
+
+### 1. Dual-Scale Visualization
+Administrators can toggle between two scaling modes to suit different diagnostic needs:
+- **Linear Mode (LIN)**: Maps latency directly (0ms - 1000ms). Best for identifying small fluctuations in healthy traffic.
+- **Logarithmic Mode (LOG)**: Uses a base-10 scale to visualize latencies from 1ms up to 10 seconds. This is the preferred mode for "hunting" high-latency outliers (spikes) that would otherwise disappear on a linear scale.
+
+### 2. Heatmap Engine
+The bars are dynamically color-coded based on severity:
+- **Emerald Green**: Healthy, fast responses (< 200ms).
+- **Amber/Orange**: Elevated latency (500ms - 900ms).
+- **Vibrant Red**: Performance bottleneck (> 1000ms).
+- **Blue Tint**: System requests (heartbeats/telemetry) are often filtered or tinted to reduce noise.
+
+### 3. Real-time Middleware
+The `ActivityTrackingMiddleware` records the duration and status of every request (excluding `/static/` assets and the telemetry endpoint itself) into a rolling 100-pulse buffer. This buffer is stored in the cache for maximum speed and zero database overhead.
+
 ## 🦾 Self-Healing Engine
 The system proactively monitors its own health scores via the `perform_health_check` logic.
 

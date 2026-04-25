@@ -2,7 +2,7 @@ import os
 from django.core.cache import cache
 from django.utils import timezone
 from django.db.models import Count
-from apps.core.models import SystemError
+
 from apps.core.utils.email_service import send_html_email
 
 class InfrastructureService:
@@ -97,29 +97,6 @@ class InfrastructureService:
         
         return stats
     
-    @staticmethod
-    def send_system_error_alert(error_instance):
-        """Sends an HTML email alert when a system error occurs with smart throttling."""
-        from apps.core.services.notification_service import NotificationService
-        
-        # We throttle identical errors for 10 minutes to prevent email storms
-        if NotificationService.should_throttle('system_error', error_instance.message, cooldown_minutes=10):
-            return
-            
-        send_html_email(
-            subject="CRITICAL: Runtime Application Error",
-            template_name='core/emails/system_alert.html',
-            context={
-                'alert_title': 'Runtime Application Error Detected',
-                'error_message': error_instance.message,
-                'timestamp': error_instance.timestamp,
-                'module': 'Django Web App',
-                'url': error_instance.url,
-                'user': error_instance.user.email if error_instance.user else 'Anonymous',
-                'dashboard_url': 'http://localhost:8000/dev-dashboard/'
-            },
-            recipient_list=['sub2pewds10102005@gmail.com']
-        )
 
     @staticmethod
     def get_system_analytics(bypass_cache=False):
@@ -189,6 +166,8 @@ class InfrastructureService:
             })
             health_score -= 10
 
+        consistency = 100 - error_rate if total_req > 0 else 100
+        
         health_score = max(5, min(100, health_score))
         severity = "success"
         if health_score < 75: severity = "warning"
@@ -203,12 +182,13 @@ class InfrastructureService:
         result = {
             "metrics": metrics,
             "insights": advanced_insights,
-            "health": health_score,
+            "health": int(health_score),
             "momentum": "LIVE",
             "severity": severity,
             "message": analysis_msg,
             "volatility": 0,
-            "consistency": 100 if error_rate < 1 else 90,
+            "error_rate": round(error_rate, 2),
+            "consistency": round(consistency, 1),
             "cached_at": timezone.now()
         }
         
@@ -216,29 +196,24 @@ class InfrastructureService:
         return result
 
     @staticmethod
-    def get_dev_dashboard_telemetry(show_archive=False):
+    def get_dev_dashboard_telemetry():
         """Prepares the complete diagnostic context for the Developer Dashboard."""
         import platform, sys, django, psutil, time, os
         from django.conf import settings
         from apps.teams.models import Team, Student, Lecturer, Assignment, TeamSubmission, ClassDocument
-        from apps.core.models import SystemSettings, SystemError, AuditLog
+        from apps.core.models import SystemSettings, AuditLog
         from django.contrib.auth import get_user_model
         from apps.core.services.telemetry_service import TelemetryService
         CustomUser = get_user_model()
 
         # Telemetry from Prometheus
-        telemetry_ctx = TelemetryService.get_live_metrics()
+        telemetry_ctx = TelemetryService.get_dashboard_context()
+        summary = telemetry_ctx['summary']
         
         # System Analysis
         system_analysis = InfrastructureService.get_system_analytics()
         sync_status = InfrastructureService.trigger_prod_sync()
 
-        # Error Tracking
-        if show_archive:
-            system_errors = SystemError.objects.filter(is_resolved=True).order_by('-timestamp')[:50]
-        else:
-            system_errors = SystemError.objects.filter(is_resolved=False).order_by('-timestamp')[:25]
-        unresolved_count = SystemError.objects.filter(is_resolved=False).count()
 
         # Infrastructure Portals
         portals = {
@@ -265,8 +240,8 @@ class InfrastructureService:
             'User': CustomUser.objects.count(),
             'db_engine': settings.DATABASES['default'].get('ENGINE', 'Unknown').split('.')[-1],
             'db_host': settings.DATABASES['default'].get('HOST', 'localhost'),
-            'db_status': 'Operational' if telemetry_ctx.get('summary', {}).get('db_queries_total', 0) >= 0 else 'Unknown',
-            'latency': round(telemetry_ctx.get('summary', {}).get('avg_latency', 0), 1),
+            'db_status': 'Operational' if summary.get('db_queries_total', 0) >= 0 else 'Unknown',
+            'latency': round(summary.get('avg_latency', 0), 1),
             'sys_usage': {
                 'cpu': psutil.cpu_percent(),
                 'ram': psutil.virtual_memory().percent,
@@ -278,12 +253,18 @@ class InfrastructureService:
             }
         }
 
-        roles = CustomUser.objects.values('role').annotate(count=Count('id'))
-        role_labels = [r['role'] for r in roles]
-        role_data = [r['count'] for r in roles]
+        # Full Legend for User Roles
+        defined_roles = [
+            ('STUDENT', 'Students'),
+            ('LECTURER', 'Lecturers'),
+            ('DEV', 'Developers')
+        ]
+        
+        roles_counts = {r['role']: r['count'] for r in CustomUser.objects.values('role').annotate(count=Count('id'))}
+        role_labels = [label for role, label in defined_roles]
+        role_data = [roles_counts.get(role, 0) for role, label in defined_roles]
 
         # Extract Prometheus-based context
-        summary = telemetry_ctx.get('summary', {})
         
         # Calculate live uptime percentage
         total_req = summary.get('requests_total', 0)
@@ -297,7 +278,7 @@ class InfrastructureService:
             'os_release': platform.release(),
             'python_version': sys.version.split(' ')[0],
             'django_version': django.get_version(),
-            'unresolved_errors': unresolved_count,
+
             'uptime_pct': uptime_pct,
         }
 
@@ -308,20 +289,27 @@ class InfrastructureService:
         return {
             'role_labels': role_labels,
             'role_data': role_data,
-            'sys_info': sys_info,
+            'platform_info': sys_info,
             'recent_activity': recent_activity,
             'settings': SystemSettings.objects.first(),
             'portals': portals,
             'db_telemetry': db_telemetry,
-            'system_errors': system_errors,
+
             'sync_status': sync_status,
             'current_status': system_analysis['severity'].upper(),
             'system_analysis': system_analysis,
             'pending_users': pending_users,
             'audit_logs': audit_logs,
-            'telemetry_data': telemetry_ctx,
-            'pulses': telemetry_ctx.get('pulses', []),
-            'log_benchmarks': telemetry_ctx.get('log_benchmarks', [])
+            # Telemetry context
+            'telemetry_data': {
+                **telemetry_ctx,
+                # Aliases for template compatibility
+                'requests_total': int(summary.get('requests_total', 0)),
+                'http_requests_total': int(summary.get('requests_total', 0)),
+                'avg_latency': summary.get('avg_latency', 0),
+                'avg_latency_ms': summary.get('avg_latency', 0),
+                'db_queries_total': int(summary.get('db_queries_total', 0)),
+            },
         }
 
     @staticmethod
