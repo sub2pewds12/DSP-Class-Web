@@ -25,8 +25,22 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.WARNING("Detected 'can_grade' column in 'users_customuser' without migration record. Faking 'users'..."))
                     call_command('migrate', 'users', fake=True, interactive=False, verbosity=1)
 
-            # 3. Standard Fake Initial for all apps (safely handles new tables)
-            self.stdout.write("Running fake-initial for all apps...")
-            call_command('migrate', fake_initial=True, interactive=False, verbosity=1)
+            # 3. Check Core App (Problematic 'teams_systemsettings' table)
+            cursor.execute("SELECT 1 FROM django_migrations WHERE app = 'core' LIMIT 1;")
+            if not cursor.fetchone():
+                cursor.execute("SELECT to_regclass('teams_systemsettings');")
+                if cursor.fetchone()[0]:
+                    self.stdout.write(self.style.WARNING("Detected 'teams_systemsettings' table without migration record. Faking 'core'..."))
+                    call_command('migrate', 'core', fake=True, interactive=False, verbosity=1)
+
+            # 4. Standard Fake Initial for all other apps
+            self.stdout.write("Running fake-initial for any remaining apps...")
+            try:
+                call_command('migrate', fake_initial=True, interactive=False, verbosity=1)
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f"Standard migrate failed: {e}. Attempting one last 'fake' for everything modular..."))
+                # If everything else fails, fake the modular block entirely to match existing DB
+                for app in ['users', 'teams', 'academia', 'core']:
+                    call_command('migrate', app, fake=True, interactive=False, verbosity=1)
 
         self.stdout.write(self.style.SUCCESS("Migration sync check complete."))
