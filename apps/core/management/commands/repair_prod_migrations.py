@@ -6,27 +6,36 @@ class Command(BaseCommand):
     help = 'Nuclear repair of migration history to handle Phase 4 modularization'
 
     def handle(self, *args, **options):
-        self.stdout.write(self.style.WARNING('Starting nuclear migration repair...'))
+        self.stdout.write(self.style.NOTICE('Checking for migration drift...'))
         
+        # Mapping of app to a table that indicates it was already applied
+        drift_check = {
+            'contenttypes': 'django_content_type',
+            'auth': 'auth_user',
+            'admin': 'django_admin_log',
+            'sessions': 'django_session',
+            'users': 'users_customuser',
+            'teams': 'teams_team',
+            'academia': 'teams_assignment',
+        }
+
         with connection.cursor() as cursor:
-            # Check if django_migrations table exists
-            cursor.execute("SELECT to_regclass('django_migrations');")
-            if not cursor.fetchone()[0]:
-                self.stdout.write(self.style.SUCCESS('django_migrations table not found. Skipping (fresh DB).'))
-                return
+            for app, table in drift_check.items():
+                # Check if the app is already in django_migrations
+                cursor.execute("SELECT 1 FROM django_migrations WHERE app = %s LIMIT 1;", [app])
+                already_recorded = cursor.fetchone()
 
-            self.stdout.write("Truncating django_migrations table for a clean Phase 4 initialization...")
-            cursor.execute("DELETE FROM django_migrations;")
-            
-            rows_deleted = cursor.rowcount
-            self.stdout.write(self.style.SUCCESS(f"Successfully cleared {rows_deleted} migration records."))
+                if not already_recorded:
+                    # App is not recorded. Check if its table exists.
+                    cursor.execute("SELECT to_regclass(%s);", [table])
+                    table_exists = cursor.fetchone()[0]
 
-        # Standardize core apps to their latest state using --fake
-        # This prevents 'already applied' SQL errors like dropping non-existent columns.
-        core_apps_to_fake = ['contenttypes', 'auth', 'admin', 'sessions']
-        for app in core_apps_to_fake:
-            self.stdout.write(f"Faking migration history for {app}...")
-            call_command('migrate', app, fake=True, interactive=False, verbosity=1)
+                    if table_exists:
+                        self.stdout.write(self.style.WARNING(f"App '{app}' has existing tables but no migration history. Syncing (faking)..."))
+                        call_command('migrate', app, fake=True, interactive=False, verbosity=1)
+                    else:
+                        self.stdout.write(f"App '{app}' is new or table-less. Standard migration will handle it.")
+                else:
+                    self.stdout.write(self.style.SUCCESS(f"App '{app}' is already in sync."))
 
-        self.stdout.write(self.style.SUCCESS("Nuclear repair complete. Core apps have been standard-faked."))
-        self.stdout.write(self.style.NOTICE("Next step: 'migrate --fake-initial' will initialize our NEW modular apps."))
+        self.stdout.write(self.style.SUCCESS("Migration sync check complete."))
