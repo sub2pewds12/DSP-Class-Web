@@ -170,6 +170,10 @@ class StatuspageService:
     def submit_metric_point(cls, metric_id, value, timestamp=None):
         """Submits a data point to a specific metric."""
         page_id = os.getenv('STATUSPAGE_PAGE_ID')
+        if not page_id:
+            logger.error("STATUSPAGE_PAGE_ID not found")
+            return False
+            
         url = f"{cls.API_URL}/pages/{page_id}/metrics/{metric_id}/data.json"
         headers = cls._get_headers()
         
@@ -182,17 +186,17 @@ class StatuspageService:
             }
         }
         
+        # If no timestamp is provided, Statuspage uses its own server time (safest for heartbeats)
         if timestamp:
             payload["data"]["timestamp"] = int(timestamp)
             
         try:
             response = requests.post(url, headers=headers, json=payload, timeout=10)
             if response.status_code not in [200, 201]:
-                print(f"[Error] Statuspage Metric [{metric_id}] Failed: {response.status_code} - {response.text}")
+                logger.error(f"Statuspage Metric [{metric_id}] Failed: {response.status_code} - {response.text}")
             else:
-                print(f"[Success] Statuspage Metric [{metric_id}] Shipped: {value}")
+                logger.info(f"Statuspage Metric [{metric_id}] Shipped: {value}")
             return response.status_code in [200, 201]
         except Exception as e:
-            print(f"[Error] Statuspage Metric Connection Error: {str(e)}")
-            logger.error(f"Statuspage Metric Error: {str(e)}")
+            logger.error(f"Statuspage Metric Connection Error: {str(e)}")
             return False

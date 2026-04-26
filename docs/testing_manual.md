@@ -33,3 +33,8 @@ Before every major release, perform these manual infrastructure checks:
 6.  **Critical Errors**: Deliberately trigger an error (or use the shell to create a `SystemError`). Does the admin receive a **Critical Alert** email?
 7.  **Uptime Pulse**: Run `python manage.py log_pulse`. Does the dashboard update with the latest latency?
 8.  **Prod Uptime**: Ensure an external pinger (UptimeRobot) is active and correctly hitting the root URL.
+
+### Latest Activities Feed
+9.  **Live Polling**: On the student dashboard, trigger an action (e.g., update project details). Within 30 seconds, does the new event slide into the **Latest Activities** tile with a pulse glow?
+10. **View All Modal**: Click the **View All** link. Does the Activity History modal open with a spinner, then load the full timeline?
+11. **Load More**: If the team has >15 logged events, does the **Load More** button appear and fetch additional pages? Does "You've reached the beginning" appear at the end?

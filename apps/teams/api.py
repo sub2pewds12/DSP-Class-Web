@@ -81,6 +81,14 @@ class SearchResponse(Schema):
     teams: List[SearchTeamSchema]
     assignments: List[SearchAssignmentSchema]
 
+class StudentProfileSchema(Schema):
+    name: str
+    username: str
+    team: str
+    role: str
+    project: str
+    avatar_url: Optional[str]
+
 # --- System & Incident Management (Dev) ---
 
 @api.get("/health", tags=["System"])
@@ -91,6 +99,59 @@ def health_check_api(request):
 
 
 # --- Student Actions ---
+
+class ActivityLogSchema(Schema):
+    id: int
+    actor_name: str
+    description: str
+    timestamp: str
+
+class PaginatedActivitySchema(Schema):
+    logs: List[ActivityLogSchema]
+    has_more: bool
+
+@api.get("/student/team-pulse", response=PaginatedActivitySchema, tags=["Student"])
+def get_team_pulse(request, after: str = None, offset: int = 0, limit: int = 10):
+    """Returns team activity logs. Supports incremental polling via `after` and history pagination via `offset`/`limit`."""
+    from django.db.models import Q
+    from apps.core.models import AuditLog
+
+    student = get_object_or_404(Student, user=request.user)
+    team = student.team
+
+    if not team:
+        return {"logs": [], "has_more": False}
+
+    team_member_ids = team.members.values_list('user_id', flat=True)
+    qs = AuditLog.objects.filter(
+        Q(actor_id__in=team_member_ids) | Q(metadata__team_id=team.id)
+    ).select_related('actor').order_by('-timestamp')
+
+    if after:
+        from django.utils.dateparse import parse_datetime
+        cutoff = parse_datetime(after)
+        if cutoff:
+            qs = qs.filter(timestamp__gt=cutoff)
+
+    # Fetch one extra to determine has_more
+    logs = list(qs[offset:offset + limit + 1])
+    has_more = len(logs) > limit
+    logs = logs[:limit]
+
+    return {
+        "logs": [
+            {
+                "id": log.id,
+                "actor_name": log.actor.get_full_name() or log.actor.username if log.actor else "system",
+                "description": log.description,
+                "timestamp": log.timestamp.isoformat(),
+            }
+            for log in logs
+        ],
+        "has_more": has_more,
+    }
+
+
 
 @api.post("/student/project-update", response={200: SuccessResponse, 403: SuccessResponse}, tags=["Student"])
 def update_project_details(request, data: ProjectUpdateSchema):
@@ -103,6 +164,14 @@ def update_project_details(request, data: ProjectUpdateSchema):
     team.project_name = data.project_name
     team.project_description = data.project_description
     team.save()
+
+    AuditService.log_event(
+        action="PROJECT_UPDATE",
+        target_type="Team",
+        target_id=str(team.id),
+        description=f"Team leader {request.user.username} updated the project details: '{data.project_name}'.",
+        metadata={"project_name": data.project_name}
+    )
     return {"status": "success", "message": "Project details updated successfully."}
 
 @api.post("/student/role-update", response=SuccessResponse, tags=["Student"])
@@ -111,6 +180,14 @@ def update_student_role(request, data: RoleUpdateSchema):
     student = get_object_or_404(Student, user=request.user)
     student.role = data.role
     student.save()
+
+    AuditService.log_event(
+        action="ROLE_UPDATE",
+        target_type="Student",
+        target_id=str(student.id),
+        description=f"Student {request.user.username} changed their role to {student.get_role_display()}.",
+        metadata={"role": student.role}
+    )
     return {"status": "success", "message": "Your role has been updated."}
 
 @api.post("/student/submit-assignment", response={200: SuccessResponse, 400: SuccessResponse, 403: SuccessResponse}, tags=["Student"])
@@ -291,3 +368,18 @@ def global_search_api(request, q: str):
         return {"students": [], "teams": [], "assignments": []}
     
     return SearchService.global_search(q)
+
+@api.get("/student/profile/{user_id}", response=StudentProfileSchema, tags=["Student"])
+def get_student_profile(request, user_id: int):
+    """Fetch profile details for a peer."""
+    user = get_object_or_404(CustomUser, id=user_id)
+    student = getattr(user, 'student_profile', None)
+    
+    return {
+        "name": user.get_full_name(),
+        "username": user.username,
+        "team": student.team.name if student and student.team else "No Team",
+        "role": student.role if student else "N/A",
+        "project": student.team.project_name if student and student.team else "N/A",
+        "avatar_url": user.avatar.url if user.avatar else None
+    }

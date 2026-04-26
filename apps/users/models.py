@@ -18,6 +18,12 @@ class CustomUser(AbstractUser):
     can_manage_teams = models.BooleanField(default=False)
     can_manage_system = models.BooleanField(default=False)
 
+    # Profile Fields (v2)
+    bio = models.TextField(max_length=500, blank=True)
+    phone_number = models.CharField(max_length=20, blank=True)
+    avatar = models.ImageField(upload_to='avatars/users/', null=True, blank=True)
+    email_notifications = models.BooleanField(default=True)
+
     
     class Meta:
         db_table = 'teams_customuser'
@@ -65,6 +71,11 @@ class Student(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='student_profile')
     team = models.ForeignKey('teams.Team', null=True, blank=True, on_delete=models.SET_NULL, related_name='members')
     role = models.CharField(max_length=255, blank=True, default="Member")
+    student_id = models.CharField(max_length=20, blank=True, unique=True, null=True)
+    academic_year = models.CharField(max_length=10, blank=True, null=True, verbose_name="Batch")
+    github_username = models.CharField(max_length=255, blank=True)
+    linkedin_url = models.URLField(max_length=500, blank=True, null=True)
+    website_url = models.URLField(max_length=500, blank=True, null=True)
 
     class Meta:
         db_table = 'teams_student'

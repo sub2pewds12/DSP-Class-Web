@@ -1,4 +1,5 @@
 import os
+import time
 from django.core.cache import cache
 from django.utils import timezone
 from django.db.models import Count
@@ -366,11 +367,11 @@ class InfrastructureService:
         now_ts = time.time()
         if db_latency:
             db_metric_id = os.getenv('STATUSPAGE_METRIC_DB_LATENCY')
-            StatuspageService.submit_metric_point(db_metric_id, db_latency, timestamp=now_ts)
+            StatuspageService.submit_metric_point(db_metric_id, db_latency)
             
         if media_latency:
             media_metric_id = os.getenv('STATUSPAGE_METRIC_MEDIA_LATENCY')
-            StatuspageService.submit_metric_point(media_metric_id, media_latency, timestamp=now_ts)
+            StatuspageService.submit_metric_point(media_metric_id, media_latency)
             
         print(f"[HealthCheck] Latencies - DB: {db_latency}ms, Media: {media_latency}ms")
             

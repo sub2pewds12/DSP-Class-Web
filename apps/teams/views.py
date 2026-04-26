@@ -8,9 +8,11 @@ import requests
 def health_check(request):
     """Lighweight endpoint for external monitoring services."""
     return HttpResponse("SYSTEM_OPERATIONAL", status=200)
-from .models import Student, Team, Lecturer, CustomUser, ClassDocument, TeamSubmission, Assignment, SystemSettings
+from .models import Team, Student, Lecturer, CustomUser, SystemSettings
+from apps.academia.models import ClassDocument, TeamSubmission, Assignment
 from apps.core.utils.email_service import send_html_email
-from apps.users.forms import UserRegistrationForm, StudentRoleForm
+from .forms import TeamSettingsForm
+from apps.users.forms import UserRegistrationForm, StudentRoleForm, UserEditForm, StudentProfileForm
 from apps.academia.forms import (
     DocumentUploadForm, AssignmentForm, AssignmentSubmissionForm, 
     GradeSubmissionForm, TeamRegistrationForm, TeamProjectForm
@@ -85,12 +87,43 @@ def dashboard_view(request, team_id=None):
     # Use Service Layer for Context
     context = AssignmentService.get_student_dashboard_context(request.user, team=team)
     
+    # Simulation Mode: If no assignment is found, mock one for the "Mission Control" tile (DEBUG ONLY)
+    next_deadline = context.get('next_deadline')
+    from django.conf import settings
+    if not next_deadline and settings.DEBUG:
+        from django.utils import timezone
+        from datetime import timedelta
+        class MockAssignment:
+            def __init__(self):
+                self.title = "Final Project Submission (SIMULATED)"
+                self.deadline = timezone.now() + timedelta(days=2, hours=14, minutes=30)
+        next_deadline = MockAssignment()
+
+    # Simulation Mode: Mock activity for "Latest Activities" feed if empty (DEBUG ONLY)
+    team_activity = context.get('team_activity', [])
+    if not team_activity and settings.DEBUG:
+        from django.utils import timezone
+        from datetime import timedelta
+        class MockLog:
+            def __init__(self, actor_name, desc, minutes_ago):
+                self.actor = type('MockActor', (), {'username': actor_name})
+                self.description = desc
+                self.timestamp = timezone.now() - timedelta(minutes=minutes_ago)
+        
+        team_activity = [
+            MockLog("alex_dev", "Updated the project topic: 'Real-time Signal Processing with Python'", 12),
+            MockLog("sarah_design", "Changed their role to 'UI/UX Lead'", 45),
+            MockLog("system", "New resource 'DSP Algorithm Guide.pdf' was added", 120),
+        ]
+
     if team:
         return render(request, 'teams/dashboard.html', {
             'student': student,
             'team': team,
             'documents': context['documents'],
             'assignments': context['assignments'],
+            'next_deadline': next_deadline,
+            'team_activity': team_activity,
             'project_form': TeamProjectForm(instance=team),
             'role_form': StudentRoleForm(instance=student),
             'assign_form': AssignmentSubmissionForm(),
@@ -304,3 +337,53 @@ def view_grades(request, pk):
 
 def pending_approval_view(request):
     return render(request, 'teams/registration/pending_approval.html')
+
+@login_required
+def settings_view(request):
+    user = request.user
+    student_profile = getattr(user, 'student_profile', None)
+    
+    # Identify if the user is a team leader
+    managed_team = None
+    if student_profile and student_profile.team:
+        if student_profile.team.leader == student_profile:
+            managed_team = student_profile.team
+
+    if request.method == 'POST':
+        form_type = request.POST.get('form_type')
+        
+        if form_type == 'personal':
+            user_form = UserEditForm(request.POST, request.FILES, instance=user, prefix='user')
+            profile_form = StudentProfileForm(request.POST, instance=student_profile, prefix='profile') if student_profile else None
+            team_form = TeamSettingsForm(instance=managed_team, prefix='team') if managed_team else None
+            
+            if user_form.is_valid() and (not profile_form or profile_form.is_valid()):
+                user_form.save()
+                if profile_form:
+                    profile_form.save()
+                messages.success(request, "Personal profile updated successfully.")
+                return redirect('settings')
+        
+        elif form_type == 'team' and managed_team:
+            user_form = UserEditForm(instance=user, prefix='user')
+            profile_form = StudentProfileForm(instance=student_profile, prefix='profile') if student_profile else None
+            team_form = TeamSettingsForm(request.POST, request.FILES, instance=managed_team, prefix='team')
+            
+            if team_form.is_valid():
+                team_form.save()
+                messages.success(request, "Team settings updated successfully.")
+                return redirect('settings')
+        
+        messages.error(request, "Please correct the errors below.")
+    else:
+        user_form = UserEditForm(instance=user, prefix='user')
+        profile_form = StudentProfileForm(instance=student_profile, prefix='profile') if student_profile else None
+        team_form = TeamSettingsForm(instance=managed_team, prefix='team') if managed_team else None
+    
+    context = {
+        'user_form': user_form,
+        'profile_form': profile_form,
+        'team_form': team_form,
+        'managed_team': managed_team,
+    }
+    return render(request, 'teams/settings.html', context)

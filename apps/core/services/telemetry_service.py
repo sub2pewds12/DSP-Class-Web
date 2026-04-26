@@ -229,7 +229,13 @@ class TelemetryService:
         pulses = TelemetryService.get_recent_pulses()
         time_labels = []
         if pulses:
-            indices = [0, len(pulses)//2, len(pulses)-1]
+            # Provide 6 evenly spaced labels across the pulse history
+            step = max(1, len(pulses) // 5)
+            indices = [i for i in range(0, len(pulses), step)]
+            # Ensure the last point is always included if not already
+            if (len(pulses) - 1) not in indices:
+                indices.append(len(pulses) - 1)
+                
             for idx in indices:
                 if 0 <= idx < len(pulses):
                     time_labels.append(pulses[idx]['timestamp'])

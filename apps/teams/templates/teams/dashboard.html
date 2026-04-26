@@ -45,35 +45,41 @@
         </div>
     {% endif %}
     
-    <div class="bento-grid">
+    <div class="bento-container">
         <!-- Area: Mission Control (Next Deadline Countdown) -->
-        <div class="bento-card next-deadline-card span-1">
+        <div class="bento-card next-deadline-card span-1" tabindex="0">
             <div class="card-header-minimal">
                 <i class="bi bi-rocket-takeoff text-primary-red"></i>
-                <span class="small fw-bold text-muted text-uppercase ls-1">Mission Control</span>
+                <span class="small fw-bold text-muted text-uppercase ls-1">Next Deadline</span>
             </div>
-            <div class="countdown-display mt-3">
+            <div class="countdown-container bg-dark-blue rounded-4 px-1 py-4 mt-3 text-white border border-soft shadow-inner">
                 {% if next_deadline %}
-                    <div class="d-flex justify-content-around text-center" id="main-countdown" data-deadline="{{ next_deadline.deadline|date:'c' }}">
-                        <div>
-                            <div class="h2 mb-0 fw-800 text-main" id="days">--</div>
-                            <div class="small text-muted">Days</div>
+                    <div class="d-flex justify-content-center align-items-center gap-1 text-center" id="main-countdown" data-deadline="{{ next_deadline.deadline|date:'c' }}">
+                        <div class="countdown-unit">
+                            <div class="h2 mb-0 fw-800" id="days">--</div>
+                            <div class="tiny-text opacity-50 text-uppercase fw-bold ls-1">Days</div>
                         </div>
-                        <div class="h2 mb-0 fw-800 text-muted opacity-25">:</div>
-                        <div>
-                            <div class="h2 mb-0 fw-800 text-main" id="hours">--</div>
-                            <div class="small text-muted">Hrs</div>
+                        <span class="h2 mb-0 fw-800 opacity-20 countdown-separator">:</span>
+                        <div class="countdown-unit">
+                            <div class="h2 mb-0 fw-800" id="hours">--</div>
+                            <div class="tiny-text opacity-50 text-uppercase fw-bold ls-1">Hrs</div>
                         </div>
-                        <div class="h2 mb-0 fw-800 text-muted opacity-25">:</div>
-                        <div>
-                            <div class="h2 mb-0 fw-800 text-main" id="minutes">--</div>
-                            <div class="small text-muted">Min</div>
+                        <span class="h2 mb-0 fw-800 opacity-20 countdown-separator">:</span>
+                        <div class="countdown-unit">
+                            <div class="h2 mb-0 fw-800" id="minutes">--</div>
+                            <div class="tiny-text opacity-50 text-uppercase fw-bold ls-1">Min</div>
+                        </div>
+                        <span class="h2 mb-0 fw-800 opacity-20 countdown-separator">:</span>
+                        <div class="countdown-unit">
+                            <div class="h2 mb-0 fw-800" id="seconds">--</div>
+                            <div class="tiny-text opacity-50 text-uppercase fw-bold ls-1">Sec</div>
                         </div>
                     </div>
-                    <div class="mt-3 text-center">
-                        <span class="badge bg-red-soft text-primary-red rounded-pill px-3 py-2 small">
+                    <div class="mt-4 text-center">
+                        <div class="badge-pill-modern">
+                            <span class="dot-indicator pulse-red me-2"></span>
                             Next: {{ next_deadline.title }}
-                        </span>
+                        </div>
                     </div>
                 {% else %}
                     <div class="text-center py-3">
@@ -85,11 +91,23 @@
         </div>
 
         <!-- Area: Project Portfolio (Main Info) -->
-        <div class="bento-card span-2 row-2">
+        <div class="bento-card span-2 row-2" tabindex="0">
             <div class="d-flex justify-content-between align-items-start mb-4">
                 <div>
                     <span class="text-muted small text-uppercase fw-bold ls-1">Project Portfolio</span>
-                    <h1 class="h1 text-main mb-1 fw-800" id="display-team-name">{{ team.name }}</h1>
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        {% if team.avatar %}
+                            <img src="{{ team.avatar.url }}" class="rounded-3 shadow-sm border border-soft" style="width: 62px; height: 62px; object-fit: cover;">
+                        {% else %}
+                            <div class="rounded-3 bg-red-soft text-primary-red d-flex align-items-center justify-content-center border border-soft" style="width: 62px; height: 62px;">
+                                <i class="bi bi-people-fill h3 mb-0"></i>
+                            </div>
+                        {% endif %}
+                        <div>
+                            <h1 class="h1 text-main mb-0 fw-800" id="display-team-name">{{ team.name }}</h1>
+                            <div class="tiny-text text-muted text-uppercase ls-1 fw-bold">Project Team</div>
+                        </div>
+                    </div>
                     <div class="mt-2">
                         <span class="text-primary-red fw-bold">Project:</span>
                         <span class="h5 text-main ms-1" id="display-project-name">{{ team.project_name|default:"Awaiting details..." }}</span>
@@ -119,15 +137,19 @@
             {% endif %}
         </div>
 
-        <!-- Area: Team Pulse (Activity) -->
-        <div class="bento-card span-1 row-2">
-            <div class="card-header-minimal mb-3">
-                <i class="bi bi-activity text-primary-red"></i>
-                <span class="small fw-bold text-muted text-uppercase ls-1">Team Pulse</span>
+        <!-- Area: Latest Activities -->
+        <div class="bento-card span-1 row-2" tabindex="0">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="card-header-minimal">
+                    <i class="bi bi-activity text-primary-red"></i>
+                    <span class="small fw-bold text-muted text-uppercase ls-1">Latest Activities</span>
+                </div>
+                <button class="btn btn-link btn-sm text-primary-red p-0 text-decoration-none" style="font-size: 0.7rem;" data-bs-toggle="modal" data-bs-target="#activityHistoryModal">View All</button>
             </div>
-            <div class="activity-feed scroll-hide" style="max-height: 300px; overflow-y: auto;">
+            <div class="activity-feed scroll-hide" id="team-pulse-feed" style="max-height: 300px; overflow-y: auto;"
+                 data-latest-ts="{% if team_activity %}{{ team_activity.0.timestamp|date:'c' }}{% endif %}">
                 {% for log in team_activity %}
-                    <div class="activity-item d-flex gap-3 mb-3">
+                    <div class="activity-item d-flex gap-3 mb-3" data-log-id="{{ log.id|default:forloop.counter }}">
                         <div class="activity-icon-sm bg-soft text-primary-red rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; flex-shrink: 0;">
                             <i class="bi bi-dot h4 mb-0"></i>
                         </div>
@@ -138,13 +160,13 @@
                         </div>
                     </div>
                 {% empty %}
-                    <div class="text-center py-4 text-muted small">Quiet for now...</div>
+                    <div class="text-center py-4 text-muted small" id="pulse-empty-state">Quiet for now...</div>
                 {% endfor %}
             </div>
         </div>
 
         <!-- Area: Team Members -->
-        <div class="bento-card span-1">
+        <div class="bento-card span-1" tabindex="0">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <span class="small fw-bold text-muted text-uppercase ls-1">Squad</span>
                 {% if not is_read_only %}
@@ -153,10 +175,14 @@
             </div>
             <div class="mini-member-list">
                 {% for member in team.members.all %}
-                    <div class="d-flex align-items-center gap-2 mb-2">
-                        <div class="avatar-xs rounded-circle bg-red-soft text-primary-red fw-bold d-flex align-items-center justify-content-center" style="width: 24px; height: 24px; font-size: 0.6rem;">
-                            {{ member.user.get_full_name|slice:":1" }}
-                        </div>
+                    <div class="d-flex align-items-center gap-2 mb-2 cursor-pointer hover-bg-light p-1 rounded-2 transition-all" onclick="showPeerProfile({{ member.user.id }})">
+                        {% if member.user.avatar %}
+                            <img src="{{ member.user.avatar.url }}" class="rounded-circle shadow-sm" style="width: 27px; height: 27px; object-fit: cover; border: 1px solid var(--glass-border);">
+                        {% else %}
+                            <div class="avatar-xs rounded-circle bg-red-soft text-primary-red fw-bold d-flex align-items-center justify-content-center" style="width: 27px; height: 27px; font-size: 0.7rem;">
+                                {{ member.user.get_full_name|slice:":1" }}
+                            </div>
+                        {% endif %}
                         <div class="text-truncate small text-main fw-500" style="max-width: 100px;">{{ member.user.get_full_name }}</div>
                     </div>
                 {% endfor %}
@@ -164,7 +190,7 @@
         </div>
 
         <!-- Area: Assignments -->
-        <div class="bento-card span-3">
+        <div class="bento-card span-3" tabindex="0">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h5 class="mb-0 fw-bold"><i class="bi bi-check2-square text-primary-red"></i> Assignments</h5>
                 <div class="search-wrapper position-relative" style="max-width: 200px;">
@@ -186,7 +212,7 @@
                             </div>
                             
                             {% if assign.grades_released and assign.team_submission %}
-                                <div class="grade-report bg-white rounded-3 p-2 mb-3 border d-flex justify-content-between align-items-center">
+                                <div class="grade-report bg-surface rounded-3 p-2 mb-3 border border-soft d-flex justify-content-between align-items-center">
                                     <div class="grade-main">
                                         <div class="text-muted tiny-text text-uppercase fw-bold">Score</div>
                                         <div class="text-primary-red h5 mb-0 fw-800">{{ assign.team_submission.grade }}%</div>
@@ -223,7 +249,7 @@
         </div>
 
         <!-- Area: Reference Materials -->
-        <div class="bento-card span-1">
+        <div class="bento-card span-1" tabindex="0">
             <span class="small fw-bold text-muted text-uppercase ls-1 d-block mb-3">Resources</span>
             <div class="resource-list scroll-hide" style="max-height: 250px; overflow-y: auto;">
                 {% for doc in documents %}
@@ -320,8 +346,8 @@
                 </div>
                 <div class="modal-body p-4 text-center">
                     <div class="mb-3">
-                        <div class="d-inline-flex align-items-center justify-content-center bg-red-soft text-primary-red rounded-circle mb-3" style="width: 80px; height: 80px;">
-                            <i class="bi bi-person-fill h1 mb-0"></i>
+                        <div id="peer-avatar-container">
+                            <!-- JS will inject avatar or icon here -->
                         </div>
                         <h4 class="fw-800 text-main mb-1" id="peer-name">Student Name</h4>
                         <p class="text-muted small mb-3" id="peer-username">@username</p>
@@ -357,8 +383,79 @@
 </div>
 
 
+<!-- Activity History Modal -->
+<div class="modal fade" id="activityHistoryModal" tabindex="-1" aria-labelledby="activityHistoryLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content bg-surface border-soft shadow-lg" style="border-radius: 24px;">
+            <div class="modal-header border-0 px-4 pt-4 pb-2">
+                <div>
+                    <h5 class="modal-title fw-800 text-main mb-0" id="activityHistoryLabel">
+                        <i class="bi bi-clock-history text-primary-red me-2"></i>Activity History
+                    </h5>
+                    <p class="text-muted small mb-0 mt-1">Complete timeline of your team's actions</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4" id="activity-history-body" style="max-height: 60vh;">
+                <div class="text-center py-5" id="history-loading">
+                    <div class="spinner-border text-primary-red" role="status"></div>
+                    <p class="text-muted small mt-3">Loading activity timeline...</p>
+                </div>
+                <div id="history-timeline"></div>
+                <div class="text-center py-3 d-none" id="history-load-more-container">
+                    <button class="btn btn-sm rounded-pill px-4 py-2 border border-soft text-muted hover-red" id="history-load-more" onclick="loadMoreHistory()">
+                        <i class="bi bi-arrow-down-circle me-1"></i> Load More
+                    </button>
+                </div>
+                <div class="text-center py-3 d-none" id="history-end-message">
+                    <span class="text-muted small opacity-50">— You've reached the beginning —</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <script>
-    <script>
+        // Peer Profile Modal logic
+        async function showPeerProfile(userId) {
+            const modalEl = document.getElementById('peerModal');
+            const modal = new bootstrap.Modal(modalEl);
+            const avatarContainer = document.getElementById('peer-avatar-container');
+            
+            // Show loading state
+            avatarContainer.innerHTML = '<div class="spinner-border text-primary-red mb-3"></div>';
+            document.getElementById('peer-name').textContent = 'Loading...';
+            document.getElementById('peer-username').textContent = '';
+            document.getElementById('peer-team').textContent = '--';
+            document.getElementById('peer-role').textContent = '--';
+            document.getElementById('peer-project').textContent = '--';
+            
+            modal.show();
+
+            try {
+                const profile = await apiCall(`/api/student/profile/${userId}`, 'GET');
+                
+                // Update avatar
+                if (profile.avatar_url) {
+                    avatarContainer.innerHTML = `<img src="${profile.avatar_url}" class="rounded-circle shadow mb-3" style="width: 88px; height: 88px; object-fit: cover; border: 3px solid var(--primary-red);">`;
+                } else {
+                    avatarContainer.innerHTML = `<div class="avatar-lg mx-auto rounded-circle bg-red-soft text-primary-red fw-bold d-flex align-items-center justify-content-center mb-3" style="width: 88px; height: 88px; font-size: 2.2rem;">${profile.name.charAt(0)}</div>`;
+                }
+                
+                document.getElementById('peer-name').textContent = profile.name;
+                document.getElementById('peer-username').textContent = `@${profile.username}`;
+                document.getElementById('peer-team').textContent = profile.team;
+                document.getElementById('peer-role').textContent = profile.role;
+                document.getElementById('peer-project').textContent = profile.project;
+                
+            } catch (e) {
+                console.error('[Peer Profile Error]', e);
+                bootstrap.Modal.getInstance(modalEl).hide();
+                showToast('Error', 'Could not load profile details', 'error');
+            }
+        }
+
         // Real-time Assignment Filtering
         const cardFilter = document.getElementById('cardFilterInput');
         const assignmentWrappers = document.querySelectorAll('.assignment-card-wrapper');
@@ -390,14 +487,16 @@
                 const days = Math.floor(diff / (1000 * 60 * 60 * 24));
                 const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                 const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
                 document.getElementById('days').innerText = days.toString().padStart(2, '0');
                 document.getElementById('hours').innerText = hours.toString().padStart(2, '0');
                 document.getElementById('minutes').innerText = minutes.toString().padStart(2, '0');
+                document.getElementById('seconds').innerText = seconds.toString().padStart(2, '0');
             }
 
             updateCountdown();
-            setInterval(updateCountdown, 60000);
+            setInterval(updateCountdown, 1000);
         }
 
         // Staggered Entry Animation
@@ -408,6 +507,11 @@
                 card.style.transition = 'all 0.5s cubic-bezier(0.23, 1, 0.32, 1)';
                 card.style.opacity = '1';
                 card.style.transform = 'translateY(0)';
+                // Clear inline styles after animation to allow CSS hover/focus to work
+                setTimeout(() => {
+                    card.style.transform = '';
+                    card.style.opacity = '';
+                }, 600);
             }, index * 80);
         });
 
@@ -487,6 +591,198 @@
                 btn.innerHTML = originalHtml;
             }
         }
+
+        // ─── Shared: timeAgo helper ───
+        function timeAgo(isoStr) {
+            const diff = Date.now() - new Date(isoStr).getTime();
+            const mins = Math.floor(diff / 60000);
+            if (mins < 1) return 'just now';
+            if (mins < 60) return `${mins} minute${mins > 1 ? 's' : ''} ago`;
+            const hrs = Math.floor(mins / 60);
+            if (hrs < 24) return `${hrs} hour${hrs > 1 ? 's' : ''} ago`;
+            const days = Math.floor(hrs / 24);
+            return `${days} day${days > 1 ? 's' : ''} ago`;
+        }
+
+        // ─── Latest Activities: Live Polling Engine ───
+        (function initTeamPulse() {
+            const feed = document.getElementById('team-pulse-feed');
+            if (!feed) return;
+
+            const POLL_INTERVAL = 30000;
+            let latestTs = feed.dataset.latestTs || '';
+            const knownIds = new Set();
+
+            feed.querySelectorAll('.activity-item[data-log-id]').forEach(el => {
+                knownIds.add(el.dataset.logId);
+            });
+
+            function createActivityHTML(log) {
+                const el = document.createElement('div');
+                el.className = 'activity-item d-flex gap-3 mb-3 pulse-new-entry';
+                el.dataset.logId = log.id;
+                el.dataset.ts = log.timestamp;
+                el.innerHTML = `
+                    <div class="activity-icon-sm bg-soft text-primary-red rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; flex-shrink: 0;">
+                        <i class="bi bi-dot h4 mb-0"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="text-main fw-bold" style="font-size: 0.75rem;">${log.actor_name}</div>
+                        <div class="text-muted" style="font-size: 0.7rem;">${log.description}</div>
+                        <div class="text-muted opacity-50 pulse-ts" style="font-size: 0.65rem;">${timeAgo(log.timestamp)}</div>
+                    </div>
+                `;
+                el.style.maxHeight = '0';
+                el.style.opacity = '0';
+                el.style.overflow = 'hidden';
+                el.style.transition = 'max-height 0.5s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.5s ease';
+                return el;
+            }
+
+            async function pollPulse() {
+                try {
+                    const url = latestTs
+                        ? `/api/student/team-pulse?after=${encodeURIComponent(latestTs)}`
+                        : '/api/student/team-pulse';
+
+                    const result = await apiCall(url, 'GET');
+                    const newLogs = result.logs || [];
+                    if (newLogs.length === 0) return;
+
+                    const emptyState = document.getElementById('pulse-empty-state');
+                    if (emptyState) emptyState.remove();
+
+                    const truly_new = newLogs.filter(log => !knownIds.has(String(log.id)));
+                    if (truly_new.length === 0) return;
+
+                    truly_new.reverse().forEach(log => {
+                        knownIds.add(String(log.id));
+                        const el = createActivityHTML(log);
+                        feed.prepend(el);
+
+                        requestAnimationFrame(() => {
+                            requestAnimationFrame(() => {
+                                el.style.maxHeight = '120px';
+                                el.style.opacity = '1';
+                            });
+                        });
+
+                        setTimeout(() => {
+                            el.classList.remove('pulse-new-entry');
+                        }, 4500);
+                    });
+
+                    latestTs = truly_new[truly_new.length - 1].timestamp;
+                    feed.dataset.latestTs = latestTs;
+
+                    const allItems = feed.querySelectorAll('.activity-item');
+                    if (allItems.length > 15) {
+                        for (let i = 15; i < allItems.length; i++) {
+                            allItems[i].style.transition = 'opacity 0.3s ease';
+                            allItems[i].style.opacity = '0';
+                            setTimeout(() => allItems[i].remove(), 300);
+                        }
+                    }
+                } catch (e) {
+                    console.debug('[Pulse] Poll skipped:', e.message);
+                }
+            }
+
+            setInterval(() => {
+                feed.querySelectorAll('.activity-item[data-ts]').forEach(el => {
+                    const tsEl = el.querySelector('.pulse-ts');
+                    if (tsEl) tsEl.textContent = timeAgo(el.dataset.ts);
+                });
+            }, 60000);
+
+            setInterval(pollPulse, POLL_INTERVAL);
+        })();
+
+        // ─── Activity History Modal Engine ───
+        let historyOffset = 0;
+        let historyLoaded = false;
+        const HISTORY_PAGE_SIZE = 15;
+
+        // Auto-load when modal opens
+        document.getElementById('activityHistoryModal')?.addEventListener('show.bs.modal', () => {
+            if (!historyLoaded) {
+                historyOffset = 0;
+                document.getElementById('history-timeline').innerHTML = '';
+                document.getElementById('history-loading').classList.remove('d-none');
+                document.getElementById('history-load-more-container').classList.add('d-none');
+                document.getElementById('history-end-message').classList.add('d-none');
+                loadMoreHistory();
+                historyLoaded = true;
+            }
+        });
+
+        // Reset on close so it re-fetches fresh data next time
+        document.getElementById('activityHistoryModal')?.addEventListener('hidden.bs.modal', () => {
+            historyLoaded = false;
+        });
+
+        async function loadMoreHistory() {
+            const timeline = document.getElementById('history-timeline');
+            const loadingEl = document.getElementById('history-loading');
+            const loadMoreBtn = document.getElementById('history-load-more');
+            const loadMoreContainer = document.getElementById('history-load-more-container');
+            const endMessage = document.getElementById('history-end-message');
+
+            if (loadMoreBtn) {
+                loadMoreBtn.disabled = true;
+                loadMoreBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Loading...';
+            }
+
+            try {
+                const result = await apiCall(`/api/student/team-pulse?offset=${historyOffset}&limit=${HISTORY_PAGE_SIZE}`, 'GET');
+                const logs = result.logs || [];
+
+                loadingEl.classList.add('d-none');
+
+                if (logs.length === 0 && historyOffset === 0) {
+                    timeline.innerHTML = '<div class="text-center py-5 text-muted small">No activity recorded yet.</div>';
+                    return;
+                }
+
+                logs.forEach(log => {
+                    const item = document.createElement('div');
+                    item.className = 'history-item d-flex gap-3 py-3 border-bottom border-soft';
+                    item.style.animation = 'fadeSlideIn 0.3s ease forwards';
+                    item.innerHTML = `
+                        <div class="history-timeline-dot mt-1">
+                            <div class="bg-primary-red rounded-circle" style="width: 8px; height: 8px;"></div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <span class="fw-bold text-main" style="font-size: 0.8rem;">${log.actor_name}</span>
+                                <span class="text-muted opacity-50" style="font-size: 0.65rem; white-space: nowrap;">${timeAgo(log.timestamp)}</span>
+                            </div>
+                            <div class="text-muted" style="font-size: 0.75rem; line-height: 1.5;">${log.description}</div>
+                        </div>
+                    `;
+                    timeline.appendChild(item);
+                });
+
+                historyOffset += logs.length;
+
+                if (result.has_more) {
+                    loadMoreContainer.classList.remove('d-none');
+                    endMessage.classList.add('d-none');
+                } else {
+                    loadMoreContainer.classList.add('d-none');
+                    endMessage.classList.remove('d-none');
+                }
+            } catch (e) {
+                console.error('[History] Load failed:', e);
+                loadingEl.innerHTML = '<div class="text-muted small">Failed to load history. Please try again.</div>';
+            } finally {
+                if (loadMoreBtn) {
+                    loadMoreBtn.disabled = false;
+                    loadMoreBtn.innerHTML = '<i class="bi bi-arrow-down-circle me-1"></i> Load More';
+                }
+            }
+        }
+
     </script>
 
 {% endblock %}

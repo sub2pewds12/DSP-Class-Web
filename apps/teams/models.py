@@ -11,6 +11,8 @@ class Team(models.Model):
     project_name = models.CharField(max_length=255, blank=True)
     project_description = models.TextField(blank=True)
     leader = models.ForeignKey('users.Student', null=True, blank=True, on_delete=models.SET_NULL, related_name='led_teams')
+    avatar = models.ImageField(upload_to='avatars/teams/', null=True, blank=True)
+    # Team Metadata
     created_at = models.DateTimeField(auto_now_add=True)
 
     def clean(self):

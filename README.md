@@ -26,6 +26,7 @@ A comprehensive, production-ready platform designed to manage student team regis
 - **Health Management**: Localized health indexing and consistency tracking ensures sub-millisecond precision for system status reporting without external dependencies.
 - **Automated Storage Maintenance**: Submission engine automatically purges old records and files when students upload replacements, preventing database bloat.
 - **Scalable Dashboard Logic**: Optimized database prefetching solves N+1 performance bottlenecks for the student interface.
+- **Latest Activities Feed**: Live-polling activity timeline on the student dashboard with slide-down animations for new events and a paginated **View All** history modal. Backed by a dedicated `GET /api/student/team-pulse` endpoint supporting incremental polling (`after`) and offset-based pagination.
 - **Database Cloaking**: Row Level Security (RLS) enabled on all tables to prevent public API exposure.
 - **Dev Center Portals**: Deep-linked management tools for Render, Cloudinary, and UptimeRobot analytics.
 - **Cloud Command Center**: Integrated storage analytics portal for deep visibility into media integrity and Cloudinary usage patterns.

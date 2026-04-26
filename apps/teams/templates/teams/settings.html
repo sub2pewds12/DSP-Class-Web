@@ -1,0 +1,442 @@
+{% extends 'teams/base.html' %}
+{% load static %}
+
+{% block extra_head %}
+<style>
+    :root {
+        --settings-sidebar-bg: var(--bg-soft);
+        --settings-main-bg: var(--bg-surface);
+        --required-star: #ff4d4d;
+    }
+    
+    .required-asterisk {
+        color: var(--required-star);
+        margin-left: 4px;
+        font-weight: bold;
+    }
+    
+    .settings-container {
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: var(--card-shadow);
+        border: 1px solid var(--glass-border);
+        background: var(--settings-main-bg);
+    }
+    
+    .settings-sidebar {
+        background: var(--settings-sidebar-bg);
+        border-right: 1px solid var(--glass-border);
+        min-height: 600px;
+    }
+    
+    .settings-nav-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 20px;
+        border-radius: 12px;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        outline: none;
+        margin-bottom: 8px;
+        background: transparent;
+        border: none;
+        width: 100%;
+        text-align: left;
+    }
+    
+    .settings-nav-link:hover {
+        background: var(--hover-color);
+        color: var(--primary-red);
+    }
+
+    .settings-nav-link i {
+        color: inherit;
+        font-size: 1.1rem;
+        transition: color 0.3s ease;
+    }
+    
+    .settings-nav-link.active {
+        background: var(--bg-surface) !important;
+        color: var(--primary-red) !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+        border: 1px solid var(--glass-border) !important;
+    }
+
+    [data-theme="dark"] .settings-nav-link.active {
+        background: rgba(255, 255, 255, 0.1) !important;
+        color: var(--primary-red) !important;
+        box-shadow: 0 0 15px rgba(255, 82, 82, 0.15) !important;
+        border: 1px solid rgba(255, 82, 82, 0.3) !important;
+    }
+    
+    .avatar-upload-container {
+        position: relative;
+        width: 145px;
+        height: 145px;
+    }
+    
+    .avatar-preview {
+        width: 145px;
+        height: 145px;
+        border-radius: 36px;
+        object-fit: cover;
+        border: 4px solid var(--settings-main-bg);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        background: var(--bg-soft);
+    }
+    
+    .avatar-edit-badge {
+        position: absolute;
+        bottom: -5px;
+        right: -5px;
+        width: 40px;
+        height: 40px;
+        background: var(--primary-red);
+        color: white;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border: 3px solid var(--settings-main-bg);
+        transition: transform 0.2s ease;
+    }
+    
+    .avatar-edit-badge:hover {
+        transform: scale(1.1);
+    }
+    
+    .form-section-title {
+        font-size: 0.9rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--primary-red);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .form-section-title::after {
+        content: "";
+        flex-grow: 1;
+        height: 1px;
+        background: var(--glass-border);
+        opacity: 0.5;
+    }
+    
+    .custom-file-input::-webkit-file-upload-button {
+        display: none;
+    }
+    
+    .custom-file-input::before {
+        content: 'Select Image';
+        display: inline-block;
+        background: var(--bg-soft);
+        border: 1px solid var(--glass-border);
+        border-radius: 8px;
+        padding: 8px 16px;
+        outline: none;
+        white-space: nowrap;
+        cursor: pointer;
+        font-weight: 700;
+        font-size: 0.8rem;
+        margin-right: 10px;
+        color: var(--text-main);
+    }
+    
+    .custom-file-input:hover::before {
+        border-color: var(--primary-red);
+    }
+
+    /* Custom Switch Styling */
+    .custom-switch .form-check-input {
+        width: 3rem;
+        height: 1.5rem;
+        cursor: pointer;
+        background-color: var(--bg-soft);
+        border-color: var(--glass-border);
+    }
+    
+    .custom-switch .form-check-input:checked {
+        background-color: var(--primary-red);
+        border-color: var(--primary-red);
+    }
+    
+    .custom-switch .form-check-input:focus {
+        box-shadow: 0 0 0 4px var(--primary-red-glow);
+    }
+
+    [data-theme="dark"] .settings-container {
+        background: var(--bg-surface);
+    }
+    
+    [data-theme="dark"] .settings-sidebar {
+        background: var(--bg-main);
+        border-right-color: var(--glass-border);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pb-5 animate-fade-up">
+    <div class="row justify-content-center">
+        <div class="col-xl-10">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-4 ps-2">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none text-muted">Dashboard</a></li>
+                    <li class="breadcrumb-item active text-main fw-bold" aria-current="page">User Settings</li>
+                </ol>
+            </nav>
+
+            <div class="settings-container">
+                <div class="row g-0">
+                    <!-- Sidebar -->
+                    <div class="col-md-3 settings-sidebar">
+                        <div class="p-4">
+                            <div class="text-center mb-4 pb-2">
+                                <div class="avatar-upload-container mx-auto mb-3">
+                                    {% if user.avatar %}
+                                        <img src="{{ user.avatar.url }}" class="avatar-preview" id="user-avatar-preview">
+                                    {% else %}
+                                        <div class="avatar-preview d-flex align-items-center justify-content-center h1 mb-0 text-primary-red fw-800">
+                                            {{ user.first_name|slice:":1"|default:user.username|slice:":1"|upper }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <h6 class="fw-800 text-main mb-0">{{ user.get_full_name|default:user.username }}</h6>
+                                <p class="small text-muted mb-0">{{ user.role|title }}</p>
+                            </div>
+
+                            <div class="nav flex-column nav-pills" id="settings-tabs" role="tablist">
+                                <button class="settings-nav-link active w-100 border-0" id="profile-tab" data-bs-toggle="pill" data-bs-target="#profile-content" type="button" role="tab">
+                                    <i class="bi bi-person-circle"></i> Personal Profile
+                                </button>
+                                
+                                {% if managed_team %}
+                                <button class="settings-nav-link w-100 border-0" id="team-tab" data-bs-toggle="pill" data-bs-target="#team-content" type="button" role="tab">
+                                    <i class="bi bi-people-fill"></i> Team Control
+                                </button>
+                                {% endif %}
+                                
+                                <button class="settings-nav-link w-100 border-0" id="security-tab" data-bs-toggle="pill" data-bs-target="#security-content" type="button" role="tab">
+                                    <i class="bi bi-shield-lock-fill"></i> Security
+                                </button>
+                            </div>
+                            
+                            <hr class="my-4 opacity-10">
+                            
+                            <a href="{% url 'logout' %}" class="settings-nav-link text-danger border-0">
+                                <i class="bi bi-box-arrow-right"></i> Sign Out
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Content area -->
+                    <div class="col-md-9">
+                        <div class="tab-content p-4 p-lg-5" id="settings-content">
+                            <!-- Profile Tab -->
+                            <div class="tab-pane fade show active" id="profile-content" role="tabpanel">
+                                <h3 class="fw-800 text-main mb-2">Personal Profile</h3>
+                                <p class="text-muted mb-5">Manage your identity and academic presence.</p>
+
+                                <form method="post" enctype="multipart/form-data">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="form_type" value="personal">
+                                    
+                                    <div class="form-section-title">Identity & Photo</div>
+                                    <div class="row g-4 mb-5 align-items-center">
+                                        <div class="col-md-auto text-center">
+                                            <div class="avatar-upload-container mx-auto">
+                                                {% if user.avatar %}
+                                                    <img src="{{ user.avatar.url }}" class="avatar-preview" id="form-avatar-preview">
+                                                {% else %}
+                                                    <div class="avatar-preview d-flex align-items-center justify-content-center h1 mb-0 text-primary-red fw-800">
+                                                        {{ user.first_name|slice:":1"|default:user.username|slice:":1"|upper }}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="col-md">
+                                            <label class="form-label small fw-bold text-muted text-uppercase ls-1">Profile Photo</label>
+                                            {{ user_form.avatar }}
+                                            <p class="x-small text-muted mt-2">Recommended: Square image, max 2MB.</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-section-title">General Information</div>
+                                    <div class="row g-4 mb-5">
+                                        <div class="{% if profile_form %}col-md-4{% else %}col-md-6{% endif %}">
+                                            <label class="form-label small fw-bold text-muted text-uppercase ls-1">
+                                                First Name <span class="required-asterisk">*</span>
+                                            </label>
+                                            {{ user_form.first_name }}
+                                        </div>
+                                        <div class="{% if profile_form %}col-md-4{% else %}col-md-6{% endif %}">
+                                            <label class="form-label small fw-bold text-muted text-uppercase ls-1">
+                                                Last Name <span class="required-asterisk">*</span>
+                                            </label>
+                                            {{ user_form.last_name }}
+                                        </div>
+                                        {% if profile_form %}
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-bold text-muted text-uppercase ls-1">
+                                                Student ID <span class="required-asterisk">*</span>
+                                            </label>
+                                            {{ profile_form.student_id }}
+                                        </div>
+                                        {% endif %}
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-muted text-uppercase ls-1">
+                                                Email Address <span class="required-asterisk">*</span>
+                                            </label>
+                                            {{ user_form.email }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-muted text-uppercase ls-1">Phone Number</label>
+                                            {{ user_form.phone_number }}
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label small fw-bold text-muted text-uppercase ls-1">Short Bio</label>
+                                            {{ user_form.bio }}
+                                        </div>
+                                    </div>
+
+                                    <div class="form-section-title">Preferences</div>
+                                    <div class="row g-4 mb-5">
+                                        <div class="col-12">
+                                            <div class="form-check form-switch custom-switch">
+                                                {{ user_form.email_notifications }}
+                                                <label class="form-check-label fw-600 text-main ms-2" for="{{ user_form.email_notifications.id_for_label }}">
+                                                    Receive Email Notifications
+                                                </label>
+                                                <p class="small text-muted mb-0 ms-2 ps-4">Get updates about team submissions, grades, and announcements.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                    <div class="mt-5 pt-3 border-top d-flex gap-3">
+                                        <button type="submit" class="btn btn-primary-red px-5 py-3 rounded-4 fw-bold shadow-sm">
+                                            Save All Changes
+                                        </button>
+                                        <a href="{% url 'dashboard' %}" class="btn btn-link text-muted text-decoration-none px-3 py-3">Discard</a>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Team Tab -->
+                            {% if managed_team %}
+                            <div class="tab-pane fade" id="team-content" role="tabpanel">
+                                <div class="d-flex align-items-center gap-3 mb-2">
+                                    <h3 class="fw-800 text-main mb-0">Team Mission Control</h3>
+                                    <span class="badge bg-red-soft text-primary-red border-0">Team Leader</span>
+                                </div>
+                                <p class="text-muted mb-5">Update your team's public identity and project details.</p>
+
+                                <form method="post" enctype="multipart/form-data">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="form_type" value="team">
+                                    
+                                    <div class="form-section-title">Team Identity</div>
+                                    <div class="row g-4 mb-5 align-items-center">
+                                        <div class="col-md-auto text-center">
+                                            <div class="avatar-upload-container mx-auto">
+                                                {% if managed_team.avatar %}
+                                                    <img src="{{ managed_team.avatar.url }}" class="avatar-preview" id="team-avatar-preview">
+                                                {% else %}
+                                                    <div class="avatar-preview d-flex align-items-center justify-content-center h1 mb-0 text-primary-red fw-800 bg-red-soft">
+                                                        <i class="bi bi-people"></i>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="col-md">
+                                            <label class="form-label small fw-bold text-muted text-uppercase ls-1">Team Banner/Avatar</label>
+                                            {{ team_form.avatar }}
+                                        </div>
+                                    </div>
+
+                                    <div class="row g-4 mb-5">
+                                        <div class="col-12">
+                                            <label class="form-label small fw-bold text-muted text-uppercase ls-1">Team Name</label>
+                                            {{ team_form.name }}
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label small fw-bold text-muted text-uppercase ls-1">Official Project Title</label>
+                                            {{ team_form.project_name }}
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label small fw-bold text-muted text-uppercase ls-1">Project Description & Goals</label>
+                                            {{ team_form.project_description }}
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-5 pt-3 border-top d-flex gap-3">
+                                        <button type="submit" class="btn btn-primary-red px-5 py-3 rounded-4 fw-bold shadow-sm">
+                                            Update Team Profile
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                            {% endif %}
+
+                            <!-- Security Tab -->
+                            <div class="tab-pane fade" id="security-content" role="tabpanel">
+                                <h3 class="fw-800 text-main mb-2">Security & Privacy</h3>
+                                <p class="text-muted mb-5">Manage your credentials and session security.</p>
+
+                                <div class="bento-card border-soft bg-soft p-4 mb-4">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="fw-700 text-main mb-1">Account Password</h6>
+                                            <p class="small text-muted mb-0">Change your password to keep your account secure.</p>
+                                        </div>
+                                        <a href="{% url 'password_change' %}" class="btn btn-outline-adaptive px-4">Change Password</a>
+                                    </div>
+                                </div>
+
+                                <div class="bento-card border-soft bg-soft p-4">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="fw-700 text-main mb-1">Two-Factor Authentication</h6>
+                                            <p class="small text-muted mb-0">Coming soon for enhanced academic integrity.</p>
+                                        </div>
+                                        <button class="btn btn-secondary disabled px-4" disabled>Configure</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Preview image on selection
+    document.querySelectorAll('input[type="file"]').forEach(input => {
+        input.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                // Handle prefixed IDs like id_user-avatar or id_team-avatar
+                const previewId = this.id.includes('user') ? 'form-avatar-preview' : 'team-avatar-preview';
+                const preview = document.getElementById(previewId);
+                
+                reader.onload = function(e) {
+                    if (preview) {
+                        preview.src = e.target.result;
+                    }
+                }
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+    });
+</script>
+{% endblock %}

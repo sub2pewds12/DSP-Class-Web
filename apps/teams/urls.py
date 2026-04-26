@@ -13,6 +13,7 @@ urlpatterns = [
     path('dev-dashboard/', views.dev_dashboard, name='dev_dashboard'),
     path('storage-analytics/', views.storage_analytics_view, name='storage_analytics'),
     path('pending-approval/', views.pending_approval_view, name='pending_approval'),
+    path('settings/', views.settings_view, name='settings'),
     path('health-check/', views.health_check, name='health_check'),
     
     # Legacy Redirects (Fixes old log errors)
@@ -29,6 +30,9 @@ urlpatterns = [
     path('password_reset/done/', auth_views.PasswordResetDoneView.as_view(template_name='teams/registration/password_reset_done.html'), name='password_reset_done'),
     path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(template_name='teams/registration/password_reset_confirm.html'), name='password_reset_confirm'),
     path('reset/done/', auth_views.PasswordResetCompleteView.as_view(template_name='teams/registration/password_reset_complete.html'), name='password_reset_complete'),
+    
+    # Password Change
+    path('password_change/', auth_views.PasswordChangeView.as_view(template_name='teams/registration/password_change_form.html', success_url='/settings/'), name='password_change'),
 
     # Action endpoints
     path('submission/<int:pk>/', views.submission_detail, name='submission_detail'),

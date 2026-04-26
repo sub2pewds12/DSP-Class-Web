@@ -48,15 +48,20 @@ class MonitoringService:
         time.sleep(10)
         
         while not cls._stop_event.is_set():
+            # 1. Grafana Shipping (Isolated)
             try:
-                print(f"\n[Heartbeat] Pulse triggered at {datetime.now().strftime('%H:%M:%S')}")
                 cls.ship_metrics()
+            except Exception as e:
+                error_msg = str(e).encode('ascii', 'ignore').decode('ascii')
+                logger.error(f"[Heartbeat] Grafana Shipping Failed: {error_msg}")
+                
+            # 2. Statuspage Shipping (Isolated)
+            try:
                 # Automated Health Check, Metrics Shipping, and Statuspage Sync
                 InfrastructureService.perform_health_check()
             except Exception as e:
-                # Robust logging to prevent charmap encoding errors on Windows
                 error_msg = str(e).encode('ascii', 'ignore').decode('ascii')
-                logger.error(f"Grafana Cloud Ship Failed: {error_msg}")
+                logger.error(f"[Heartbeat] Statuspage/HealthCheck Failed: {error_msg}")
             
             # Sleep for 60 seconds (or until stopped)
             cls._stop_event.wait(60)

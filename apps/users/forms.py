@@ -33,6 +33,42 @@ class UserRegistrationForm(forms.ModelForm):
 
 from apps.users.models import Student
 
+class UserEditForm(forms.ModelForm):
+    first_name = forms.CharField(required=True, label="First Name")
+    last_name = forms.CharField(required=True, label="Last Name")
+    email = forms.EmailField(required=True, label="Email Address")
+
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email', 'phone_number', 'bio', 'avatar', 'email_notifications']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['avatar'].widget = forms.FileInput(attrs={'class': 'form-control rounded-4 bg-soft text-main border-soft shadow-sm custom-file-input'})
+        for name, field in self.fields.items():
+            if name == 'avatar':
+                continue
+            
+            if name == 'email_notifications':
+                field.widget.attrs.update({'class': 'form-check-input'})
+            else:
+                field.widget.attrs.update({'class': 'form-control rounded-4 bg-soft text-main border-soft shadow-sm'})
+
+class StudentProfileForm(forms.ModelForm):
+    student_id = forms.CharField(required=True, label="Student ID")
+
+    class Meta:
+        model = Student
+        fields = ['student_id']
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs.update({
+                'class': 'form-control rounded-4 bg-soft text-main border-soft shadow-sm',
+                'placeholder': 'Enter your student ID'
+            })
+
 class StudentRoleForm(forms.ModelForm):
     class Meta:
         model = Student

@@ -37,8 +37,13 @@
                 <h6 class="small fw-bold text-uppercase text-muted mb-2 ls-1">Team Members</h6>
                 <div class="d-flex flex-wrap gap-2">
                     {% for member in team.members.all %}
-                        <div class="status-badge bg-soft text-main shadow-sm border small" style="font-size: 0.7rem;">
-                            <i class="bi bi-person me-1"></i> {{ member.user.get_full_name }}
+                        <div class="status-badge bg-soft text-main shadow-sm border small d-flex align-items-center" style="font-size: 0.7rem; padding: 2px 10px 2px 2px;">
+                            {% if member.user.avatar %}
+                                <img src="{{ member.user.avatar.url }}" class="rounded-circle me-1" style="width: 22px; height: 22px; object-fit: cover;">
+                            {% else %}
+                                <i class="bi bi-person me-1 ms-1"></i>
+                            {% endif %}
+                            {{ member.user.get_full_name }}
                         </div>
                     {% empty %}
                         <span class="text-muted small italic">Awaiting registration...</span>

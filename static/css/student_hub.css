@@ -39,7 +39,7 @@
     --primary-red: #FF5252;
     --primary-red-glow: rgba(255, 82, 82, 0.2);
     --glass-bg: rgba(15, 23, 42, 0.85);
-    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.25);
     --text-main: #F5F5F5;
     --text-muted: #94A3B8;
     --bg-main: #0f172a;
@@ -89,8 +89,55 @@ body {
     border-bottom: 1px solid var(--glass-border);
     transition: all 0.4s ease;
     padding: 0.75rem 0 !important;
+    position: sticky;
+    top: 0;
+    z-index: 10000 !important; /* Extremely high to beat any bento card stacking context */
 }
 
+/* Ensure all dropdowns are above bento cards and other elements */
+.dropdown-menu {
+    z-index: 10001 !important;
+    background: var(--bg-surface) !important;
+    border: 1px solid var(--glass-border) !important;
+    visibility: visible !important;
+    display: block; /* For testing visibility in some contexts, but Bootstrap handles this */
+    display: none; /* Reset to default so Bootstrap can toggle it */
+}
+
+.dropdown-menu.show {
+    display: block !important;
+}
+
+.dropdown-item {
+    color: var(--text-main) !important;
+    padding: 0.7rem 1.25rem !important;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: var(--transition-fast);
+    display: flex;
+    align-items: center;
+}
+
+.dropdown-item i {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    transition: var(--transition-fast);
+}
+
+.dropdown-item:hover {
+    background-color: var(--hover-color) !important;
+    color: var(--primary-red) !important;
+}
+
+.dropdown-item:hover i {
+    color: var(--primary-red);
+}
+
+.dropdown-divider {
+    border-top: 1px solid var(--glass-border);
+    margin: 0.5rem 0;
+    opacity: 0.5;
+}
 [data-theme="dark"] .navbar-crimson {
     background: rgba(15, 23, 42, 0.9) !important;
     border-color: rgba(255, 255, 255, 0.1);
@@ -146,16 +193,26 @@ body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    position: relative;
+    outline: none;
 }
 
-.bento-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12), 0 0 15px var(--primary-red-glow);
+.next-deadline-card {
+    padding: 1.5rem 1.25rem !important;
+}
+
+
+.bento-card:hover,
+.bento-card:focus-within {
+    transform: translateY(-8px) scale(1.005);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15), 0 0 20px var(--primary-red-glow);
     border-color: var(--primary-red);
+    z-index: 2;
 }
 
-[data-theme="dark"] .bento-card:hover {
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3), var(--card-glow);
+[data-theme="dark"] .bento-card:hover,
+[data-theme="dark"] .bento-card:focus-within {
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4), var(--card-glow);
 }
 
 /* --- Spanning Logic --- */
@@ -526,3 +583,185 @@ body {
 .bg-red-soft {
     background-color: var(--primary-red-glow) !important;
 }
+
+/* --- Form Control Refinements --- */
+.form-control {
+    transition: var(--transition-standard);
+    border: 1px solid var(--glass-border) !important;
+}
+
+.form-control:focus {
+    background-color: var(--bg-surface) !important;
+    border-color: var(--primary-red) !important;
+    box-shadow: 0 0 0 4px var(--primary-red-glow) !important;
+    color: var(--text-main) !important;
+}
+
+[data-theme="dark"] .form-control {
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+[data-theme="dark"] .form-control:focus {
+    border-color: var(--primary-red) !important;
+}
+
+/* Custom File Input for Settings */
+.custom-file-input {
+    border: 1px dashed var(--glass-border) !important;
+    padding: 1rem !important;
+    background: var(--bg-soft) !important;
+}
+/* --- Advanced Countdown Engine --- */
+.bg-dark-blue {
+    background-color: #0f172a !important;
+}
+
+.countdown-container {
+    transition: var(--transition-standard);
+}
+
+.countdown-unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.countdown-separator {
+    transform: translateY(-8px);
+}
+
+.countdown-unit .h2, 
+#main-countdown .h2 {
+    font-size: 1.5rem;
+    letter-spacing: -0.01em;
+    line-height: 1;
+    margin: 0;
+}
+
+.shadow-inner {
+    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+}
+
+.badge-pill-modern {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(211, 47, 47, 0.1);
+    color: #FF5252;
+    padding: 6px 16px;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border: 1px solid rgba(211, 47, 47, 0.2);
+}
+
+.dot-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.pulse-red {
+    background: #FF5252;
+    box-shadow: 0 0 0 rgba(255, 82, 82, 0.4);
+    animation: pulse-red 2s infinite;
+}
+
+@keyframes pulse-red {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 82, 82, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(255, 82, 82, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 82, 82, 0);
+    }
+}
+
+.tiny-text {
+    font-size: 0.65rem;
+}
+
+/* --- Latest Activities: Live Entry Animation --- */
+.pulse-new-entry {
+    animation: pulseGlow 0.5s ease-in-out 8;
+    border-radius: 12px;
+}
+
+@keyframes pulseGlow {
+    0%, 100% {
+        background: transparent;
+        box-shadow: none;
+    }
+    50% {
+        background: rgba(211, 47, 47, 0.08);
+        box-shadow: 0 0 12px rgba(211, 47, 47, 0.15);
+    }
+}
+
+[data-theme="dark"] .pulse-new-entry {
+    animation: pulseGlowDark 0.5s ease-in-out 8;
+}
+
+@keyframes pulseGlowDark {
+    0%, 100% {
+        background: transparent;
+        box-shadow: none;
+    }
+    50% {
+        background: rgba(255, 82, 82, 0.1);
+        box-shadow: 0 0 14px rgba(255, 82, 82, 0.2);
+    }
+}
+
+.fw-800 { font-weight: 800; }
+.ls-1 { letter-spacing: 0.1em; }
+
+/* --- Activity History Modal --- */
+.history-item {
+    transition: background 0.2s ease;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    border-radius: 8px;
+}
+
+.history-item:hover {
+    background: var(--hover-color);
+}
+
+.history-timeline-dot {
+    width: 16px;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+}
+
+@keyframes fadeSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+/* --- Brand Styling --- */
+.brand-dot {
+    width: 8px;
+    height: 8px;
+    background-color: var(--primary-red);
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 10px var(--primary-red-glow);
+}
+
+/* --- Footer Refinement --- */
+footer .navbar-brand {
+    display: flex;
+    align-items: center;
+}
+
