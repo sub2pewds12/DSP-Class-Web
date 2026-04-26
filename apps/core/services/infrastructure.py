@@ -282,7 +282,7 @@ class InfrastructureService:
             'uptime_pct': uptime_pct,
         }
 
-        recent_activity = TeamSubmission.objects.select_related('team', 'submitted_by').all().order_by('-submitted_at')[:25]
+        recent_activity = TeamSubmission.objects.select_related('team', 'submitted_by', 'assignment').all().order_by('-submitted_at')[:25]
         audit_logs = AuditLog.objects.select_related('actor').all().order_by('-timestamp')[:25]
         pending_users = CustomUser.objects.filter(is_approved=False).order_by('-date_joined')
 

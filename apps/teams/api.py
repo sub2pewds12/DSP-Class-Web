@@ -92,7 +92,7 @@ def health_check_api(request):
 
 # --- Student Actions ---
 
-@api.post("/student/project-update", response=SuccessResponse, tags=["Student"])
+@api.post("/student/project-update", response={200: SuccessResponse, 403: SuccessResponse}, tags=["Student"])
 def update_project_details(request, data: ProjectUpdateSchema):
     """Allows Team Leaders to update their project name and description."""
     student = get_object_or_404(Student, user=request.user)
@@ -113,7 +113,7 @@ def update_student_role(request, data: RoleUpdateSchema):
     student.save()
     return {"status": "success", "message": "Your role has been updated."}
 
-@api.post("/student/submit-assignment", response=SuccessResponse, tags=["Student"])
+@api.post("/student/submit-assignment", response={200: SuccessResponse, 400: SuccessResponse, 403: SuccessResponse}, tags=["Student"])
 def submit_assignment_api(request, assignment_id: int, files: List[UploadedFile] = File(...)):
     """
     Submits project files for an assignment. 
@@ -157,7 +157,7 @@ def submit_assignment_api(request, assignment_id: int, files: List[UploadedFile]
 
 # --- Lecturer Actions ---
 
-@api.post("/lecturer/create-assignment", response=SuccessResponse, tags=["Lecturer"])
+@api.post("/lecturer/create-assignment", response={200: SuccessResponse, 403: SuccessResponse}, tags=["Lecturer"])
 def create_assignment_api(request, data: AssignmentSchema, instr_file: Optional[UploadedFile] = File(None)):
     """Create a new course assignment."""
     if not getattr(request.user, 'can_manage_assignments', False):
@@ -173,7 +173,7 @@ def create_assignment_api(request, data: AssignmentSchema, instr_file: Optional[
     )
     return {"status": "success", "message": f"Assignment '{assign.title}' created."}
 
-@api.post("/lecturer/upload-document", response=SuccessResponse, tags=["Lecturer"])
+@api.post("/lecturer/upload-document", response={200: SuccessResponse, 403: SuccessResponse}, tags=["Lecturer"])
 def upload_document_api(request, title: str, file: UploadedFile = File(...)):
     """Upload a new material for the class."""
     if not getattr(request.user, 'can_manage_assignments', False):
@@ -186,7 +186,7 @@ def upload_document_api(request, title: str, file: UploadedFile = File(...)):
     )
     return {"status": "success", "message": f"Document '{doc.title}' uploaded."}
 
-@api.post("/lecturer/grade-submission/{sub_id}", response=SuccessResponse, tags=["Lecturer"])
+@api.post("/lecturer/grade-submission/{sub_id}", response={200: SuccessResponse, 403: SuccessResponse}, tags=["Lecturer"])
 def grade_submission_api(request, sub_id: int, data: GradeUpdateSchema):
     """Assign/Update a grade and feedback for a team submission."""
     if not getattr(request.user, 'can_grade', False):
@@ -201,7 +201,7 @@ def grade_submission_api(request, sub_id: int, data: GradeUpdateSchema):
     
     return {"status": "success", "message": f"Grade updated for {submission.team.name}."}
 
-@api.post("/lecturer/release-grades/{assign_id}", response=SuccessResponse, tags=["Lecturer"])
+@api.post("/lecturer/release-grades/{assign_id}", response={200: SuccessResponse, 403: SuccessResponse}, tags=["Lecturer"])
 def release_grades_api(request, assign_id: int):
     """Release grades for an assignment, making them visible to students."""
     if not getattr(request.user, 'can_grade', False):
@@ -220,7 +220,7 @@ def release_grades_api(request, assign_id: int):
     
     return {"status": "success", "message": f"Grades released for '{assignment.title}'."}
 
-@api.post("/lecturer/delete-document/{doc_id}", response=SuccessResponse, tags=["Lecturer"])
+@api.post("/lecturer/delete-document/{doc_id}", response={200: SuccessResponse, 403: SuccessResponse}, tags=["Lecturer"])
 def delete_document_api(request, doc_id: int):
     """Permanently delete a class document."""
     if not getattr(request.user, 'can_manage_assignments', False):
@@ -233,7 +233,7 @@ def delete_document_api(request, doc_id: int):
 
 # --- Dev Actions ---
 
-@api.post("/dev/approve-user/{user_id}", response=SuccessResponse, tags=["Dev"])
+@api.post("/dev/approve-user/{user_id}", response={200: SuccessResponse, 403: SuccessResponse}, tags=["Dev"])
 def approve_user_api(request, user_id: int):
     """Approve a pending user registration and notify them via email."""
     if not getattr(request.user, 'can_manage_teams', False):
@@ -244,7 +244,7 @@ def approve_user_api(request, user_id: int):
     
     return {"status": "success", "message": f"User '{user.get_full_name()}' approved."}
 
-@api.post("/dev/deny-user/{user_id}", response=SuccessResponse, tags=["Dev"])
+@api.post("/dev/deny-user/{user_id}", response={200: SuccessResponse, 403: SuccessResponse}, tags=["Dev"])
 def deny_user_api(request, user_id: int):
     """Deny and delete a pending user registration."""
     if not getattr(request.user, 'can_manage_teams', False):
@@ -255,7 +255,7 @@ def deny_user_api(request, user_id: int):
     
     return {"status": "success", "message": f"User '{name}' denied and removed."}
 
-@api.get("/dev/supabase-status", tags=["Dev"])
+@api.get("/dev/supabase-status", response={200: dict, 403: SuccessResponse}, tags=["Dev"])
 def get_supabase_status(request):
     """Asynchronous heartbeat for the Supabase platform."""
     if not getattr(request.user, 'can_manage_system', False):
@@ -266,7 +266,7 @@ def get_supabase_status(request):
 
 # --- General Actions ---
 
-@api.post("/submission/{sub_id}/delete", response=SuccessResponse, tags=["General"])
+@api.post("/submission/{sub_id}/delete", response={200: SuccessResponse, 403: SuccessResponse}, tags=["General"])
 def delete_submission_api(request, sub_id: int):
     """Allows Team Leaders or Lecturers to remove a submission."""
     submission = get_object_or_404(TeamSubmission, pk=sub_id)

@@ -53,10 +53,17 @@ class MonitoringService:
                 # Automated Health Check, Metrics Shipping, and Statuspage Sync
                 InfrastructureService.perform_health_check()
             except Exception as e:
-                logger.error(f"Grafana Cloud Ship Failed: {str(e)}")
+                # Robust logging to prevent charmap encoding errors on Windows
+                error_msg = str(e).encode('ascii', 'ignore').decode('ascii')
+                logger.error(f"Grafana Cloud Ship Failed: {error_msg}")
             
             # Sleep for 60 seconds (or until stopped)
             cls._stop_event.wait(60)
+
+    @classmethod
+    def ship_to_grafana(cls):
+        """Alias for backward compatibility."""
+        return cls.ship_metrics()
 
     @classmethod
     def ship_metrics(cls):
