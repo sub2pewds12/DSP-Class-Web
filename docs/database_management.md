@@ -70,3 +70,10 @@ To protect student data, we employ a "Database Cloaking" strategy via Supabase R
   ```sql
   ALTER TABLE public.new_table ENABLE ROW LEVEL SECURITY;
   ```
+## 8. Connection Resilience & Latency Tracking
+
+The platform implements several patterns to ensure database availability:
+- **Transaction Pooling**: Required for high-concurrency cloud environments like Supabase.
+- **Idle Pruning**: `CONN_MAX_AGE=0` ensures that the connection pool is never clogged with stale sessions.
+- **Heartbeat Probing**: The system measures query latency every few minutes. If latency exceeds 1000ms or connection fails, the **AI SRE** automatically generates a status update and broadcasts it to the **Statuspage**.
+- **Protected Environments**: The `InfrastructureService` detects cloud database hosts (Supabase, RDS, etc.) and prevents destructive commands like `flush` or `reset_db` unless a `SAFETY_VALVE_OPEN` override is provided.

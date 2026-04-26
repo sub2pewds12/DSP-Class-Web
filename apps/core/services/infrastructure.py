@@ -114,7 +114,7 @@ class InfrastructureService:
         health_score = 100
         
         # 1. Error Rate Analysis
-        total_req = metrics.get('http_requests_total', 0)
+        total_req = metrics.get('requests_total', 0)
         status_codes = metrics.get('status_codes', {})
         err_4xx = status_codes.get('4xx', 0)
         err_5xx = status_codes.get('5xx', 0)
@@ -138,7 +138,7 @@ class InfrastructureService:
             })
 
         # 2. Latency Benchmarking
-        avg_latency = metrics.get('avg_latency_ms', 0)
+        avg_latency = metrics.get('avg_latency', 0)
         if avg_latency > 500:
             advanced_insights.append({
                 "type": "latency", 
@@ -227,6 +227,7 @@ class InfrastructureService:
             'openapi': '/api/openapi.json',
             'uptimerobot': 'https://stats.uptimerobot.com/eX7GdUhav0',
             'uptime_config': 'https://dashboard.uptimerobot.com/monitors',
+            'ai_studio': 'https://aistudio.google.com/usage?project=gen-lang-client-0215424143&timeRange=last-28-days',
         }
 
         # DB Telemetry
@@ -359,16 +360,19 @@ class InfrastructureService:
         # 1. Measure Latencies
         latencies = InfrastructureService.measure_latencies()
         db_latency = latencies.get('db_latency')
+        media_latency = latencies.get('media_latency')
         
         # 2. Ship Metrics to Statuspage
+        now_ts = time.time()
         if db_latency:
             db_metric_id = os.getenv('STATUSPAGE_METRIC_DB_LATENCY')
-            StatuspageService.submit_metric_point(db_metric_id, db_latency)
+            StatuspageService.submit_metric_point(db_metric_id, db_latency, timestamp=now_ts)
             
-        media_latency = latencies.get('media_latency')
         if media_latency:
             media_metric_id = os.getenv('STATUSPAGE_METRIC_MEDIA_LATENCY')
-            StatuspageService.submit_metric_point(media_metric_id, media_latency)
+            StatuspageService.submit_metric_point(media_metric_id, media_latency, timestamp=now_ts)
+            
+        print(f"[HealthCheck] Latencies - DB: {db_latency}ms, Media: {media_latency}ms")
             
         # 3. Sync Component Statuses
         StatuspageService.sync_infrastructure()
@@ -378,8 +382,10 @@ class InfrastructureService:
         health_score = analytics['health']
 
         if health_score < 40:
-            # Automated Incident Reporting
-            StatuspageService.auto_report_incident(health_score)
+            # 5. AI-Enhanced Incident Reporting (Rate Limited)
+            from apps.core.services.ai_service import AIService
+            ai_message = AIService.generate_incident_report(analytics)
+            StatuspageService.auto_report_incident(health_score, message=ai_message)
             
             cache.clear()
             send_html_email(

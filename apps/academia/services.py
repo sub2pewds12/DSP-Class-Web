@@ -4,7 +4,9 @@ from django.db import transaction
 from apps.academia.models import Assignment, TeamSubmission, SubmissionFile, ClassDocument
 from apps.users.models import CustomUser
 from apps.core.services.audit_service import AuditService
+from apps.core.models import AuditLog
 from django.core.cache import cache
+from django.db.models import Avg, Max, Q
 
 class SubmissionService:
     """
@@ -266,6 +268,19 @@ class AssignmentService:
         return cache.get_or_set("dashboard_teacher", _get_context, timeout=300)
 
     @staticmethod
+    def get_assignment_stats(assignment_id: int):
+        """Calculates anonymized statistics for an assignment."""
+        stats = TeamSubmission.objects.filter(
+            assignment_id=assignment_id, 
+            grade__isnull=False
+        ).aggregate(avg=Avg('grade'), max=Max('grade'))
+        
+        return {
+            'average': round(stats['avg'] or 0, 1),
+            'high': stats['max'] or 0
+        }
+
+    @staticmethod
     def get_student_dashboard_context(user: CustomUser, team=None):
         """
         Gathers data for the student dashboard (Cached partially).
@@ -279,18 +294,42 @@ class AssignmentService:
             return list(documents), list(assignments)
 
         # Cache global documents and assignments
-        documents, assignments = cache.get_or_set("dashboard_students", _get_docs_and_assigns, timeout=300)
+        documents, assignments_raw = cache.get_or_set("dashboard_students", _get_docs_and_assigns, timeout=300)
         
+        # Clone assignments to avoid modifying cached objects shared across sessions
+        import copy
+        assignments = [copy.copy(a) for a in assignments_raw]
+
+        # Enrichment: Team Activity Feed
+        team_activity = []
         if team:
-            # Personal context cannot be globally cached easily, but we use optimized queries
+            # Fetch logs involving team members or explicit team_id metadata
+            team_member_ids = team.members.values_list('user_id', flat=True)
+            team_activity = AuditLog.objects.filter(
+                Q(actor_id__in=team_member_ids) | Q(metadata__team_id=team.id)
+            ).select_related('actor').order_by('-timestamp')[:10]
+
+            # Attach team-specific submissions
             team_subs = team.submissions.all().order_by('-submitted_at')
-            # Attach submissions to the cached assignments for THIS specific team
             for a in assignments:
-                # Find matching submission from team_subs
                 matching_sub = next((s for s in team_subs if s.assignment_id == a.id), None)
                 a.team_submission = matching_sub
+
+        # Enrichment: Next Deadline
+        from django.utils import timezone
+        next_deadline = Assignment.objects.filter(
+            deadline__gt=timezone.now(),
+            is_active=True
+        ).order_by('deadline').first()
+
+        # Enrichment: Grade Stats for released assignments
+        for a in assignments:
+            if a.grades_released:
+                a.stats = AssignmentService.get_assignment_stats(a.id)
 
         return {
             'documents': documents,
             'assignments': assignments,
+            'team_activity': team_activity,
+            'next_deadline': next_deadline,
         }

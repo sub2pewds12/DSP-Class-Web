@@ -495,10 +495,15 @@
         color: var(--primary-red) !important;
     }
 
-    /* Fix for invisible dropdown options in dark mode */
+    #pulse-range-select, 
+    #pulse-cap-select {
+        color-scheme: dark;
+        background: rgba(255, 255, 255, 0.05) !important;
+    }
+
     #pulse-range-select option, 
     #pulse-cap-select option {
-        background-color: #212529 !important;
+        background-color: #1a1a1a !important;
         color: white !important;
     }
 </style>
@@ -635,6 +640,12 @@
                         <a href="https://manage.statuspage.io/pages/88ml9sy0fwxn/" target="_blank" class="portal-tile">
                             <i class="bi bi-broadcast-pin h4 mb-0 text-primary-red"></i>
                             <span class="small fw-bold">Status Admin</span>
+                        </a>
+                    </div>
+                    <div class="col-4">
+                        <a href="{{ portals.ai_studio }}" target="_blank" class="portal-tile">
+                            <i class="bi bi-robot h4 mb-0 text-primary-red"></i>
+                            <span class="small fw-bold">AI Usage</span>
                         </a>
                     </div>
                 </div>
@@ -1040,11 +1051,11 @@
                         </button>
                         <div class="d-flex align-items-center bg-dark bg-opacity-25 rounded-pill px-2 border border-white border-opacity-10 me-2" style="height: 26px;">
                             <span class="x-small text-muted me-2" style="font-size: 0.5rem; letter-spacing: 0.5px;">VIEW:</span>
-                            <select id="pulse-range-select" onchange="updatePulseRange(this.value)" class="bg-transparent border-0 text-white x-small p-0 fw-bold" style="font-size: 0.55rem; outline: none; cursor: pointer; color-scheme: dark;">
+                            <select id="pulse-range-select" onchange="updatePulseRange(this.value)" class="bg-transparent border-0 text-white x-small p-0 fw-bold" style="font-size: 0.55rem; outline: none; cursor: pointer;">
+                                <option value="25">25 pts</option>
                                 <option value="50">50 pts</option>
+                                <option value="75">75 pts</option>
                                 <option value="100" selected>100 pts</option>
-                                <option value="250">250 pts</option>
-                                <option value="500">500 pts</option>
                             </select>
                         </div>
                         <div class="d-flex align-items-center bg-dark bg-opacity-25 rounded-pill px-2 border border-white border-opacity-10" style="height: 26px;">

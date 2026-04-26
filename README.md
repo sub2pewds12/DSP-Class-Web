@@ -17,11 +17,12 @@ A comprehensive, production-ready platform designed to manage student team regis
 - **API Shielding & Security**: Global **CORS** headers, **IP-based Rate Limiting**, and **Host Hardening**.
 - **Modern AJAX Dashboards**: All state-modifying actions are handled via a centralized API utility.
 - **Interactive API Documentation**: Full Swagger / OpenAPI portal for system integration.
+- **AI-Powered SITREP**: Integrated with **Google Gemini** to generate professional, context-aware incident reports. Governed by a 4-hour safety lock to prevent API cost overruns.
 - **Manual Grading**: Dedicated numeric score (0-100) and qualitative feedback system.
 - **Result Release Control**: Grades are kept private until deliberately released.
 - **Resource Repository**: Central hub for class materials and PDFs.
 - **Role-Based Approval**: Secure gatekeeping where Lecturers and Admins require manual verification.
-- **NOC-Style System Telemetry**: High-density real-time tracking of DB latency, system load, and runtime errors with automated emergency alerting. Includes a new **Traffic Pulse** histogram with advanced **Dual-Axis Scaling** (X-axis history depth up to 500pts and Y-axis latency capping) for deep forensic analysis.
+- **NOC-Style System Telemetry**: High-density real-time tracking of DB latency, system load, and runtime errors with automated emergency alerting. Includes a new **Traffic Pulse** histogram with advanced **Dual-Axis Scaling** (X-axis history depth up to 100pts and Y-axis latency capping) for deep forensic analysis.
 - **Health Management**: Localized health indexing and consistency tracking ensures sub-millisecond precision for system status reporting without external dependencies.
 - **Automated Storage Maintenance**: Submission engine automatically purges old records and files when students upload replacements, preventing database bloat.
 - **Scalable Dashboard Logic**: Optimized database prefetching solves N+1 performance bottlenecks for the student interface.

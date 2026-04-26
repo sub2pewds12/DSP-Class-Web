@@ -51,7 +51,7 @@ class StatuspageService:
         payload = {"component": {"status": status}}
         
         try:
-            response = requests.patch(url, headers=headers, json=payload)
+            response = requests.patch(url, headers=headers, json=payload, timeout=10)
             if response.status_code in [200, 201]:
                 logger.info(f"Updated {component_key} to {status}")
                 return True
@@ -126,7 +126,9 @@ class StatuspageService:
         }
 
         try:
-            response = requests.post(url, headers=headers, json=payload)
+            response = requests.post(url, headers=headers, json=payload, timeout=10)
+            if response.status_code not in [200, 201]:
+                print(f"[Error] Statuspage Incident Failed: {response.status_code} - {response.text}")
             return response.status_code in [200, 201]
         except Exception as e:
             logger.error(f"Statuspage Incident Error: {str(e)}")
@@ -143,7 +145,7 @@ class StatuspageService:
             return True # Fail-safe: assume active incident to avoid spam
             
         try:
-            response = requests.get(url, headers=headers)
+            response = requests.get(url, headers=headers, timeout=10)
             if response.status_code == 200:
                 incidents = response.json()
                 return len(incidents) > 0
@@ -152,12 +154,13 @@ class StatuspageService:
             return True
 
     @classmethod
-    def auto_report_incident(cls, health_score):
+    def auto_report_incident(cls, health_score, message=None):
         """Automatically reports an incident if health is critical and no active incident exists."""
         if health_score < 40 and not cls.has_active_incidents():
+            final_message = message or f"Our automated systems have detected a drop in system health (Score: {health_score}%). We are investigating the cause and working on a resolution."
             return cls.create_incident(
                 name="System Instability Detected",
-                message=f"Our automated systems have detected a drop in system health (Score: {health_score}%). We are investigating the cause and working on a resolution.",
+                message=final_message,
                 status='investigating',
                 component_keys=['REGISTRY_API', 'STUDENT_HUB']
             )
@@ -183,8 +186,13 @@ class StatuspageService:
             payload["data"]["timestamp"] = int(timestamp)
             
         try:
-            response = requests.post(url, headers=headers, json=payload)
+            response = requests.post(url, headers=headers, json=payload, timeout=10)
+            if response.status_code not in [200, 201]:
+                print(f"[Error] Statuspage Metric [{metric_id}] Failed: {response.status_code} - {response.text}")
+            else:
+                print(f"[Success] Statuspage Metric [{metric_id}] Shipped: {value}")
             return response.status_code in [200, 201]
         except Exception as e:
+            print(f"[Error] Statuspage Metric Connection Error: {str(e)}")
             logger.error(f"Statuspage Metric Error: {str(e)}")
             return False

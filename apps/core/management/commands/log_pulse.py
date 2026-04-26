@@ -32,12 +32,12 @@ class Command(BaseCommand):
         
         if db_latency:
             db_metric_id = os.getenv('STATUSPAGE_METRIC_DB_LATENCY')
-            StatuspageService.submit_metric_point(db_metric_id, db_latency)
+            StatuspageService.submit_metric_point(db_metric_id, db_latency, timestamp=time.time())
             self.stdout.write(self.style.SUCCESS(f'DB Pulse shipped: {db_latency:.2f}ms'))
         
         if media_latency:
             media_metric_id = os.getenv('STATUSPAGE_METRIC_MEDIA_LATENCY')
-            StatuspageService.submit_metric_point(media_metric_id, media_latency)
+            StatuspageService.submit_metric_point(media_metric_id, media_latency, timestamp=time.time())
             self.stdout.write(self.style.SUCCESS(f'Media Pulse shipped: {media_latency:.2f}ms'))
         
         if not db_latency and not media_latency:

@@ -124,8 +124,8 @@ class TelemetryService:
         }
         
         pulses.append(new_pulse)
-        if len(pulses) > 500:
-            pulses = pulses[-500:]
+        if len(pulses) > 100:
+            pulses = pulses[-100:]
             
         cache.set(cache_key, pulses, 86400)
         cache.set('telemetry_last_updated', timezone.now(), 86400)
@@ -146,7 +146,7 @@ class TelemetryService:
                 
             seed_pulses = []
             now = timezone.now()
-            for i in range(500):
+            for i in range(100):
                 latency = random.uniform(20, 150)
                 if i % 20 == 0: latency = random.uniform(300, 800)
                 
@@ -167,7 +167,7 @@ class TelemetryService:
                 base_color = f"hsl({hue}, 40%, 20%)"
 
                 seed_pulses.append({
-                    'timestamp': now - timezone.timedelta(minutes=(500-i)),
+                    'timestamp': now - timezone.timedelta(minutes=(100-i)),
                     'status': 'OPERATIONAL' if latency < 1000 else 'CRITICAL',
                     'latency': latency,
                     'log_h': min(100, max(5, math.log10(max(1, latency)) * 25)),

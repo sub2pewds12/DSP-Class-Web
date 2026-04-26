@@ -14,7 +14,7 @@ The **Traffic Pulse** histogram provides a high-density, real-time visualization
 
 ### 1. Advanced Scaling Controls
 Administrators can surgically adjust the visualization depth and bounds via integrated header controls:
-- **VIEW (X-Axis)**: Toggle history density between **50, 100, 250, or 500 pulses**. Defaults to 100 for clarity, but supports 500-point forensic deep-dives.
+- **VIEW (X-Axis)**: Toggle history density between **25, 50, 75, or 100 pulses**. Defaults to 100 for high-density visibility.
 - **CAP (Y-Axis)**: Scale the vertical linear range between **250ms, 500ms, 1s, 2s, or 5s**. This allows for high-resolution monitoring of high-performance endpoints.
 - **Dual Mode**: Seamlessly switch between **Linear (LIN)** and **Logarithmic (LOG)** scales. LOG mode visualizations cover 1ms to 10s on a base-10 scale.
 
@@ -26,10 +26,23 @@ The bars use a continuous HSL hue interpolation engine:
 - **Interpolation**: Colors transition smoothly through the spectrum based on actual latency, providing immediate intuitive feedback on performance "drift."
 
 ### 3. Real-time Middleware & Buffer
-The `ActivityTrackingMiddleware` records the duration and status of every request into a high-capacity rolling **500-pulse buffer**. 
+The `ActivityTrackingMiddleware` records the duration and status of every request into a high-capacity rolling **100-pulse buffer**. 
 - **Storage**: In-memory cache for sub-millisecond overhead.
 - **Exclusion**: Static assets and telemetry requests are filtered to maintain data purity.
 - **Persistence**: Data is retained as long as the cache survives, providing historical context across administrative sessions.
+
+## 🤖 AI-Powered Incident Management
+
+The platform is integrated with **Google Gemini (AI Service)** to provide human-readable, professional incident reports during system degradations. This replaces generic automated messages with context-aware SITREP (Situation Report) updates.
+
+### 1. Context-Aware Generation
+When a performance incident is detected (e.g., high database latency or elevated error rates), the AI analyzes the raw telemetry data (health score, latency, error percentages) and generates a concise summary for the **Statuspage**.
+
+### 2. "Safe AI" Architecture (Rate Limiting)
+To prevent API cost bloat and redundant reporting, the AI service is governed by a **4-hour state lock**:
+- **Trigger**: AI only runs on the *initial* detection of an incident.
+- **Cooldown**: Once a report is generated, the AI service locks itself for 4 hours. Subsequent health checks will use the existing report or fallback to cached data.
+- **Fail-safe**: If the AI API is unreachable or rate-limited, the system automatically falls back to hardcoded, professional templates.
 
 ## 🦾 Self-Healing Engine
 The system proactively monitors its own health scores via the `perform_health_check` logic.
@@ -41,9 +54,10 @@ The system proactively monitors its own health scores via the `perform_health_ch
 
 ### 2. Automated Recovery Actions
 When health falls below the **40% threshold**, the system automatically executes:
-1. **Cache Flush**: Clears non-essential caches to release memory pressure and remove potentially stale or corrupted state.
-2. **Emergency Alert**: Sends a high-priority HTML email to the system administrator with a full diagnostic dump of the current telemetry.
-3. **Incident Sanitizer**: The system uses a concurrent probing engine to automatically resolve incidents where the target URL has returned to a healthy state (HTTP 200).
+1. **AI SITREP**: Triggers the `AIService` to generate a professional incident report based on current failure metrics.
+2. **Statuspage Broadcast**: Updates the public Statuspage with the AI-generated SITREP and sets the affected components to 'Major Outage'.
+3. **Cache Flush**: Clears non-essential caches to release memory pressure and remove potentially stale or corrupted state.
+4. **Emergency Alert**: Sends a high-priority HTML email to the system administrator with the AI report and a full diagnostic dump.
 
 ## 🗄️ Storage Integrity
 To prevent media storage bloat, the academic engine maintains a "one-team-one-slot" policy:

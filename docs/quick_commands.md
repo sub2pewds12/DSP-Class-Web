@@ -23,6 +23,7 @@ A one-page cheat sheet for common commands and essential links.
 | **Render Dashboard** | [https://dashboard.render.com/](https://dashboard.render.com/) |
 | **Cloudinary Console** | [https://cloudinary.com/console](https://cloudinary.com/console) |
 | **GitHub** | [https://github.com/](https://github.com/) |
+| **Google AI Studio** | [https://aistudio.google.com/](https://aistudio.google.com/) |
 | **Django Docs** | [https://docs.djangoproject.com/en/5.0/](https://docs.djangoproject.com/en/5.0/) |
 
 ---
@@ -76,3 +77,4 @@ Remember to keep these set in your `.env` file for local development:
 - `CLOUDINARY_CLOUD_NAME=...`
 - `CLOUDINARY_API_KEY=...`
 - `CLOUDINARY_API_SECRET=...`
+- `GEMINI_API_KEY=...`

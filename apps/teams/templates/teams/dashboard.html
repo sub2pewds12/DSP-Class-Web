@@ -45,57 +45,73 @@
         </div>
     {% endif %}
     
-    <div class="bento-container">
-        
-        <!-- Area: Project Overview (Large Bento) -->
-        <div class="bento-card span-3 row-2">
+    <div class="bento-grid">
+        <!-- Area: Mission Control (Next Deadline Countdown) -->
+        <div class="bento-card next-deadline-card span-1">
+            <div class="card-header-minimal">
+                <i class="bi bi-rocket-takeoff text-primary-red"></i>
+                <span class="small fw-bold text-muted text-uppercase ls-1">Mission Control</span>
+            </div>
+            <div class="countdown-display mt-3">
+                {% if next_deadline %}
+                    <div class="d-flex justify-content-around text-center" id="main-countdown" data-deadline="{{ next_deadline.deadline|date:'c' }}">
+                        <div>
+                            <div class="h2 mb-0 fw-800 text-main" id="days">--</div>
+                            <div class="small text-muted">Days</div>
+                        </div>
+                        <div class="h2 mb-0 fw-800 text-muted opacity-25">:</div>
+                        <div>
+                            <div class="h2 mb-0 fw-800 text-main" id="hours">--</div>
+                            <div class="small text-muted">Hrs</div>
+                        </div>
+                        <div class="h2 mb-0 fw-800 text-muted opacity-25">:</div>
+                        <div>
+                            <div class="h2 mb-0 fw-800 text-main" id="minutes">--</div>
+                            <div class="small text-muted">Min</div>
+                        </div>
+                    </div>
+                    <div class="mt-3 text-center">
+                        <span class="badge bg-red-soft text-primary-red rounded-pill px-3 py-2 small">
+                            Next: {{ next_deadline.title }}
+                        </span>
+                    </div>
+                {% else %}
+                    <div class="text-center py-3">
+                        <i class="bi bi-check-all text-success h1 d-block mb-2"></i>
+                        <span class="text-muted small">All missions clear</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Area: Project Portfolio (Main Info) -->
+        <div class="bento-card span-2 row-2">
             <div class="d-flex justify-content-between align-items-start mb-4">
                 <div>
                     <span class="text-muted small text-uppercase fw-bold ls-1">Project Portfolio</span>
                     <h1 class="h1 text-main mb-1 fw-800" id="display-team-name">{{ team.name }}</h1>
                     <div class="mt-2">
-                        <span class="text-primary-red fw-bold">Project Name:</span>
-                        <span class="h5 text-main ms-1" id="display-project-name">{{ team.project_name|default:"Awaiting project details..." }}</span>
+                        <span class="text-primary-red fw-bold">Project:</span>
+                        <span class="h5 text-main ms-1" id="display-project-name">{{ team.project_name|default:"Awaiting details..." }}</span>
                     </div>
                 </div>
-
-                <!-- Global Search for Students -->
-                <div class="search-wrapper position-relative d-none d-md-block" style="min-width: 300px;">
-                    <div class="input-group">
-                        <span class="input-group-text border-0 bg-soft rounded-start-pill ps-3">
-                            <i class="bi bi-search text-muted"></i>
-                        </span>
-                        <input type="text" id="globalSearchInput" class="form-control border-0 bg-soft rounded-end-pill py-2" placeholder="Find peers or tasks..." autocomplete="off">
-                    </div>
-                <div id="searchDropdown" class="position-absolute w-100 bg-surface shadow-xl rounded-4 mt-2 d-none overflow-hidden" style="z-index: 1050; border: 1px solid var(--border-color);">
-                    <div id="searchResults" class="p-2">
-                        <!-- Results injected via JS -->
-                    </div>
-                </div>
-                </div>
-
                 {% if team.leader == student %}
-                    <span class="status-badge bg-soft text-main border border-warning shadow-sm"><i class="bi bi-star-fill"></i> Team Leader</span>
-                {% else %}
-                    <span class="status-badge bg-soft text-muted border-0">Team Member</span>
+                    <span class="status-badge bg-soft text-main border border-warning shadow-sm"><i class="bi bi-star-fill"></i> Leader</span>
                 {% endif %}
             </div>
-
+            
             <div class="p-3 bg-soft rounded-4 border-0 mb-4">
-                <p class="text-muted small mb-0 fw-500" id="display-project-description" style="line-height: 1.6;">{{ team.project_description|default:"Your team hasn't defined their project objectives yet. Project leaders can update this description below." }}</p>
+                <p class="text-muted small mb-0 fw-500" id="display-project-description" style="line-height: 1.6;">{{ team.project_description|default:"Leader can update project objectives below." }}</p>
             </div>
 
             {% if team.leader == student and not is_read_only %}
                 <div class="border-top pt-4 mt-auto">
-                    <h6 class="small fw-bold text-uppercase mb-3">Project Settings</h6>
                     <form name="updateProjectForm" onsubmit="event.preventDefault(); updateProject();" class="row g-2">
                         <div class="col-md-5">
-                            <input type="text" name="project_name" class="form-control rounded-4 bg-soft text-main border-0 shadow-sm" value="{{ team.project_name|default:'' }}" placeholder="Project Title" required>
+                            <input type="text" name="project_name" class="form-control rounded-4 bg-soft text-main border-0 shadow-sm" value="{{ team.project_name|default:'' }}" placeholder="Project Title">
                         </div>
                         <div class="col-md-7 d-flex gap-2">
-                            <div class="flex-grow-1">
-                                <input type="text" name="project_description" class="form-control rounded-4 bg-soft text-main border-0 shadow-sm" value="{{ team.project_description|default:'' }}" placeholder="Project Description">
-                            </div>
+                            <input type="text" name="project_description" class="form-control rounded-4 bg-soft text-main border-0 shadow-sm flex-grow-1" value="{{ team.project_description|default:'' }}" placeholder="Brief Description">
                             <button type="submit" class="btn btn-primary-red px-4">Update</button>
                         </div>
                     </form>
@@ -103,123 +119,131 @@
             {% endif %}
         </div>
 
-        <!-- Area: Team Members (Small Bento) -->
-        <div class="bento-card row-2">
-            <div class="d-flex justify-content-between align-items-center mb-1">
-                <h5 class="fw-bold text-main mb-0">Team Members</h5>
+        <!-- Area: Team Pulse (Activity) -->
+        <div class="bento-card span-1 row-2">
+            <div class="card-header-minimal mb-3">
+                <i class="bi bi-activity text-primary-red"></i>
+                <span class="small fw-bold text-muted text-uppercase ls-1">Team Pulse</span>
+            </div>
+            <div class="activity-feed scroll-hide" style="max-height: 300px; overflow-y: auto;">
+                {% for log in team_activity %}
+                    <div class="activity-item d-flex gap-3 mb-3">
+                        <div class="activity-icon-sm bg-soft text-primary-red rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; flex-shrink: 0;">
+                            <i class="bi bi-dot h4 mb-0"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="text-main fw-bold" style="font-size: 0.75rem;">{{ log.actor.get_full_name|default:log.actor.username }}</div>
+                            <div class="text-muted" style="font-size: 0.7rem;">{{ log.description }}</div>
+                            <div class="text-muted opacity-50" style="font-size: 0.65rem;">{{ log.timestamp|timesince }} ago</div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="text-center py-4 text-muted small">Quiet for now...</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Area: Team Members -->
+        <div class="bento-card span-1">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="small fw-bold text-muted text-uppercase ls-1">Squad</span>
                 {% if not is_read_only %}
-                    <button class="btn btn-sm btn-outline-danger rounded-pill px-3" style="font-size: 0.7rem;" data-bs-toggle="modal" data-bs-target="#roleModal">Edit Role</button>
+                    <button class="btn btn-link btn-sm text-primary-red p-0 text-decoration-none" style="font-size: 0.7rem;" data-bs-toggle="modal" data-bs-target="#roleModal">Edit Role</button>
                 {% endif %}
             </div>
-            <div class="member-list scroll-hide" style="overflow-y: auto;">
+            <div class="mini-member-list">
                 {% for member in team.members.all %}
-                    <div class="d-flex align-items-center p-3 mb-3 rounded-4 transition member-list-item {% if member.user == user %}bg-soft shadow-sm border-start border-4 border-danger active-user-card{% else %}bg-soft border-opacity-10 border{% endif %}">
-                        <div class="flex-grow-1 min-width-0">
-                            <div class="fw-bold small text-main text-truncate">{{ member.user.get_full_name }}</div>
-                            <div class="text-primary-red opacity-75 fw-600 user-role-badge" style="font-size: 0.65rem;" {% if member.user == user %}id="my-role-badge"{% endif %}>
-                                {{ member.role|default:"ASSIGNED ROLE"|upper }}
-                            </div>
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <div class="avatar-xs rounded-circle bg-red-soft text-primary-red fw-bold d-flex align-items-center justify-content-center" style="width: 24px; height: 24px; font-size: 0.6rem;">
+                            {{ member.user.get_full_name|slice:":1" }}
                         </div>
-                        {% if team.leader == member %}
-                        <i class="bi bi-shield-lock-fill text-primary-red ms-2"></i>
-                        {% endif %}
+                        <div class="text-truncate small text-main fw-500" style="max-width: 100px;">{{ member.user.get_full_name }}</div>
                     </div>
                 {% endfor %}
             </div>
         </div>
 
-        <!-- Area: Assignments (Wide Bento) -->
-        <div class="bento-card span-4">
+        <!-- Area: Assignments -->
+        <div class="bento-card span-3">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h5 class="mb-0 fw-bold"><i class="bi bi-check2-square text-primary-red"></i> Project Assignments</h5>
-                <span class="status-badge bg-dark text-white">{{ assignments|length }} Active Tasks</span>
+                <h5 class="mb-0 fw-bold"><i class="bi bi-check2-square text-primary-red"></i> Assignments</h5>
+                <div class="search-wrapper position-relative" style="max-width: 200px;">
+                    <input type="text" id="cardFilterInput" class="form-control form-control-sm border-0 bg-soft rounded-pill" placeholder="Filter tasks...">
+                </div>
             </div>
 
-            <div class="row g-4">
+            <div class="row g-3">
                 {% for assign in assignments %}
-                    <div class="col-md-4">
-                        <div class="p-4 rounded-4 border bg-soft h-100 d-flex flex-column shadow-sm hover-up assignment-card" id="assign-card-{{ assign.id }}">
-                            <div class="d-flex justify-content-between align-items-start mb-3">
-                                <h6 class="fw-bold text-main mb-0">{{ assign.title }}</h6>
-                                <div class="status-indicator">
-                                    {% if assign.team_submission %}
-                                        <i class="bi bi-check-circle-fill text-success h5 mb-0"></i>
-                                    {% else %}
-                                        <i class="bi bi-circle h5 mb-0 text-muted"></i>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <p class="text-muted small mb-4 flex-grow-1" style="font-size: 0.8rem;">{{ assign.description|truncatechars:90 }}</p>
-                            
-                            <div class="pt-3 border-top mt-auto">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <div class="small fw-bold text-muted">
-                                        <i class="bi bi-calendar3 me-1"></i>{{ assign.deadline|date:"M d" }}
-                                    </div>
-                                    {% if assign.is_late %}
-                                        <span class="badge bg-danger-subtle text-danger rounded-pill px-2" style="font-size: 0.65rem;">Late</span>
-                                    {% endif %}
-                                </div>
-
+                    <div class="col-md-6 assignment-card-wrapper" data-title="{{ assign.title|lower }}">
+                        <div class="p-3 rounded-4 border bg-soft h-100 d-flex flex-column transition-all hover-up assignment-card" id="assign-card-{{ assign.id }}">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="fw-bold text-main mb-0 small">{{ assign.title }}</h6>
                                 {% if assign.team_submission %}
-                                    {% if assign.grades_released %}
-                                        <div class="p-3 bg-soft rounded-4 mt-2 border">
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <span class="small fw-bold text-uppercase text-muted" style="font-size: 0.65rem;">Result</span>
-                                                <span class="badge bg-primary-red text-white rounded-pill">{{ assign.team_submission.grade }}%</span>
-                                            </div>
-                                            <div class="mt-2 text-main small" style="font-size: 0.75rem; font-style: italic;">
-                                                "{{ assign.team_submission.feedback|default:"No feedback provided." }}"
-                                            </div>
-                                        </div>
-                                    {% else %}
-                                        <div class="text-center py-2 border rounded-4 small text-muted bg-soft" style="font-size: 0.7rem;">
-                                            <i class="bi bi-clock-history me-1"></i> Awaiting Grade
-                                        </div>
-                                    {% endif %}
-                                    {% if not is_read_only %}
-                                        <button class="btn btn-primary-red btn-sm w-100 rounded-pill mt-2 py-2" style="font-size: 0.75rem" data-bs-toggle="modal" data-bs-target="#submitModal{{ assign.id }}">Update Submission</button>
-                                    {% endif %}
+                                    <i class="bi bi-check-circle-fill text-success small"></i>
                                 {% else %}
-                                    {% if not is_read_only %}
-                                        <button class="btn btn-primary-red btn-sm w-100 rounded-pill mt-2 py-2" style="font-size: 0.75rem" data-bs-toggle="modal" data-bs-target="#submitModal{{ assign.id }}">Submit Work</button>
-                                    {% endif %}
+                                    <i class="bi bi-circle text-muted small"></i>
+                                {% endif %}
+                            </div>
+                            
+                            {% if assign.grades_released and assign.team_submission %}
+                                <div class="grade-report bg-white rounded-3 p-2 mb-3 border d-flex justify-content-between align-items-center">
+                                    <div class="grade-main">
+                                        <div class="text-muted tiny-text text-uppercase fw-bold">Score</div>
+                                        <div class="text-primary-red h5 mb-0 fw-800">{{ assign.team_submission.grade }}%</div>
+                                    </div>
+                                    <div class="grade-stats d-flex gap-3 border-start ps-3">
+                                        <div class="text-center">
+                                            <div class="text-muted tiny-text text-uppercase fw-bold">Avg</div>
+                                            <div class="text-main fw-bold small">{{ assign.stats.average }}</div>
+                                        </div>
+                                        <div class="text-center">
+                                            <div class="text-muted tiny-text text-uppercase fw-bold">High</div>
+                                            <div class="text-main fw-bold small">{{ assign.stats.high }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <p class="text-muted tiny-text mb-3 flex-grow-1">{{ assign.description|truncatechars:60 }}</p>
+                            {% endif %}
+                            
+                            <div class="d-flex justify-content-between align-items-center mt-auto">
+                                <div class="tiny-text fw-bold {% if assign.is_late %}text-danger{% else %}text-muted{% endif %}">
+                                    <i class="bi bi-clock me-1"></i>{{ assign.deadline|date:"M d" }}
+                                </div>
+                                {% if not is_read_only %}
+                                    <button class="btn btn-primary-red btn-sm rounded-pill px-3 py-1" style="font-size: 0.65rem" data-bs-toggle="modal" data-bs-target="#submitModal{{ assign.id }}">
+                                        {% if assign.team_submission %}Update{% else %}Submit{% endif %}
+                                    </button>
                                 {% endif %}
                             </div>
                         </div>
                     </div>
-
                 {% endfor %}
             </div>
         </div>
 
-        <!-- Area: Reference Materials (Side Bento) -->
-        <div class="bento-card span-2">
-            <h5 class="mb-4 fw-bold"><i class="bi bi-folder2-open text-primary-red"></i> Reference Materials</h5>
-            <div class="list-group list-group-flush">
+        <!-- Area: Reference Materials -->
+        <div class="bento-card span-1">
+            <span class="small fw-bold text-muted text-uppercase ls-1 d-block mb-3">Resources</span>
+            <div class="resource-list scroll-hide" style="max-height: 250px; overflow-y: auto;">
                 {% for doc in documents %}
                     {% if doc.file %}
-                    <a href="{{ doc.file.url }}" target="_blank" class="list-group-item list-group-item-action border-0 px-0 d-flex justify-content-between align-items-center mb-2 bg-transparent">
-                        <div class="d-flex align-items-center">
-                            <div class="p-2 rounded-3 bg-soft text-primary-red me-3">
-                                <i class="bi bi-file-earmark-pdf h5 mb-0"></i>
-                            </div>
-                            <div>
-                                <div class="fw-bold text-main small">{{ doc.title }}</div>
-                                <small class="text-muted" style="font-size: 0.7rem;">Uploaded {{ doc.uploaded_at|date:"M d" }}</small>
-                            </div>
+                    <a href="{{ doc.file.url }}" target="_blank" class="d-flex align-items-center gap-3 p-2 rounded-3 hover-bg-light transition-all text-decoration-none mb-1">
+                        <div class="bg-soft text-primary-red rounded p-2">
+                            <i class="bi bi-file-earmark-text small"></i>
                         </div>
-                        <i class="bi bi-chevron-right text-muted small"></i>
+                        <div class="text-truncate">
+                            <div class="text-main fw-bold tiny-text text-truncate">{{ doc.title }}</div>
+                            <div class="text-muted" style="font-size: 0.6rem;">{{ doc.uploaded_at|date:"M d" }}</div>
+                        </div>
                     </a>
                     {% endif %}
                 {% empty %}
-                    <div class="text-center py-5 text-muted small">
-                        <i class="bi bi-folder2 h1 mb-3 d-block opacity-25"></i>
-                        No materials available.
-                    </div>
+                    <div class="text-center py-3 text-muted tiny-text">No resources.</div>
                 {% endfor %}
             </div>
         </div>
+    </div>
 
     </div>
 
@@ -334,218 +358,135 @@
 
 
 <script>
-    async function updateProject() {
-        const form = document.querySelector('form[name="updateProjectForm"]');
-        const btn = form.querySelector('button[type="submit"]');
-        const originalText = btn.innerHTML;
-        
-        const data = {
-            project_name: form.querySelector('[name="project_name"]').value,
-            project_description: form.querySelector('[name="project_description"]').value
-        };
+    <script>
+        // Real-time Assignment Filtering
+        const cardFilter = document.getElementById('cardFilterInput');
+        const assignmentWrappers = document.querySelectorAll('.assignment-card-wrapper');
 
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
-
-        try {
-            await apiCall('/api/student/project-update', 'POST', data);
-            
-            // Local DOM Patch
-            document.getElementById('display-project-name').textContent = data.project_name;
-            document.getElementById('display-project-description').textContent = data.project_description;
-            
-            const card = document.getElementById('display-project-name').closest('.bento-card');
-            card.classList.add('animate-fade-up');
-            setTimeout(() => card.classList.remove('animate-fade-up'), 1000);
-            
-            showToast('Portfolio Updated', 'Your team project details have been synchronized.');
-        } catch (e) { 
-            console.error(e);
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = originalText;
-        }
-    }
-
-    async function updateRole() {
-        const modalEl = document.getElementById('roleModal');
-        const roleSelect = document.getElementById('id_role');
-        const role = roleSelect.value;
-        const roleLabel = roleSelect.options[roleSelect.selectedIndex].text;
-        const btn = modalEl.querySelector('button[type="submit"]');
-
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Updating...';
-
-        try {
-            await apiCall('/api/student/role-update', 'POST', { role });
-            
-            // Local DOM Patch
-            const badge = document.getElementById('my-role-badge');
-            if (badge) {
-                badge.textContent = roleLabel.toUpperCase();
-                badge.closest('.member-list-item').classList.add('animate-fade-up');
-            }
-            
-            bootstrap.Modal.getInstance(modalEl).hide();
-            showToast('Role Secured', `You are now the team's ${roleLabel}.`);
-        } catch (e) { } finally {
-            btn.disabled = false;
-            btn.innerHTML = 'Confirm Team Role';
-        }
-    }
-
-    async function submitAssignment(assignId) {
-        const modal = document.getElementById(`submitModal${assignId}`);
-        const form = modal.querySelector('form');
-        const formData = new FormData();
-        
-        formData.append('assignment_id', assignId);
-        formData.append('title', form.querySelector('[name="title"]').value);
-        
-        const files = form.querySelector('[name="files"]').files;
-        for (let i = 0; i < files.length; i++) {
-            formData.append('files', files[i]);
-        }
-
-        const btn = modal.querySelector('.submit-btn-loading');
-        const originalHtml = btn.innerHTML;
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading...';
-
-        try {
-            const result = await apiCall('/api/student/submit-assignment', 'POST', formData, true);
-            
-            // Local DOM Patch: Update the card icon to Checked
-            const card = document.getElementById(`assign-card-${assignId}`);
-            if (card) {
-                card.querySelector('.status-indicator').innerHTML = '<i class="bi bi-check-circle-fill text-success h5 mb-0"></i>';
-                card.classList.add('submission-card-active');
-            }
-            
-            bootstrap.Modal.getInstance(modal).hide();
-            showToast('Upload Successful', result.message);
-            
-            // Reset form for next time
-            form.reset();
-        } catch (e) {
-            console.error(e);
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = originalHtml;
-        }
-    }
-
-    /* GLOBAL SEARCH LOGIC */
-    const searchInput = document.getElementById('globalSearchInput');
-    const searchDropdown = document.getElementById('searchDropdown');
-    const searchResults = document.getElementById('searchResults');
-    let searchTimeout;
-
-    searchInput.addEventListener('input', (e) => {
-        clearTimeout(searchTimeout);
-        const query = e.target.value.trim();
-        
-        if (query.length < 2) {
-            searchDropdown.classList.add('d-none');
-            return;
-        }
-
-        searchTimeout = setTimeout(() => performSearch(query), 300);
-    });
-
-    async function performSearch(query) {
-        searchInput.parentElement.classList.add('search-loading');
-        try {
-            const data = await apiCall(`/api/search/global?query=${encodeURIComponent(query)}`);
-            renderSearchResults(data);
-        } catch (e) {
-            console.error('Search failed', e);
-        } finally {
-            searchInput.parentElement.classList.remove('search-loading');
-        }
-    }
-
-    function renderSearchResults(data) {
-        searchResults.innerHTML = '';
-        let hasResults = false;
-
-        const sections = [
-            { title: 'Assignments', key: 'assignments', icon: 'bi-check2-square' },
-            { title: 'Students', key: 'students', icon: 'bi-person' },
-            { title: 'Teams', key: 'teams', icon: 'bi-people' }
-        ];
-
-        sections.forEach(section => {
-            const items = data[section.key] || [];
-            if (items.length > 0) {
-                hasResults = true;
-                const header = document.createElement('div');
-                header.className = 'px-3 py-2 small fw-bold text-muted text-uppercase bg-soft rounded-3 mb-1 mt-2';
-                header.style.fontSize = '0.65rem';
-                header.innerHTML = `<i class="bi ${section.icon} me-1"></i> ${section.title}`;
-                searchResults.appendChild(header);
-
-                items.forEach(item => {
-                    const div = document.createElement('div');
-                    div.className = 'px-3 py-2 hover-bg-light cursor-pointer rounded-3 transition-all d-flex align-items-center';
-                    
-                    if (section.key === 'assignments') {
-                        div.innerHTML = `<div><div class="fw-bold small">${item.title}</div><div class="text-muted" style="font-size: 0.7rem;">Due ${item.deadline}</div></div>`;
-                        div.onclick = () => scrollToElement(`assign-card-${item.id}`);
-                    } else if (section.key === 'students') {
-                        div.innerHTML = `<div><div class="fw-bold small">${item.name}</div><div class="text-muted" style="font-size: 0.7rem;">${item.team} • ${item.role}</div></div>`;
-                        div.onclick = () => showPeerProfile(item);
-                    } else {
-                        div.innerHTML = `<div><div class="fw-bold small">${item.name}</div><div class="text-muted" style="font-size: 0.7rem;">Project: ${item.project}</div></div>`;
-                        div.onclick = () => showPeerProfile({ team: item.name, project: item.project, name: item.leader, role: 'Leader' });
-                    }
-                    searchResults.appendChild(div);
+        if (cardFilter) {
+            cardFilter.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                assignmentWrappers.forEach(wrapper => {
+                    const title = wrapper.dataset.title;
+                    wrapper.style.display = title.includes(term) ? 'block' : 'none';
                 });
+            });
+        }
+
+        // Mission Control Countdown
+        const countdownContainer = document.getElementById('main-countdown');
+        if (countdownContainer) {
+            const deadline = new Date(countdownContainer.dataset.deadline).getTime();
+            
+            function updateCountdown() {
+                const now = new Date().getTime();
+                const diff = deadline - now;
+
+                if (diff < 0) {
+                    countdownContainer.innerHTML = '<div class="text-success fw-bold">Mission Active</div>';
+                    return;
+                }
+
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+                document.getElementById('days').innerText = days.toString().padStart(2, '0');
+                document.getElementById('hours').innerText = hours.toString().padStart(2, '0');
+                document.getElementById('minutes').innerText = minutes.toString().padStart(2, '0');
             }
+
+            updateCountdown();
+            setInterval(updateCountdown, 60000);
+        }
+
+        // Staggered Entry Animation
+        document.querySelectorAll('.bento-card').forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(15px)';
+            setTimeout(() => {
+                card.style.transition = 'all 0.5s cubic-bezier(0.23, 1, 0.32, 1)';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 80);
         });
 
-        if (!hasResults) {
-            searchResults.innerHTML = '<div class="p-4 text-center text-muted small">No matches found.</div>';
+        // API Call Helper and existing functions...
+        async function updateProject() {
+            const form = document.querySelector('form[name="updateProjectForm"]');
+            const btn = form.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            
+            const data = {
+                project_name: form.querySelector('[name="project_name"]').value,
+                project_description: form.querySelector('[name="project_description"]').value
+            };
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+            try {
+                await apiCall('/api/student/project-update', 'POST', data);
+                document.getElementById('display-project-name').textContent = data.project_name;
+                document.getElementById('display-project-description').textContent = data.project_description;
+                showToast('Portfolio Updated', 'Success');
+            } catch (e) { 
+                console.error(e);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
         }
 
-        searchDropdown.classList.remove('d-none');
-    }
+        async function updateRole() {
+            const modalEl = document.getElementById('roleModal');
+            const roleSelect = document.getElementById('id_role');
+            const role = roleSelect.value;
+            const roleLabel = roleSelect.options[roleSelect.selectedIndex].text;
+            const btn = modalEl.querySelector('button[type="submit"]');
 
-    function scrollToElement(id) {
-        const el = document.getElementById(id);
-        if (el) {
-            searchDropdown.classList.add('d-none');
-            searchInput.value = '';
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            el.classList.add('highlight-pulse');
-            setTimeout(() => el.classList.remove('highlight-pulse'), 2000);
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+            try {
+                await apiCall('/api/student/role-update', 'POST', { role });
+                bootstrap.Modal.getInstance(modalEl).hide();
+                showToast('Role Updated', `Position: ${roleLabel}`);
+                setTimeout(() => location.reload(), 1000);
+            } catch (e) { } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Confirm';
+            }
         }
-    }
 
-    async function showPeerProfile(data) {
-        searchDropdown.classList.add('d-none');
-        searchInput.value = '';
-        
-        document.getElementById('peer-name').textContent = data.name || 'N/A';
-        document.getElementById('peer-username').textContent = data.username ? `@${data.username}` : '';
-        document.getElementById('peer-team').textContent = data.team || 'No Team';
-        document.getElementById('peer-role').textContent = data.role || 'Member';
-        
-        // If it's a student, we might need to fetch their team's project name if it wasn't in the search result
-        // For simplicity, if we don't have it, we show a placeholder or fetch it
-        document.getElementById('peer-project').textContent = data.project || 'Collaborating on team objectives.';
+        async function submitAssignment(assignId) {
+            const modal = document.getElementById(`submitModal${assignId}`);
+            const form = modal.querySelector('form');
+            const formData = new FormData();
+            formData.append('assignment_id', assignId);
+            formData.append('title', form.querySelector('[name="title"]').value);
+            const files = form.querySelector('[name="files"]').files;
+            for (let i = 0; i < files.length; i++) {
+                formData.append('files', files[i]);
+            }
 
-        const modal = new bootstrap.Modal(document.getElementById('peerModal'));
-        modal.show();
-    }
+            const btn = modal.querySelector('.submit-btn-loading');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>...';
 
-    // Close dropdown on outside click
-    document.addEventListener('click', (e) => {
-        if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
-            searchDropdown.classList.add('d-none');
+            try {
+                const result = await apiCall('/api/student/submit-assignment', 'POST', formData, true);
+                bootstrap.Modal.getInstance(modal).hide();
+                showToast('Success', result.message);
+                setTimeout(() => location.reload(), 1000);
+            } catch (e) {
+                console.error(e);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
         }
-    });
-</script>
+    </script>
 
 {% endblock %}

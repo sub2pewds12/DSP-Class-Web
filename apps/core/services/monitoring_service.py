@@ -49,6 +49,7 @@ class MonitoringService:
         
         while not cls._stop_event.is_set():
             try:
+                print(f"\n[Heartbeat] Pulse triggered at {datetime.now().strftime('%H:%M:%S')}")
                 cls.ship_metrics()
                 # Automated Health Check, Metrics Shipping, and Statuspage Sync
                 InfrastructureService.perform_health_check()
