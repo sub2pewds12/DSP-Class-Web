@@ -105,9 +105,9 @@ class SubmissionService:
         cache.delete_many(["dashboard_teacher", "dashboard_students"])
         return title
 
-class AssignmentService:
+class AcademiaService:
     """
-    Handles lecturer actions related to assignments and documents.
+    Handles course actions related to assignments, documents, and student roles.
     """
 
     @staticmethod
@@ -146,6 +146,41 @@ class AssignmentService:
                     'submission': sub,
                 })
         return teams
+
+    @staticmethod
+    def get_student_roles(student):
+        """
+        Parses a student's comma-separated role string and maps to icons.
+        Returns a dict with 'role_list', 'role_icons', and 'role_data'.
+        """
+        if not student:
+            return {'role_list': [], 'role_icons': [], 'role_data': [], 'role_icon': 'person'}
+
+        role_icon_map = {
+            'leader': 'terminal-fill', 'project lead': 'terminal-fill',
+            'architect': 'diagram-3-fill', 'systems architect': 'diagram-3-fill',
+            'signal': 'activity', 'dsp engineer': 'activity',
+            'algorithm': 'braces', 'algorithm developer': 'braces',
+            'embedded': 'cpu-fill', 'embedded engineer': 'cpu-fill',
+            'analyst': 'bar-chart-fill', 'quality engineer': 'bar-chart-fill',
+            'writer': 'file-earmark-text', 'technical writer': 'file-earmark-text',
+            'developer': 'code-slash', 'designer': 'palette2', 'researcher': 'search'
+        }
+        
+        # Support multiple roles (comma separated)
+        raw_roles = [r.strip() for r in (student.role or "").split(',') if r.strip()]
+        if not raw_roles: raw_roles = ["Member"]
+        
+        role_list = raw_roles
+        role_icons = [role_icon_map.get(r.lower(), 'person-badge') for r in raw_roles]
+        role_data = [{'label': label, 'icon': icon} for label, icon in zip(role_list, role_icons)]
+        
+        return {
+            'role_list': role_list,
+            'role_icons': role_icons,
+            'role_data': role_data,
+            'role_icon': role_icons[0] if role_icons else 'person-badge'
+        }
 
     @staticmethod
     def create_assignment(
@@ -250,10 +285,10 @@ class AssignmentService:
             documents = ClassDocument.objects.all().order_by('-uploaded_at')
             assignments = Assignment.objects.all().order_by('-deadline')
             
-            trends = AssignmentService.get_submission_trends()
+            trends = AcademiaService.get_submission_trends()
             
             # Offload status mapping logic to service
-            teams = AssignmentService.get_team_status_matrix(teams, assignments)
+            teams = AcademiaService.get_team_status_matrix(teams, assignments)
 
             return {
                 'teams': teams,
@@ -315,21 +350,60 @@ class AssignmentService:
                 matching_sub = next((s for s in team_subs if s.assignment_id == a.id), None)
                 a.team_submission = matching_sub
 
-        # Enrichment: Next Deadline
-        from django.utils import timezone
-        next_deadline = Assignment.objects.filter(
-            deadline__gt=timezone.now(),
-            is_active=True
-        ).order_by('deadline').first()
+            # NEW: Enrichment: Member Status & Roles
+            from django.db.models import Max
+            last_activities = AuditLog.objects.filter(
+                actor_id__in=team_member_ids
+            ).values('actor_id').annotate(last_active=Max('timestamp'))
+            
+            activity_map = {item['actor_id']: item['last_active'] for item in last_activities}
+            from django.utils import timezone
+            now = timezone.now()
+            
+            for m in team.members.all():
+                m.last_active = activity_map.get(m.user_id)
+                # Online if active in the last 10 minutes
+                m.is_online = m.last_active and (now - m.last_active).total_seconds() < 600
+                
+                # Use centralized role mapping
+                roles = AcademiaService.get_student_roles(m)
+                m.role_list = roles['role_list']
+                m.role_icons = roles['role_icons']
+                m.role_data = roles['role_data']
+                m.role_icon = roles['role_icon']
 
-        # Enrichment: Grade Stats for released assignments
-        for a in assignments:
-            if a.grades_released:
-                a.stats = AssignmentService.get_assignment_stats(a.id)
+        # Enrichment: Dashboard Deadlines (Prioritize upcoming, then recently passed to fill 4 slots)
+        from django.utils import timezone
+        now = timezone.now()
+        upcoming = sorted([a for a in assignments if a.deadline > now and a.is_active], key=lambda x: x.deadline)
+        passed = sorted([a for a in assignments if a.deadline <= now and a.is_active], key=lambda x: x.deadline, reverse=True)
+        
+        compact_deadlines = (upcoming + passed)[:4]
+        next_deadline = upcoming[0] if upcoming else None
+
+        # Metadata for the Visual Role Selector
+        role_metadata = [
+            {'id': 'Leader', 'label': 'Project Lead', 'icon': 'terminal-fill', 'desc': 'Oversees project architecture and delivery milestones.'},
+            {'id': 'Architect', 'label': 'Systems Architect', 'icon': 'diagram-3-fill', 'desc': 'Integrates high-level hardware and software design.'},
+            {'id': 'Signal', 'label': 'DSP Engineer', 'icon': 'activity', 'desc': 'Specializes in signal processing theory and mathematics.'},
+            {'id': 'Algorithm', 'label': 'Algorithm Developer', 'icon': 'braces', 'desc': 'Implements core algorithms and analyzes computational complexity.'},
+            {'id': 'Embedded', 'label': 'Embedded Engineer', 'icon': 'cpu-fill', 'desc': 'Develops low-level firmware and hardware logic.'},
+            {'id': 'Analyst', 'label': 'Quality Engineer', 'icon': 'bar-chart-fill', 'desc': 'Performs signal verification and performance analysis.'},
+            {'id': 'Writer', 'label': 'Technical Writer', 'icon': 'file-earmark-text', 'desc': 'Maintains technical documentation and project reports.'},
+        ]
+        role_ids_only = [r['id'] for r in role_metadata]
 
         return {
             'documents': documents,
             'assignments': assignments,
             'team_activity': team_activity,
             'next_deadline': next_deadline,
+            'upcoming_deadlines': upcoming,
+            'compact_deadlines': compact_deadlines,
+            'role_metadata': role_metadata,
+            'role_ids_only': role_ids_only,
+            'now': now,
         }
+
+# Backward compatibility
+AssignmentService = AcademiaService

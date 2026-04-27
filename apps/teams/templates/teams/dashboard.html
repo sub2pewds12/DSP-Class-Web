@@ -5,135 +5,218 @@
 <style>
     /* Search Bar Spinner */
     @keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
     }
+
     .search-loading .bi-search {
         animation: spin 1s linear infinite;
         color: var(--primary-red) !important;
     }
-    
+
     /* Pulse animation for search highlight */
     @keyframes pulse-highlight {
-        0% { background-color: transparent; }
-        50% { background-color: rgba(220, 53, 69, 0.2); }
-        100% { background-color: transparent; }
+        0% {
+            background-color: transparent;
+        }
+
+        50% {
+            background-color: rgba(220, 53, 69, 0.2);
+        }
+
+        100% {
+            background-color: transparent;
+        }
     }
+
     .highlight-pulse {
         animation: pulse-highlight 2s ease-in-out;
         border: 2px solid var(--primary-red) !important;
     }
-    
+
     .hover-bg-light:hover {
         background-color: var(--hover-color);
     }
+
     .cursor-pointer {
         cursor: pointer;
     }
-    .ls-1 { letter-spacing: 0.1em; }
-    .shadow-xl { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+
+    .ls-1 {
+        letter-spacing: 0.1em;
+    }
+
+    .shadow-xl {
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
 </style>
 
 <div class="container mt-4 pb-5">
     {% if is_read_only %}
-        <div class="alert alert-info border-0 rounded-4 shadow-sm mb-4 d-flex align-items-center">
-            <i class="bi bi-shield-check h4 mb-0 me-3"></i>
-            <div>
-                <div class="fw-bold">Read-Only System Operator Mode</div>
-                <div class="small opacity-75">You are currently inspecting **{{ team.name }}** as a Developer. Administrative actions are disabled.</div>
-            </div>
+    <div class="alert alert-info border-0 rounded-4 shadow-sm mb-4 d-flex align-items-center">
+        <i class="bi bi-shield-check h4 mb-0 me-3"></i>
+        <div>
+            <div class="fw-bold">Read-Only Mode</div>
+            <div class="small opacity-75">You are currently inspecting **{{ team.name }}** as a Developer.
+                Administrative actions are disabled.</div>
         </div>
+    </div>
     {% endif %}
-    
+
     <div class="bento-container">
-        <!-- Area: Mission Control (Next Deadline Countdown) -->
-        <div class="bento-card next-deadline-card span-1" tabindex="0">
+        <!-- Area: Project Submissions & Milestones -->
+        <div class="bento-card next-deadline-card span-1 row-2" tabindex="0">
             <div class="card-header-minimal">
-                <i class="bi bi-rocket-takeoff text-primary-red"></i>
-                <span class="small fw-bold text-muted text-uppercase ls-1">Next Deadline</span>
+                <i class="bi bi-file-earmark-arrow-up text-primary-red"></i>
+                <span class="small fw-bold text-muted text-uppercase ls-1">Submissions</span>
             </div>
-            <div class="countdown-container bg-dark-blue rounded-4 px-1 py-4 mt-3 text-white border border-soft shadow-inner">
-                {% if next_deadline %}
-                    <div class="d-flex justify-content-center align-items-center gap-1 text-center" id="main-countdown" data-deadline="{{ next_deadline.deadline|date:'c' }}">
-                        <div class="countdown-unit">
-                            <div class="h2 mb-0 fw-800" id="days">--</div>
-                            <div class="tiny-text opacity-50 text-uppercase fw-bold ls-1">Days</div>
-                        </div>
-                        <span class="h2 mb-0 fw-800 opacity-20 countdown-separator">:</span>
-                        <div class="countdown-unit">
-                            <div class="h2 mb-0 fw-800" id="hours">--</div>
-                            <div class="tiny-text opacity-50 text-uppercase fw-bold ls-1">Hrs</div>
-                        </div>
-                        <span class="h2 mb-0 fw-800 opacity-20 countdown-separator">:</span>
-                        <div class="countdown-unit">
-                            <div class="h2 mb-0 fw-800" id="minutes">--</div>
-                            <div class="tiny-text opacity-50 text-uppercase fw-bold ls-1">Min</div>
-                        </div>
-                        <span class="h2 mb-0 fw-800 opacity-20 countdown-separator">:</span>
-                        <div class="countdown-unit">
-                            <div class="h2 mb-0 fw-800" id="seconds">--</div>
-                            <div class="tiny-text opacity-50 text-uppercase fw-bold ls-1">Sec</div>
-                        </div>
+
+            {% if next_deadline %}
+            <div class="submission-focus-card bg-dark-blue rounded-4 p-3 mt-3 text-white border border-soft shadow-inner">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="badge bg-red-soft text-primary-red tiny-text text-uppercase fw-800 ls-1 px-2 py-1">Next Up</div>
+                    <div class="text-muted small" id="main-countdown-subtle" data-deadline="{{ next_deadline.deadline|date:'c' }}">
+                        <i class="bi bi-clock me-1"></i>
+                        <span id="days">--</span>d <span id="hours">--</span>h <span id="minutes">--</span>m
                     </div>
-                    <div class="mt-4 text-center">
-                        <div class="badge-pill-modern">
-                            <span class="dot-indicator pulse-red me-2"></span>
-                            Next: {{ next_deadline.title }}
+                </div>
+                
+                <h5 class="fw-800 mb-1 text-truncate" title="{{ next_deadline.title }}">{{ next_deadline.title }}</h5>
+                <p class="tiny-text text-muted mb-3">Due {{ next_deadline.deadline|date:"M d, H:i" }}</p>
+
+                <button class="btn btn-primary-red w-100 py-2 rounded-4 fw-bold d-flex align-items-center justify-content-center gap-2" 
+                        onclick="showSubmissionModal({{ next_deadline.id }})">
+                    <i class="bi bi-cloud-arrow-up-fill"></i>
+                    Submit Files
+                </button>
+            </div>
+            {% else %}
+            <div class="text-center py-5 opacity-50">
+                <i class="bi bi-check-circle h1 d-block mb-2 text-success"></i>
+                <span class="text-muted small">No pending submissions</span>
+            </div>
+            {% endif %}
+
+            {% if compact_deadlines|length > 1 %}
+            <div class="mt-4 pt-3">
+                <div class="tiny-text text-muted text-uppercase ls-1 fw-bold mb-3 d-flex justify-content-between">
+                    <span>Milestones</span>
+                    <span class="opacity-50">Next 3 Events</span>
+                </div>
+                <div class="upcoming-deadlines-list">
+                    {% for assign in compact_deadlines|slice:"1:4" %}
+                    <div class="deadline-item d-flex align-items-center gap-3 mb-2 p-2 rounded-3 transition-all hover-bg-light cursor-pointer" 
+                         onclick="showSubmissionModal({{ assign.id }})">
+                        <div class="date-badge-compact text-center {% if assign.deadline < now %}opacity-50{% endif %}" style="width: 40px; height: 40px; flex-shrink: 0;">
+                            <div class="small fw-bold text-primary-red mb-0" style="line-height: 1;">{{ assign.deadline|date:"d" }}</div>
+                            <div class="tiny-text text-muted text-uppercase" style="font-size: 0.5rem;">{{ assign.deadline|date:"M" }}</div>
                         </div>
+                        <div class="flex-grow-1 text-truncate">
+                            <div class="small fw-bold text-main" style="font-size: 0.75rem;">{{ assign.title }}</div>
+                            <div class="tiny-text text-muted" style="font-size: 0.65rem;">
+                                {% if assign.deadline < now %}
+                                <span class="text-danger">Passed</span> • {{ assign.deadline|date:"M d" }}
+                                {% else %}
+                                {{ assign.deadline|date:"M d, H:i" }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <i class="bi bi-chevron-right text-muted opacity-25 small"></i>
                     </div>
-                {% else %}
-                    <div class="text-center py-3">
-                        <i class="bi bi-check-all text-success h1 d-block mb-2"></i>
-                        <span class="text-muted small">All missions clear</span>
-                    </div>
-                {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="mt-auto pt-3 border-top border-soft">
+                <button class="btn btn-link btn-sm text-primary-red fw-bold text-decoration-none p-0 w-100 text-start d-flex justify-content-between align-items-center" 
+                        data-bs-toggle="modal" data-bs-target="#allDeadlinesModal">
+                    <span style="font-size: 0.75rem;">Academic Timeline</span>
+                    <i class="bi bi-arrow-right"></i>
+                </button>
             </div>
         </div>
 
         <!-- Area: Project Portfolio (Main Info) -->
-        <div class="bento-card span-2 row-2" tabindex="0">
+        <div class="bento-card span-2" tabindex="0">
             <div class="d-flex justify-content-between align-items-start mb-4">
-                <div>
-                    <span class="text-muted small text-uppercase fw-bold ls-1">Project Portfolio</span>
-                    <div class="d-flex align-items-center gap-3 mb-2">
-                        {% if team.avatar %}
-                            <img src="{{ team.avatar.url }}" class="rounded-3 shadow-sm border border-soft" style="width: 62px; height: 62px; object-fit: cover;">
-                        {% else %}
-                            <div class="rounded-3 bg-red-soft text-primary-red d-flex align-items-center justify-content-center border border-soft" style="width: 62px; height: 62px;">
-                                <i class="bi bi-people-fill h3 mb-0"></i>
+                <div class="project-info-ribbon flex-grow-1 me-3">
+                    <div class="d-flex align-items-center gap-4">
+                        <div class="position-relative">
+                            {% if team.avatar %}
+                            <img src="{{ team.avatar.url }}" class="rounded-4 shadow-lg border border-soft"
+                                style="width: 72px; height: 72px; object-fit: cover;">
+                            {% else %}
+                            <div class="rounded-4 bg-red-soft text-primary-red d-flex align-items-center justify-content-center border border-soft shadow-sm"
+                                style="width: 72px; height: 72px;">
+                                <i class="bi bi-people-fill h2 mb-0"></i>
                             </div>
-                        {% endif %}
+                            {% endif %}
+                            {% if team.leader == student %}
+                            <div class="leader-star-floating" title="Team Leader">
+                                <i class="bi bi-star-fill"></i>
+                            </div>
+                            {% endif %}
+                        </div>
                         <div>
-                            <h1 class="h1 text-main mb-0 fw-800" id="display-team-name">{{ team.name }}</h1>
-                            <div class="tiny-text text-muted text-uppercase ls-1 fw-bold">Project Team</div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <h1 class="h1 text-main mb-0 fw-900" id="display-team-name">{{ team.name }}</h1>
+                                {% if team.leader == student %}
+                                <span class="badge-pill-status badge-pill-leader">
+                                    <i class="bi bi-star-fill"></i> Leader
+                                </span>
+                                {% endif %}
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="tiny-text text-muted text-uppercase ls-2 fw-800">Team Portfolio</span>
+                                <span class="text-primary-red fw-bold">/</span>
+                                <span class="text-main fw-bold" id="display-project-name" style="font-size: 0.95rem;">
+                                    {{ team.project_name|default:"Awaiting project name..." }}
+                                </span>
+                            </div>
                         </div>
                     </div>
-                    <div class="mt-2">
-                        <span class="text-primary-red fw-bold">Project:</span>
-                        <span class="h5 text-main ms-1" id="display-project-name">{{ team.project_name|default:"Awaiting details..." }}</span>
-                    </div>
                 </div>
-                {% if team.leader == student %}
-                    <span class="status-badge bg-soft text-main border border-warning shadow-sm"><i class="bi bi-star-fill"></i> Leader</span>
-                {% endif %}
-            </div>
-            
-            <div class="p-3 bg-soft rounded-4 border-0 mb-4">
-                <p class="text-muted small mb-0 fw-500" id="display-project-description" style="line-height: 1.6;">{{ team.project_description|default:"Leader can update project objectives below." }}</p>
             </div>
 
-            {% if team.leader == student and not is_read_only %}
-                <div class="border-top pt-4 mt-auto">
-                    <form name="updateProjectForm" onsubmit="event.preventDefault(); updateProject();" class="row g-2">
-                        <div class="col-md-5">
-                            <input type="text" name="project_name" class="form-control rounded-4 bg-soft text-main border-0 shadow-sm" value="{{ team.project_name|default:'' }}" placeholder="Project Title">
-                        </div>
-                        <div class="col-md-7 d-flex gap-2">
-                            <input type="text" name="project_description" class="form-control rounded-4 bg-soft text-main border-0 shadow-sm flex-grow-1" value="{{ team.project_description|default:'' }}" placeholder="Brief Description">
-                            <button type="submit" class="btn btn-primary-red px-4">Update</button>
-                        </div>
-                    </form>
+            <div class="project-description-box mb-4">
+                <p class="text-muted mb-0 fw-500" id="display-project-description" style="line-height: 1.8; font-size: 0.9rem;">
+                    {{ team.project_description|default:"Team members can update the project description using the form below." }}
+                </p>
+            </div>
+
+            {% if not is_read_only %}
+            <div class="border-top border-soft pt-4">
+                <div class="tiny-text text-muted text-uppercase ls-1 fw-bold mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-pencil-square text-primary-red"></i> Update Project Details
                 </div>
+                <form name="updateProjectForm" onsubmit="event.preventDefault(); updateProject();" class="row g-3">
+                    <div class="col-md-5">
+                        <div class="input-group console-input-group">
+                            <span class="input-group-text"><i class="bi bi-tag"></i></span>
+                            <input type="text" name="project_name"
+                                class="form-control"
+                                value="{{ team.project_name|default:'' }}" placeholder="Project Name">
+                        </div>
+                    </div>
+                    <div class="col-md-7 d-flex gap-3">
+                        <div class="input-group console-input-group flex-grow-1">
+                            <span class="input-group-text"><i class="bi bi-text-left"></i></span>
+                            <input type="text" name="project_description"
+                                class="form-control"
+                                value="{{ team.project_description|default:'' }}" placeholder="Project Description">
+                        </div>
+                        <button type="submit" class="btn btn-primary-red px-4 rounded-4 fw-bold">
+                            Update
+                        </button>
+                    </div>
+                </form>
+            </div>
             {% endif %}
         </div>
 
@@ -144,106 +227,77 @@
                     <i class="bi bi-activity text-primary-red"></i>
                     <span class="small fw-bold text-muted text-uppercase ls-1">Latest Activities</span>
                 </div>
-                <button class="btn btn-link btn-sm text-primary-red p-0 text-decoration-none" style="font-size: 0.7rem;" data-bs-toggle="modal" data-bs-target="#activityHistoryModal">View All</button>
+                <button class="btn btn-link btn-sm text-primary-red p-0 text-decoration-none" style="font-size: 0.7rem;"
+                    data-bs-toggle="modal" data-bs-target="#activityHistoryModal">View All</button>
             </div>
-            <div class="activity-feed scroll-hide" id="team-pulse-feed" style="max-height: 300px; overflow-y: auto;"
-                 data-latest-ts="{% if team_activity %}{{ team_activity.0.timestamp|date:'c' }}{% endif %}">
+            <div class="activity-feed bento-scroll-content" id="team-pulse-feed"
+                data-latest-ts="{% if team_activity %}{{ team_activity.0.timestamp|date:'c' }}{% endif %}">
                 {% for log in team_activity %}
-                    <div class="activity-item d-flex gap-3 mb-3" data-log-id="{{ log.id|default:forloop.counter }}">
-                        <div class="activity-icon-sm bg-soft text-primary-red rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; flex-shrink: 0;">
-                            <i class="bi bi-dot h4 mb-0"></i>
-                        </div>
-                        <div class="activity-content">
-                            <div class="text-main fw-bold" style="font-size: 0.75rem;">{{ log.actor.get_full_name|default:log.actor.username }}</div>
-                            <div class="text-muted" style="font-size: 0.7rem;">{{ log.description }}</div>
-                            <div class="text-muted opacity-50" style="font-size: 0.65rem;">{{ log.timestamp|timesince }} ago</div>
-                        </div>
+                <div class="activity-item d-flex gap-3 mb-3" data-log-id="{{ log.id|default:forloop.counter }}"
+                    data-ts="{{ log.timestamp|date:'c' }}">
+                    <div class="activity-icon-sm bg-soft text-primary-red rounded-circle d-flex align-items-center justify-content-center"
+                        style="width: 32px; height: 32px; flex-shrink: 0;">
+                        <i class="bi bi-dot h4 mb-0"></i>
                     </div>
+                    <div class="activity-content">
+                        <div class="text-main fw-bold d-flex align-items-center" style="font-size: 0.75rem;">
+                            {{ log.actor.get_full_name|default:log.actor.username }}
+                            <span class="unseen-dot d-none"></span>
+                        </div>
+                        <div class="text-muted" style="font-size: 0.7rem;">{{ log.description }}</div>
+                        <div class="text-muted opacity-50 pulse-ts" style="font-size: 0.65rem;">{{ log.timestamp|timesince }} ago</div>
+                    </div>
+                </div>
                 {% empty %}
-                    <div class="text-center py-4 text-muted small" id="pulse-empty-state">Quiet for now...</div>
+                <div class="text-center py-4 text-muted small" id="pulse-empty-state">Quiet for now...</div>
                 {% endfor %}
             </div>
         </div>
 
-        <!-- Area: Team Members -->
-        <div class="bento-card span-1" tabindex="0">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <span class="small fw-bold text-muted text-uppercase ls-1">Squad</span>
-                {% if not is_read_only %}
-                    <button class="btn btn-link btn-sm text-primary-red p-0 text-decoration-none" style="font-size: 0.7rem;" data-bs-toggle="modal" data-bs-target="#roleModal">Edit Role</button>
-                {% endif %}
+        <!-- Area: Team Members & Roles -->
+        <div class="bento-card span-2" tabindex="0">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-people text-primary-red"></i> Operational Team</h5>
+                <div class="badge bg-red-soft text-primary-red rounded-pill px-3">{{ team.members.count }} Members</div>
             </div>
-            <div class="mini-member-list">
+            <div class="row g-3">
                 {% for member in team.members.all %}
-                    <div class="d-flex align-items-center gap-2 mb-2 cursor-pointer hover-bg-light p-1 rounded-2 transition-all" onclick="showPeerProfile({{ member.user.id }})">
-                        {% if member.user.avatar %}
-                            <img src="{{ member.user.avatar.url }}" class="rounded-circle shadow-sm" style="width: 27px; height: 27px; object-fit: cover; border: 1px solid var(--glass-border);">
-                        {% else %}
-                            <div class="avatar-xs rounded-circle bg-red-soft text-primary-red fw-bold d-flex align-items-center justify-content-center" style="width: 27px; height: 27px; font-size: 0.7rem;">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center gap-3 mb-3 member-card-v2 p-2 rounded-4"
+                        onclick="showPeerProfile({{ member.user.id }})"
+                        title="Last active: {{ member.last_active|default:'Never'|date:'M d, H:i' }}">
+                        <div class="position-relative">
+                            {% if member.user.avatar %}
+                            <img src="{{ member.user.avatar.url }}" class="rounded-circle"
+                                style="width: 32px; height: 32px; object-fit: cover; border: 2px solid var(--glass-border);">
+                            {% else %}
+                            <div class="avatar-xs rounded-circle bg-red-soft text-primary-red fw-bold d-flex align-items-center justify-content-center"
+                                style="width: 32px; height: 32px; font-size: 0.8rem;">
                                 {{ member.user.get_full_name|slice:":1" }}
                             </div>
-                        {% endif %}
-                        <div class="text-truncate small text-main fw-500" style="max-width: 100px;">{{ member.user.get_full_name }}</div>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
-
-        <!-- Area: Assignments -->
-        <div class="bento-card span-3" tabindex="0">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h5 class="mb-0 fw-bold"><i class="bi bi-check2-square text-primary-red"></i> Assignments</h5>
-                <div class="search-wrapper position-relative" style="max-width: 200px;">
-                    <input type="text" id="cardFilterInput" class="form-control form-control-sm border-0 bg-soft rounded-pill" placeholder="Filter tasks...">
-                </div>
-            </div>
-
-            <div class="row g-3">
-                {% for assign in assignments %}
-                    <div class="col-md-6 assignment-card-wrapper" data-title="{{ assign.title|lower }}">
-                        <div class="p-3 rounded-4 border bg-soft h-100 d-flex flex-column transition-all hover-up assignment-card" id="assign-card-{{ assign.id }}">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <h6 class="fw-bold text-main mb-0 small">{{ assign.title }}</h6>
-                                {% if assign.team_submission %}
-                                    <i class="bi bi-check-circle-fill text-success small"></i>
-                                {% else %}
-                                    <i class="bi bi-circle text-muted small"></i>
+                            {% endif %}
+                            <!-- Online Status Indicator -->
+                            <div class="status-dot position-absolute bottom-0 end-0 {% if member.is_online %}status-online{% else %}status-offline{% endif %}"
+                                style="border: 2px solid var(--bg-surface);"></div>
+                        </div>
+                        <div class="text-truncate flex-grow-1">
+                            <div class="text-main fw-600 small mb-0">
+                                {{ member.user.get_full_name }}
+                                {% if team.leader == member %}
+                                <i class="bi bi-star-fill text-warning ms-1" style="font-size: 0.6rem;"
+                                    title="Team Leader"></i>
                                 {% endif %}
                             </div>
-                            
-                            {% if assign.grades_released and assign.team_submission %}
-                                <div class="grade-report bg-surface rounded-3 p-2 mb-3 border border-soft d-flex justify-content-between align-items-center">
-                                    <div class="grade-main">
-                                        <div class="text-muted tiny-text text-uppercase fw-bold">Score</div>
-                                        <div class="text-primary-red h5 mb-0 fw-800">{{ assign.team_submission.grade }}%</div>
-                                    </div>
-                                    <div class="grade-stats d-flex gap-3 border-start ps-3">
-                                        <div class="text-center">
-                                            <div class="text-muted tiny-text text-uppercase fw-bold">Avg</div>
-                                            <div class="text-main fw-bold small">{{ assign.stats.average }}</div>
-                                        </div>
-                                        <div class="text-center">
-                                            <div class="text-muted tiny-text text-uppercase fw-bold">High</div>
-                                            <div class="text-main fw-bold small">{{ assign.stats.high }}</div>
-                                        </div>
-                                    </div>
+                            <div class="d-flex flex-wrap gap-1 mt-1">
+                                {% for r in member.role_data %}
+                                <div class="glass-badge" title="{{ r.label }}">
+                                    <i class="bi bi-{{ r.icon }}"></i>
                                 </div>
-                            {% else %}
-                                <p class="text-muted tiny-text mb-3 flex-grow-1">{{ assign.description|truncatechars:60 }}</p>
-                            {% endif %}
-                            
-                            <div class="d-flex justify-content-between align-items-center mt-auto">
-                                <div class="tiny-text fw-bold {% if assign.is_late %}text-danger{% else %}text-muted{% endif %}">
-                                    <i class="bi bi-clock me-1"></i>{{ assign.deadline|date:"M d" }}
-                                </div>
-                                {% if not is_read_only %}
-                                    <button class="btn btn-primary-red btn-sm rounded-pill px-3 py-1" style="font-size: 0.65rem" data-bs-toggle="modal" data-bs-target="#submitModal{{ assign.id }}">
-                                        {% if assign.team_submission %}Update{% else %}Submit{% endif %}
-                                    </button>
-                                {% endif %}
+                                {% endfor %}
                             </div>
                         </div>
                     </div>
+                </div>
                 {% endfor %}
             </div>
         </div>
@@ -251,140 +305,190 @@
         <!-- Area: Reference Materials -->
         <div class="bento-card span-1" tabindex="0">
             <span class="small fw-bold text-muted text-uppercase ls-1 d-block mb-3">Resources</span>
-            <div class="resource-list scroll-hide" style="max-height: 250px; overflow-y: auto;">
+            <div class="resource-list scroll-hide" style="max-height: 180px; overflow-y: auto;">
                 {% for doc in documents %}
-                    {% if doc.file %}
-                    <a href="{{ doc.file.url }}" target="_blank" class="d-flex align-items-center gap-3 p-2 rounded-3 hover-bg-light transition-all text-decoration-none mb-1">
-                        <div class="bg-soft text-primary-red rounded p-2">
-                            <i class="bi bi-file-earmark-text small"></i>
-                        </div>
-                        <div class="text-truncate">
-                            <div class="text-main fw-bold tiny-text text-truncate">{{ doc.title }}</div>
-                            <div class="text-muted" style="font-size: 0.6rem;">{{ doc.uploaded_at|date:"M d" }}</div>
-                        </div>
-                    </a>
-                    {% endif %}
+                {% if doc.file %}
+                <a href="{{ doc.file.url }}" target="_blank"
+                    class="d-flex align-items-center gap-3 p-2 rounded-3 hover-bg-light transition-all text-decoration-none mb-1">
+                    <div class="bg-soft text-primary-red rounded p-2">
+                        <i class="bi bi-file-earmark-text small"></i>
+                    </div>
+                    <div class="text-truncate">
+                        <div class="text-main fw-bold tiny-text text-truncate">{{ doc.title }}</div>
+                        <div class="text-muted" style="font-size: 0.6rem;">{{ doc.uploaded_at|date:"M d" }}</div>
+                    </div>
+                </a>
+                {% endif %}
                 {% empty %}
-                    <div class="text-center py-3 text-muted tiny-text">No resources.</div>
+                <div class="text-center py-3 text-muted tiny-text">No resources.</div>
                 {% endfor %}
             </div>
         </div>
     </div>
 
-    </div>
+</div>
 
-    <!-- Role Modal -->
-    <div class="modal fade" id="roleModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 rounded-5 overflow-hidden">
-                <form onsubmit="event.preventDefault(); updateRole();">
-                    <div class="modal-header border-0 bg-primary-red text-white py-4">
-                        <h5 class="modal-title fw-bold">Select Team Role</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body p-4">
-                        <p class="text-muted small mb-4">Define your primary responsibility within **{{ team.name }}**.</p>
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold text-muted text-uppercase">Primary Designation</label>
-                            <select name="role" id="id_role" class="form-select rounded-4 bg-soft text-main border-0 shadow-sm">
-                                {% for val, label in student.ROLE_CHOICES %}
-                                    <option value="{{ val }}" {% if student.role == val %}selected{% endif %}>{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="modal-footer border-0 p-4">
-                        <button type="submit" class="btn btn-primary-red w-100 py-3 rounded-pill">Confirm Team Role</button>
-                    </div>
-                </form>
+<!-- Role Modal -->
+<div class="modal fade" id="roleModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+        <form class="modal-content border-0 rounded-5 overflow-hidden" onsubmit="event.preventDefault(); updateRole();">
+            <div class="modal-header border-0 bg-primary-red text-white py-3">
+                <h5 class="modal-title fw-bold">Select Team Role</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-        </div>
-    </div>
+            <div class="modal-body p-4">
+                <p class="text-muted small mb-3">Define your primary responsibility within **{{ team.name }}**.</p>
 
-    </div>
-
-    <!-- Assignment Submission Modals (Global Level to avoid backdrop issues) -->
-    {% for assign in assignments %}
-    <div class="modal fade" id="submitModal{{ assign.id }}" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg rounded-5 overflow-hidden">
-                <form onsubmit="event.preventDefault(); submitAssignment({{ assign.id }});">
-                    <div class="modal-header border-0 bg-dark text-white py-4">
-                        <h5 class="modal-title fw-bold">Submit Assignment: {{ assign.title }}</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="role-selection-grid mb-3">
+                    {% for role in role_metadata %}
+                    <div class="role-card {% if role.id in student.role %}active{% endif %}"
+                        data-role-id="{{ role.id }}" onclick="toggleRole('{{ role.id }}', this)">
+                        <i class="bi bi-{{ role.icon }}"></i>
+                        <div class="role-name">{{ role.label }}</div>
+                        <div class="role-desc text-muted">{{ role.desc }}</div>
                     </div>
-                    <div class="modal-body p-4">
-                        <div class="mb-4">
-                            <label class="form-label small fw-bold text-uppercase text-muted">Submission Title</label>
-                            <input type="text" name="title" class="form-control rounded-4 bg-soft text-main border-0 shadow-sm" placeholder="e.g. Iteration 1 Report" required>
-                        </div>
-                        <div class="mb-4">
-                            <label class="form-label small fw-bold text-uppercase text-muted">Attachments (Docs, Images, PNG, ZIP...)</label>
-                            <input type="file" name="files" class="form-control rounded-4 bg-soft text-main border-0 shadow-sm" multiple required>
-                            <div class="form-text small opacity-75">You can select up to 10 files at once. Each file must be a document or image.</div>
-                        </div>
-                        <div class="p-3 bg-red-soft rounded-4 small text-danger">
-                            <i class="bi bi-info-circle-fill me-2"></i> Note: New uploads will replace **all** previously submitted files for this assignment.
-                        </div>
+                    {% endfor %}
+                    <div class="role-card {% if 'Custom' in student.role or not student.role %}active{% endif %}"
+                        id="custom-role-card" onclick="toggleCustomRole(this)">
+                        <i class="bi bi-pencil-square"></i>
+                        <div class="role-name">Custom</div>
+                        <div class="role-desc">Specialized role...</div>
                     </div>
-                    <div class="modal-footer border-0 p-4">
-                        <button type="submit" class="btn btn-primary-red w-100 py-3 rounded-pill shadow submit-btn-loading">Upload Project File</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    {% endfor %}
-
-    <!-- Peer Profile Modal -->
-    <div class="modal fade" id="peerModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 rounded-5 overflow-hidden shadow-lg">
-                <div class="modal-header border-0 bg-primary-red text-white py-4">
-                    <h5 class="modal-title fw-bold">Peer Profile</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body p-4 text-center">
-                    <div class="mb-3">
-                        <div id="peer-avatar-container">
-                            <!-- JS will inject avatar or icon here -->
-                        </div>
-                        <h4 class="fw-800 text-main mb-1" id="peer-name">Student Name</h4>
-                        <p class="text-muted small mb-3" id="peer-username">@username</p>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-uppercase text-muted mb-1">Role Description</label>
+                    <textarea id="role_description" class="form-control bg-soft border-0 rounded-4 p-3" rows="2"
+                        placeholder="Describe your specific tasks and responsibilities..."
+                        style="font-size: 0.9rem;">{{ student.role_description }}</textarea>
+                </div>
+
+                <input type="hidden" name="role" id="id_role_input" value="{{ student.role }}">
+                <input type="text" id="custom_role_text"
+                    class="custom-role-input {% if 'Custom' in student.role %}active{% endif %}"
+                    placeholder="e.g. Documentation Specialist"
+                    value="{% if 'Custom' in student.role %}{{ student.role }}{% endif %}" oninput="syncRoles()">
+            </div>
+            <div class="modal-footer border-0 p-3">
+                <button type="submit" class="btn btn-primary-red w-100 py-3 rounded-pill fw-bold">Confirm Team
+                    Role</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+</div>
+
+<!-- Assignment Submission Modals (Global Level to avoid backdrop issues) -->
+{% for assign in assignments %}
+<div class="modal fade" id="submitModal{{ assign.id }}" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-5 overflow-hidden">
+            <form onsubmit="event.preventDefault(); submitAssignment({{ assign.id }});">
+                <div class="modal-header border-0 bg-dark text-white py-4">
+                    <h5 class="modal-title fw-bold">Submit Assignment: {{ assign.title }}</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-uppercase text-muted">Submission Title</label>
+                        <input type="text" name="title"
+                            class="form-control rounded-4 bg-soft text-main border-0 shadow-sm"
+                            placeholder="e.g. Iteration 1 Report" required>
                     </div>
-                    
-                    <div class="row g-3">
-                        <div class="col-6">
-                            <div class="p-3 bg-soft rounded-4 border">
-                                <span class="d-block small text-muted text-uppercase fw-bold mb-1" style="font-size: 0.6rem;">Team</span>
-                                <span class="fw-bold text-main" id="peer-team">Team Alpha</span>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="p-3 bg-soft rounded-4 border">
-                                <span class="d-block small text-muted text-uppercase fw-bold mb-1" style="font-size: 0.6rem;">Role</span>
-                                <span class="fw-bold text-primary-red" id="peer-role">Lead Developer</span>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="p-3 bg-soft rounded-4 border text-start">
-                                <span class="d-block small text-muted text-uppercase fw-bold mb-2" style="font-size: 0.6rem;">Active Project</span>
-                                <p class="mb-0 text-main fw-500" id="peer-project" style="font-size: 0.85rem;">Project title will appear here...</p>
-                            </div>
-                        </div>
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-uppercase text-muted">Attachments (Docs, Images,
+                            PNG, ZIP...)</label>
+                        <input type="file" name="files"
+                            class="form-control rounded-4 bg-soft text-main border-0 shadow-sm" multiple required>
+                        <div class="form-text small opacity-75">You can select up to 10 files at once. Each file must be
+                            a document or image.</div>
+                    </div>
+                    <div class="p-3 bg-red-soft rounded-4 small text-danger">
+                        <i class="bi bi-info-circle-fill me-2"></i> Note: New uploads will replace **all** previously
+                        submitted files for this assignment.
                     </div>
                 </div>
                 <div class="modal-footer border-0 p-4">
-                    <button type="button" class="btn btn-secondary w-100 py-3 rounded-pill" data-bs-dismiss="modal">Close Profile</button>
+                    <button type="submit"
+                        class="btn btn-primary-red w-100 py-3 rounded-pill shadow submit-btn-loading">Upload Project
+                        File</button>
                 </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Peer Profile Modal -->
+<div class="modal fade" id="peerModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+        <div class="modal-content border-0 rounded-5 overflow-hidden shadow-lg">
+            <div class="modal-header border-0 bg-primary-red text-white py-3">
+                <h5 class="modal-title fw-bold">Peer Profile</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <div class="mb-3">
+                    <div id="peer-avatar-container">
+                        <!-- JS will inject avatar or icon here -->
+                    </div>
+                    <h4 class="fw-800 text-main mb-1" id="peer-name">Student Name</h4>
+                    <p class="text-muted small mb-3" id="peer-username">@username</p>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="p-3 bg-soft rounded-4 border">
+                            <span class="d-block small text-muted text-uppercase fw-bold mb-1"
+                                style="font-size: 0.6rem;">Team</span>
+                            <span class="fw-bold text-main" id="peer-team">Team Alpha</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 bg-soft rounded-4 border">
+                            <span class="d-block small text-muted text-uppercase fw-bold mb-1"
+                                style="font-size: 0.6rem;">Roles</span>
+                            <div id="peer-role-badges" class="d-flex flex-wrap gap-1 mt-1">
+                                <!-- Badges will be injected here -->
+                            </div>
+                            <div id="peer-role-text" class="fw-bold text-primary-red mt-1 small"
+                                style="font-size: 0.75rem;">--</div>
+                        </div>
+                    </div>
+                    <div class="col-12" id="peer-description-container">
+                        <div class="p-3 bg-soft rounded-4 border text-start">
+                            <span class="d-block small text-muted text-uppercase fw-bold mb-2"
+                                style="font-size: 0.6rem;">Role Description</span>
+                            <p class="mb-0 text-main font-italic" id="peer-description"
+                                style="font-size: 0.8rem; line-height: 1.5; white-space: pre-line;">No details provided.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="p-3 bg-soft rounded-4 border text-start">
+                            <span class="d-block small text-muted text-uppercase fw-bold mb-2"
+                                style="font-size: 0.6rem;">Active Project</span>
+                            <p class="mb-0 text-main fw-500" id="peer-project" style="font-size: 0.85rem;">Project title
+                                will appear here...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 p-4">
+                <button type="button" class="btn btn-secondary w-100 py-3 rounded-pill" data-bs-dismiss="modal">Close
+                    Profile</button>
             </div>
         </div>
     </div>
 </div>
+</div>
 
 
 <!-- Activity History Modal -->
-<div class="modal fade" id="activityHistoryModal" tabindex="-1" aria-labelledby="activityHistoryLabel" aria-hidden="true">
+<div class="modal fade" id="activityHistoryModal" tabindex="-1" aria-labelledby="activityHistoryLabel"
+    aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content bg-surface border-soft shadow-lg" style="border-radius: 24px;">
             <div class="modal-header border-0 px-4 pt-4 pb-2">
@@ -403,7 +507,8 @@
                 </div>
                 <div id="history-timeline"></div>
                 <div class="text-center py-3 d-none" id="history-load-more-container">
-                    <button class="btn btn-sm rounded-pill px-4 py-2 border border-soft text-muted hover-red" id="history-load-more" onclick="loadMoreHistory()">
+                    <button class="btn btn-sm rounded-pill px-4 py-2 border border-soft text-muted hover-red"
+                        id="history-load-more" onclick="loadMoreHistory()">
                         <i class="bi bi-arrow-down-circle me-1"></i> Load More
                     </button>
                 </div>
@@ -417,338 +522,472 @@
 
 
 <script>
-        // Peer Profile Modal logic
-        async function showPeerProfile(userId) {
-            const modalEl = document.getElementById('peerModal');
-            const modal = new bootstrap.Modal(modalEl);
-            const avatarContainer = document.getElementById('peer-avatar-container');
-            
-            // Show loading state
-            avatarContainer.innerHTML = '<div class="spinner-border text-primary-red mb-3"></div>';
-            document.getElementById('peer-name').textContent = 'Loading...';
-            document.getElementById('peer-username').textContent = '';
-            document.getElementById('peer-team').textContent = '--';
-            document.getElementById('peer-role').textContent = '--';
-            document.getElementById('peer-project').textContent = '--';
-            
-            modal.show();
+    // Peer Profile Modal logic
+    async function showPeerProfile(userId) {
+        const modalEl = document.getElementById('peerModal');
+        const modal = new bootstrap.Modal(modalEl);
+        const avatarContainer = document.getElementById('peer-avatar-container');
 
-            try {
-                const profile = await apiCall(`/api/student/profile/${userId}`, 'GET');
-                
-                // Update avatar
-                if (profile.avatar_url) {
-                    avatarContainer.innerHTML = `<img src="${profile.avatar_url}" class="rounded-circle shadow mb-3" style="width: 88px; height: 88px; object-fit: cover; border: 3px solid var(--primary-red);">`;
-                } else {
-                    avatarContainer.innerHTML = `<div class="avatar-lg mx-auto rounded-circle bg-red-soft text-primary-red fw-bold d-flex align-items-center justify-content-center mb-3" style="width: 88px; height: 88px; font-size: 2.2rem;">${profile.name.charAt(0)}</div>`;
-                }
-                
-                document.getElementById('peer-name').textContent = profile.name;
-                document.getElementById('peer-username').textContent = `@${profile.username}`;
-                document.getElementById('peer-team').textContent = profile.team;
-                document.getElementById('peer-role').textContent = profile.role;
-                document.getElementById('peer-project').textContent = profile.project;
-                
-            } catch (e) {
-                console.error('[Peer Profile Error]', e);
-                bootstrap.Modal.getInstance(modalEl).hide();
-                showToast('Error', 'Could not load profile details', 'error');
+        // Show loading state
+        avatarContainer.innerHTML = '<div class="spinner-border text-primary-red mb-3"></div>';
+        document.getElementById('peer-name').textContent = 'Loading...';
+        document.getElementById('peer-username').textContent = '';
+        document.getElementById('peer-team').textContent = '--';
+        document.getElementById('peer-role-badges').innerHTML = '';
+        document.getElementById('peer-role-text').textContent = '--';
+        document.getElementById('peer-description').textContent = 'Loading details...';
+        document.getElementById('peer-project').textContent = '--';
+
+        modal.show();
+
+        try {
+            const profile = await apiCall(`/api/student/profile/${userId}`, 'GET');
+
+            // Update avatar
+            if (profile.avatar_url) {
+                avatarContainer.innerHTML = `<img src="${profile.avatar_url}" class="rounded-circle shadow mb-3" style="width: 88px; height: 88px; object-fit: cover; border: 3px solid var(--primary-red);">`;
+            } else {
+                avatarContainer.innerHTML = `<div class="avatar-lg mx-auto rounded-circle bg-red-soft text-primary-red fw-bold d-flex align-items-center justify-content-center mb-3" style="width: 88px; height: 88px; font-size: 2.2rem;">${profile.name.charAt(0)}</div>`;
             }
+
+            document.getElementById('peer-name').textContent = profile.name;
+            document.getElementById('peer-username').textContent = `@${profile.username}`;
+            document.getElementById('peer-team').textContent = profile.team;
+            document.getElementById('peer-project').textContent = profile.project;
+
+            // Roles
+            const roleBadges = document.getElementById('peer-role-badges');
+            roleBadges.innerHTML = profile.role_data.map(r => `
+                    <div class="glass-badge" title="${r.label}">
+                        <i class="bi bi-${r.icon}"></i>
+                    </div>
+                `).join('');
+            document.getElementById('peer-role-text').textContent = profile.role;
+
+            // Description
+            const desc = document.getElementById('peer-description');
+            if (profile.role_description && profile.role_description.trim()) {
+                desc.textContent = profile.role_description;
+                desc.classList.remove('text-muted', 'opacity-50');
+            } else {
+                desc.textContent = "No detailed description provided.";
+                desc.classList.add('text-muted', 'opacity-50');
+            }
+
+        } catch (e) {
+            console.error('[Peer Profile Error]', e);
+            bootstrap.Modal.getInstance(modalEl).hide();
+            showToast('Error', 'Could not load profile details', 'error');
         }
+    }
 
-        // Real-time Assignment Filtering
-        const cardFilter = document.getElementById('cardFilterInput');
-        const assignmentWrappers = document.querySelectorAll('.assignment-card-wrapper');
+    // Real-time Assignment Filtering
+    const cardFilter = document.getElementById('cardFilterInput');
+    const assignmentWrappers = document.querySelectorAll('.assignment-card-wrapper');
 
-        if (cardFilter) {
-            cardFilter.addEventListener('input', (e) => {
-                const term = e.target.value.toLowerCase();
-                assignmentWrappers.forEach(wrapper => {
-                    const title = wrapper.dataset.title;
-                    wrapper.style.display = title.includes(term) ? 'block' : 'none';
-                });
+    if (cardFilter) {
+        cardFilter.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            assignmentWrappers.forEach(wrapper => {
+                const title = wrapper.dataset.title;
+                wrapper.style.display = title.includes(term) ? 'block' : 'none';
             });
-        }
+        });
+    }
 
-        // Mission Control Countdown
-        const countdownContainer = document.getElementById('main-countdown');
-        if (countdownContainer) {
-            const deadline = new Date(countdownContainer.dataset.deadline).getTime();
-            
-            function updateCountdown() {
-                const now = new Date().getTime();
-                const diff = deadline - now;
+    // Mission Control Countdown (Subtle Version)
+    const countdownContainer = document.getElementById('main-countdown-subtle');
+    if (countdownContainer) {
+        const deadline = new Date(countdownContainer.dataset.deadline).getTime();
 
-                if (diff < 0) {
-                    countdownContainer.innerHTML = '<div class="text-success fw-bold">Mission Active</div>';
-                    return;
-                }
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const diff = deadline - now;
 
-                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-                document.getElementById('days').innerText = days.toString().padStart(2, '0');
-                document.getElementById('hours').innerText = hours.toString().padStart(2, '0');
-                document.getElementById('minutes').innerText = minutes.toString().padStart(2, '0');
-                document.getElementById('seconds').innerText = seconds.toString().padStart(2, '0');
+            if (diff < 0) {
+                countdownContainer.innerHTML = '<span class="text-success small fw-bold"><i class="bi bi-check2-circle"></i> Deadline Passed</span>';
+                return;
             }
 
-            updateCountdown();
-            setInterval(updateCountdown, 1000);
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            const dEl = document.getElementById('days');
+            const hEl = document.getElementById('hours');
+            const mEl = document.getElementById('minutes');
+            const sEl = document.getElementById('seconds');
+
+            if (dEl) dEl.innerText = days.toString().padStart(2, '0');
+            if (hEl) hEl.innerText = hours.toString().padStart(2, '0');
+            if (mEl) mEl.innerText = minutes.toString().padStart(2, '0');
+            if (sEl) sEl.innerText = seconds.toString().padStart(2, '0');
         }
 
-        // Staggered Entry Animation
-        document.querySelectorAll('.bento-card').forEach((card, index) => {
-            card.style.opacity = '0';
-            card.style.transform = 'translateY(15px)';
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+    }
+
+    // Staggered Entry Animation
+    document.querySelectorAll('.bento-card').forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(15px)';
+        setTimeout(() => {
+            card.style.transition = 'all 0.5s cubic-bezier(0.23, 1, 0.32, 1)';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+            // Clear inline styles after animation to allow CSS hover/focus to work
             setTimeout(() => {
-                card.style.transition = 'all 0.5s cubic-bezier(0.23, 1, 0.32, 1)';
-                card.style.opacity = '1';
-                card.style.transform = 'translateY(0)';
-                // Clear inline styles after animation to allow CSS hover/focus to work
-                setTimeout(() => {
-                    card.style.transform = '';
-                    card.style.opacity = '';
-                }, 600);
-            }, index * 80);
+                card.style.transform = '';
+                card.style.opacity = '';
+            }, 600);
+        }, index * 80);
+    });
+
+    // API Call Helper and existing functions...
+    async function updateProject() {
+        const form = document.querySelector('form[name="updateProjectForm"]');
+        const btn = form.querySelector('button[type="submit"]');
+        const originalText = btn.innerHTML;
+
+        const data = {
+            project_name: form.querySelector('[name="project_name"]').value,
+            project_description: form.querySelector('[name="project_description"]').value
+        };
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+        try {
+            await apiCall('/api/student/project-update', 'POST', data);
+            document.getElementById('display-project-name').textContent = data.project_name;
+            document.getElementById('display-project-description').textContent = data.project_description;
+            showToast('Portfolio Updated', 'Success');
+        } catch (e) {
+            console.error(e);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+
+    function toggleRole(roleId, element) {
+        element.classList.toggle('active');
+        syncRoles();
+    }
+
+    function toggleCustomRole(element) {
+        element.classList.toggle('active');
+        const customInput = document.getElementById('custom_role_text');
+        if (element.classList.contains('active')) {
+            customInput.classList.add('active');
+            customInput.focus();
+        } else {
+            customInput.classList.remove('active');
+        }
+        syncRoles();
+    }
+
+    function syncRoles() {
+        const activeRoles = [];
+        document.querySelectorAll('.role-card.active').forEach(card => {
+            const roleId = card.dataset.roleId;
+            if (roleId) {
+                activeRoles.push(roleId);
+            } else if (card.id === 'custom-role-card') {
+                const customVal = document.getElementById('custom_role_text').value.trim();
+                if (customVal) activeRoles.push(customVal);
+            }
+        });
+        document.getElementById('id_role_input').value = activeRoles.join(', ');
+    }
+
+    async function updateRole() {
+        const modalEl = document.getElementById('roleModal');
+        const role = document.getElementById('id_role_input').value;
+        const role_description = document.getElementById('role_description').value;
+
+        const btn = modalEl.querySelector('button[type="submit"]');
+
+        if (!role) {
+            showToast('Error', 'Please select at least one role', 'danger');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Updating...';
+
+        try {
+            await apiCall('/api/student/role-update', 'POST', { role, role_description });
+            bootstrap.Modal.getInstance(modalEl).hide();
+            showToast('Success', 'Team roles and description updated');
+            setTimeout(() => location.reload(), 1000);
+        } catch (e) {
+            showToast('Error', 'Failed to update roles', 'danger');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = 'Confirm Team Role';
+        }
+    }
+
+    async function submitAssignment(assignId) {
+        const modal = document.getElementById(`submitModal${assignId}`);
+        const form = modal.querySelector('form');
+        const formData = new FormData();
+        formData.append('assignment_id', assignId);
+        formData.append('title', form.querySelector('[name="title"]').value);
+        const files = form.querySelector('[name="files"]').files;
+        for (let i = 0; i < files.length; i++) {
+            formData.append('files', files[i]);
+        }
+
+        const btn = modal.querySelector('.submit-btn-loading');
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>...';
+
+        try {
+            const result = await apiCall('/api/student/submit-assignment', 'POST', formData, true);
+            bootstrap.Modal.getInstance(modal).hide();
+            showToast('Success', result.message);
+            setTimeout(() => location.reload(), 1000);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+    }
+
+    // ─── Shared: timeAgo helper ───
+    function timeAgo(isoStr) {
+        const diff = Date.now() - new Date(isoStr).getTime();
+        const mins = Math.floor(diff / 60000);
+        if (mins < 1) return 'just now';
+        if (mins < 60) return `${mins} minute${mins > 1 ? 's' : ''} ago`;
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return `${hrs} hour${hrs > 1 ? 's' : ''} ago`;
+        const days = Math.floor(hrs / 24);
+        return `${days} day${days > 1 ? 's' : ''} ago`;
+    }
+
+    // ─── Latest Activities: Live Polling Engine ───
+    (function initTeamPulse() {
+        const feed = document.getElementById('team-pulse-feed');
+        if (!feed) return;
+
+        const POLL_INTERVAL = 30000;
+        let latestTs = feed.dataset.latestTs || '';
+        const knownIds = new Set();
+
+        feed.querySelectorAll('.activity-item[data-log-id]').forEach(el => {
+            knownIds.add(el.dataset.logId);
         });
 
-        // API Call Helper and existing functions...
-        async function updateProject() {
-            const form = document.querySelector('form[name="updateProjectForm"]');
-            const btn = form.querySelector('button[type="submit"]');
-            const originalText = btn.innerHTML;
-            
-            const data = {
-                project_name: form.querySelector('[name="project_name"]').value,
-                project_description: form.querySelector('[name="project_description"]').value
-            };
-
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
-
-            try {
-                await apiCall('/api/student/project-update', 'POST', data);
-                document.getElementById('display-project-name').textContent = data.project_name;
-                document.getElementById('display-project-description').textContent = data.project_description;
-                showToast('Portfolio Updated', 'Success');
-            } catch (e) { 
-                console.error(e);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-            }
-        }
-
-        async function updateRole() {
-            const modalEl = document.getElementById('roleModal');
-            const roleSelect = document.getElementById('id_role');
-            const role = roleSelect.value;
-            const roleLabel = roleSelect.options[roleSelect.selectedIndex].text;
-            const btn = modalEl.querySelector('button[type="submit"]');
-
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
-
-            try {
-                await apiCall('/api/student/role-update', 'POST', { role });
-                bootstrap.Modal.getInstance(modalEl).hide();
-                showToast('Role Updated', `Position: ${roleLabel}`);
-                setTimeout(() => location.reload(), 1000);
-            } catch (e) { } finally {
-                btn.disabled = false;
-                btn.innerHTML = 'Confirm';
-            }
-        }
-
-        async function submitAssignment(assignId) {
-            const modal = document.getElementById(`submitModal${assignId}`);
-            const form = modal.querySelector('form');
-            const formData = new FormData();
-            formData.append('assignment_id', assignId);
-            formData.append('title', form.querySelector('[name="title"]').value);
-            const files = form.querySelector('[name="files"]').files;
-            for (let i = 0; i < files.length; i++) {
-                formData.append('files', files[i]);
-            }
-
-            const btn = modal.querySelector('.submit-btn-loading');
-            const originalHtml = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>...';
-
-            try {
-                const result = await apiCall('/api/student/submit-assignment', 'POST', formData, true);
-                bootstrap.Modal.getInstance(modal).hide();
-                showToast('Success', result.message);
-                setTimeout(() => location.reload(), 1000);
-            } catch (e) {
-                console.error(e);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = originalHtml;
-            }
-        }
-
-        // ─── Shared: timeAgo helper ───
-        function timeAgo(isoStr) {
-            const diff = Date.now() - new Date(isoStr).getTime();
-            const mins = Math.floor(diff / 60000);
-            if (mins < 1) return 'just now';
-            if (mins < 60) return `${mins} minute${mins > 1 ? 's' : ''} ago`;
-            const hrs = Math.floor(mins / 60);
-            if (hrs < 24) return `${hrs} hour${hrs > 1 ? 's' : ''} ago`;
-            const days = Math.floor(hrs / 24);
-            return `${days} day${days > 1 ? 's' : ''} ago`;
-        }
-
-        // ─── Latest Activities: Live Polling Engine ───
-        (function initTeamPulse() {
-            const feed = document.getElementById('team-pulse-feed');
-            if (!feed) return;
-
-            const POLL_INTERVAL = 30000;
-            let latestTs = feed.dataset.latestTs || '';
-            const knownIds = new Set();
-
-            feed.querySelectorAll('.activity-item[data-log-id]').forEach(el => {
-                knownIds.add(el.dataset.logId);
-            });
-
-            function createActivityHTML(log) {
-                const el = document.createElement('div');
-                el.className = 'activity-item d-flex gap-3 mb-3 pulse-new-entry';
-                el.dataset.logId = log.id;
-                el.dataset.ts = log.timestamp;
-                el.innerHTML = `
+        function createActivityHTML(log, isUnseen = true) {
+            const el = document.createElement('div');
+            el.className = 'activity-item d-flex gap-3 mb-3 pulse-new-entry' + (isUnseen ? ' unseen-activity' : '');
+            el.dataset.logId = log.id;
+            el.dataset.ts = log.timestamp;
+            el.innerHTML = `
                     <div class="activity-icon-sm bg-soft text-primary-red rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; flex-shrink: 0;">
                         <i class="bi bi-dot h4 mb-0"></i>
                     </div>
                     <div class="activity-content">
-                        <div class="text-main fw-bold" style="font-size: 0.75rem;">${log.actor_name}</div>
+                        <div class="text-main fw-bold d-flex align-items-center" style="font-size: 0.75rem;">
+                            ${log.actor_name}
+                            ${isUnseen ? '<span class="unseen-indicator"></span>' : ''}
+                        </div>
                         <div class="text-muted" style="font-size: 0.7rem;">${log.description}</div>
                         <div class="text-muted opacity-50 pulse-ts" style="font-size: 0.65rem;">${timeAgo(log.timestamp)}</div>
                     </div>
                 `;
-                el.style.maxHeight = '0';
-                el.style.opacity = '0';
-                el.style.overflow = 'hidden';
-                el.style.transition = 'max-height 0.5s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.5s ease';
-                return el;
+            el.style.maxHeight = '0';
+            el.style.opacity = '0';
+            el.style.overflow = 'hidden';
+            el.style.transition = 'max-height 0.5s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.5s ease';
+            return el;
+        }
+
+        // --- New Persistence Logic (Per User/Team) ---
+        const LAST_SEEN_KEY = `team_pulse_last_seen_{{ team.id }}_{{ request.user.id }}`;
+        let lastSeenTs = localStorage.getItem(LAST_SEEN_KEY) || '1970-01-01T00:00:00Z';
+
+        function markAsSeen() {
+            // Find the latest timestamp currently visible in the feed
+            let maxTs = 0;
+            feed.querySelectorAll('.activity-item[data-ts]').forEach(el => {
+                const ts = new Date(el.dataset.ts).getTime();
+                if (ts > maxTs) maxTs = ts;
+            });
+
+            if (maxTs > 0) {
+                const isoTs = new Date(maxTs).toISOString();
+                localStorage.setItem(LAST_SEEN_KEY, isoTs);
+                lastSeenTs = isoTs; // Update local variable
+
+                // Visually clear highlights
+                setTimeout(() => {
+                    feed.querySelectorAll('.unseen-activity').forEach(el => {
+                        el.classList.remove('unseen-activity');
+                        const indicator = el.querySelector('.unseen-indicator');
+                        if (indicator) indicator.remove();
+                    });
+                }, 2000);
             }
+        }
 
-            async function pollPulse() {
-                try {
-                    const url = latestTs
-                        ? `/api/student/team-pulse?after=${encodeURIComponent(latestTs)}`
-                        : '/api/student/team-pulse';
+        // Highlight existing items on load
+        let foundUnseen = false;
+        feed.querySelectorAll('.activity-item[data-ts]').forEach(el => {
+            const itemTs = new Date(el.dataset.ts).getTime();
+            const lastSeenTime = new Date(lastSeenTs).getTime();
 
-                    const result = await apiCall(url, 'GET');
-                    const newLogs = result.logs || [];
-                    if (newLogs.length === 0) return;
+            if (itemTs > lastSeenTime + 1000) {
+                foundUnseen = true;
+                el.classList.add('unseen-activity');
+                el.classList.add('pulse-new-entry');
+                setTimeout(() => el.classList.remove('pulse-new-entry'), 5000);
 
-                    const emptyState = document.getElementById('pulse-empty-state');
-                    if (emptyState) emptyState.remove();
+                const nameEl = el.querySelector('.text-main');
+                if (nameEl && !nameEl.querySelector('.unseen-indicator')) {
+                    const dot = document.createElement('span');
+                    dot.className = 'unseen-indicator';
+                    nameEl.appendChild(dot);
+                }
+            }
+        });
 
-                    const truly_new = newLogs.filter(log => !knownIds.has(String(log.id)));
-                    if (truly_new.length === 0) return;
+        // Automatic seen state: If items pulsed on load, mark them as seen
+        // so they won't pulse again on the next refresh.
+        if (foundUnseen) {
+            // Delay markAsSeen slightly so the animation starts, but the state is updated
+            setTimeout(markAsSeen, 1000);
+        }
 
-                    truly_new.reverse().forEach(log => {
-                        knownIds.add(String(log.id));
-                        const el = createActivityHTML(log);
-                        feed.prepend(el);
+        // Also keep the hover fallback for live items
+        let seenTimeout;
+        feed.addEventListener('mouseenter', () => {
+            seenTimeout = setTimeout(markAsSeen, 3000);
+        });
+        feed.addEventListener('mouseleave', () => {
+            if (seenTimeout) clearTimeout(seenTimeout);
+        });
+        // Also mark as seen if they open the history modal
+        document.getElementById('activityHistoryModal')?.addEventListener('show.bs.modal', markAsSeen);
 
+        async function pollPulse() {
+            try {
+                const url = latestTs
+                    ? `/api/student/team-pulse?after=${encodeURIComponent(latestTs)}`
+                    : '/api/student/team-pulse';
+
+                const result = await apiCall(url, 'GET');
+                const newLogs = result.logs || [];
+                if (newLogs.length === 0) return;
+
+                const emptyState = document.getElementById('pulse-empty-state');
+                if (emptyState) emptyState.remove();
+
+                const truly_new = newLogs.filter(log => !knownIds.has(String(log.id)));
+                if (truly_new.length === 0) return;
+
+                truly_new.reverse().forEach(log => {
+                    knownIds.add(String(log.id));
+                    const el = createActivityHTML(log, true);
+                    feed.prepend(el);
+
+                    requestAnimationFrame(() => {
                         requestAnimationFrame(() => {
-                            requestAnimationFrame(() => {
-                                el.style.maxHeight = '120px';
-                                el.style.opacity = '1';
-                            });
+                            el.style.maxHeight = '120px';
+                            el.style.opacity = '1';
                         });
-
-                        setTimeout(() => {
-                            el.classList.remove('pulse-new-entry');
-                        }, 4500);
                     });
 
-                    latestTs = truly_new[truly_new.length - 1].timestamp;
-                    feed.dataset.latestTs = latestTs;
-
-                    const allItems = feed.querySelectorAll('.activity-item');
-                    if (allItems.length > 15) {
-                        for (let i = 15; i < allItems.length; i++) {
-                            allItems[i].style.transition = 'opacity 0.3s ease';
-                            allItems[i].style.opacity = '0';
-                            setTimeout(() => allItems[i].remove(), 300);
-                        }
-                    }
-                } catch (e) {
-                    console.debug('[Pulse] Poll skipped:', e.message);
-                }
-            }
-
-            setInterval(() => {
-                feed.querySelectorAll('.activity-item[data-ts]').forEach(el => {
-                    const tsEl = el.querySelector('.pulse-ts');
-                    if (tsEl) tsEl.textContent = timeAgo(el.dataset.ts);
+                    setTimeout(() => {
+                        el.classList.remove('pulse-new-entry');
+                    }, 4500);
                 });
-            }, 60000);
 
-            setInterval(pollPulse, POLL_INTERVAL);
-        })();
+                latestTs = truly_new[truly_new.length - 1].timestamp;
+                feed.dataset.latestTs = latestTs;
+                // Note: Don't update lastSeenTs here yet, let the user "see" it first
 
-        // ─── Activity History Modal Engine ───
-        let historyOffset = 0;
-        let historyLoaded = false;
-        const HISTORY_PAGE_SIZE = 15;
-
-        // Auto-load when modal opens
-        document.getElementById('activityHistoryModal')?.addEventListener('show.bs.modal', () => {
-            if (!historyLoaded) {
-                historyOffset = 0;
-                document.getElementById('history-timeline').innerHTML = '';
-                document.getElementById('history-loading').classList.remove('d-none');
-                document.getElementById('history-load-more-container').classList.add('d-none');
-                document.getElementById('history-end-message').classList.add('d-none');
-                loadMoreHistory();
-                historyLoaded = true;
-            }
-        });
-
-        // Reset on close so it re-fetches fresh data next time
-        document.getElementById('activityHistoryModal')?.addEventListener('hidden.bs.modal', () => {
-            historyLoaded = false;
-        });
-
-        async function loadMoreHistory() {
-            const timeline = document.getElementById('history-timeline');
-            const loadingEl = document.getElementById('history-loading');
-            const loadMoreBtn = document.getElementById('history-load-more');
-            const loadMoreContainer = document.getElementById('history-load-more-container');
-            const endMessage = document.getElementById('history-end-message');
-
-            if (loadMoreBtn) {
-                loadMoreBtn.disabled = true;
-                loadMoreBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Loading...';
-            }
-
-            try {
-                const result = await apiCall(`/api/student/team-pulse?offset=${historyOffset}&limit=${HISTORY_PAGE_SIZE}`, 'GET');
-                const logs = result.logs || [];
-
-                loadingEl.classList.add('d-none');
-
-                if (logs.length === 0 && historyOffset === 0) {
-                    timeline.innerHTML = '<div class="text-center py-5 text-muted small">No activity recorded yet.</div>';
-                    return;
+                const allItems = feed.querySelectorAll('.activity-item');
+                if (allItems.length > 15) {
+                    for (let i = 15; i < allItems.length; i++) {
+                        allItems[i].style.transition = 'opacity 0.3s ease';
+                        allItems[i].style.opacity = '0';
+                        setTimeout(() => allItems[i].remove(), 300);
+                    }
                 }
+            } catch (e) {
+                console.debug('[Pulse] Poll skipped:', e.message);
+            }
+        }
 
-                logs.forEach(log => {
-                    const item = document.createElement('div');
-                    item.className = 'history-item d-flex gap-3 py-3 border-bottom border-soft';
-                    item.style.animation = 'fadeSlideIn 0.3s ease forwards';
-                    item.innerHTML = `
+        setInterval(() => {
+            feed.querySelectorAll('.activity-item[data-ts]').forEach(el => {
+                const tsEl = el.querySelector('.pulse-ts');
+                if (tsEl) tsEl.textContent = timeAgo(el.dataset.ts);
+            });
+        }, 60000);
+
+        setInterval(pollPulse, POLL_INTERVAL);
+    })();
+
+    // ─── Activity History Modal Engine ───
+    let historyOffset = 0;
+    let historyLoaded = false;
+    const HISTORY_PAGE_SIZE = 15;
+
+    // Auto-load when modal opens
+    document.getElementById('activityHistoryModal')?.addEventListener('show.bs.modal', () => {
+        if (!historyLoaded) {
+            historyOffset = 0;
+            document.getElementById('history-timeline').innerHTML = '';
+            document.getElementById('history-loading').classList.remove('d-none');
+            document.getElementById('history-load-more-container').classList.add('d-none');
+            document.getElementById('history-end-message').classList.add('d-none');
+            loadMoreHistory();
+            historyLoaded = true;
+        }
+    });
+
+    // Reset on close so it re-fetches fresh data next time
+    document.getElementById('activityHistoryModal')?.addEventListener('hidden.bs.modal', () => {
+        historyLoaded = false;
+    });
+
+    async function loadMoreHistory() {
+        const timeline = document.getElementById('history-timeline');
+        const loadingEl = document.getElementById('history-loading');
+        const loadMoreBtn = document.getElementById('history-load-more');
+        const loadMoreContainer = document.getElementById('history-load-more-container');
+        const endMessage = document.getElementById('history-end-message');
+
+        if (loadMoreBtn) {
+            loadMoreBtn.disabled = true;
+            loadMoreBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Loading...';
+        }
+
+        try {
+            const result = await apiCall(`/api/student/team-pulse?offset=${historyOffset}&limit=${HISTORY_PAGE_SIZE}`, 'GET');
+            const logs = result.logs || [];
+
+            loadingEl.classList.add('d-none');
+
+            if (logs.length === 0 && historyOffset === 0) {
+                timeline.innerHTML = '<div class="text-center py-5 text-muted small">No activity recorded yet.</div>';
+                return;
+            }
+
+            logs.forEach(log => {
+                const item = document.createElement('div');
+                item.className = 'history-item d-flex gap-3 py-3 border-bottom border-soft';
+                item.style.animation = 'fadeSlideIn 0.3s ease forwards';
+                item.innerHTML = `
                         <div class="history-timeline-dot mt-1">
                             <div class="bg-primary-red rounded-circle" style="width: 8px; height: 8px;"></div>
                         </div>
@@ -760,29 +999,126 @@
                             <div class="text-muted" style="font-size: 0.75rem; line-height: 1.5;">${log.description}</div>
                         </div>
                     `;
-                    timeline.appendChild(item);
-                });
+                timeline.appendChild(item);
+            });
 
-                historyOffset += logs.length;
+            historyOffset += logs.length;
 
-                if (result.has_more) {
-                    loadMoreContainer.classList.remove('d-none');
-                    endMessage.classList.add('d-none');
-                } else {
-                    loadMoreContainer.classList.add('d-none');
-                    endMessage.classList.remove('d-none');
-                }
-            } catch (e) {
-                console.error('[History] Load failed:', e);
-                loadingEl.innerHTML = '<div class="text-muted small">Failed to load history. Please try again.</div>';
-            } finally {
-                if (loadMoreBtn) {
-                    loadMoreBtn.disabled = false;
-                    loadMoreBtn.innerHTML = '<i class="bi bi-arrow-down-circle me-1"></i> Load More';
-                }
+            if (result.has_more) {
+                loadMoreContainer.classList.remove('d-none');
+                endMessage.classList.add('d-none');
+            } else {
+                loadMoreContainer.classList.add('d-none');
+                endMessage.classList.remove('d-none');
+            }
+        } catch (e) {
+            console.error('[History] Load failed:', e);
+            loadingEl.innerHTML = '<div class="text-muted small">Failed to load history. Please try again.</div>';
+        } finally {
+            if (loadMoreBtn) {
+                loadMoreBtn.disabled = false;
+                loadMoreBtn.innerHTML = '<i class="bi bi-arrow-down-circle me-1"></i> Load More';
             }
         }
+    }
 
-    </script>
+</script>
+
+<!-- All Deadlines Modal -->
+<div class="modal fade" id="allDeadlinesModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content border-0 shadow-lg rounded-5 overflow-hidden">
+            <div class="modal-header border-0 bg-dark text-white py-4 px-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="bg-primary-red p-2 rounded-3">
+                        <i class="bi bi-calendar-event h4 mb-0"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-800 mb-0">Academic Timeline</h5>
+                        <p class="small opacity-75 mb-0">All project milestones and submissions</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <!-- Modal Search/Filter -->
+                <div class="p-4 border-bottom bg-soft">
+                    <div class="input-group console-input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" id="deadlineSearch" class="form-control" placeholder="Search milestones..." onkeyup="filterModalDeadlines()">
+                    </div>
+                </div>
+                <div class="deadline-timeline-list p-4 bento-scroll-content" style="max-height: 60vh;">
+                    {% for assign in assignments %}
+                    <div class="deadline-row d-flex align-items-center justify-content-between p-3 rounded-4 mb-2 transition-all hover-bg-soft" data-title="{{ assign.title|lower }}">
+                        <div class="d-flex align-items-center gap-4 flex-grow-1">
+                            <div class="date-badge-compact {% if assign.is_overdue %}overdue{% elif assign.is_submitted %}submitted{% endif %} text-center">
+                                <div class="month text-uppercase">{{ assign.deadline|date:"M" }}</div>
+                                <div class="day fw-bold">{{ assign.deadline|date:"d" }}</div>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-1">{{ assign.title }}</h6>
+                                <p class="small text-muted mb-0">
+                                    <i class="bi bi-clock me-1"></i> Due {{ assign.deadline|date:"H:i" }}
+                                    {% if assign.is_submitted %}
+                                    <span class="ms-2 text-success fw-bold"><i class="bi bi-check-circle-fill"></i> Submitted</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            {% if not assign.is_submitted %}
+                                <button class="btn btn-primary-red btn-sm rounded-pill px-3" onclick="openSubmitFromModal({{ assign.id }})">
+                                    Submit
+                                </button>
+                            {% else %}
+                                <button class="btn btn-outline-success btn-sm rounded-pill px-3" disabled>
+                                    Done
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Bridge function to handle submission modals from within the timeline modal
+    function openSubmitFromModal(assignmentId) {
+        // 1. Hide the timeline modal
+        const timelineModalEl = document.getElementById('allDeadlinesModal');
+        const timelineModal = bootstrap.Modal.getInstance(timelineModalEl);
+        if (timelineModal) timelineModal.hide();
+
+        // 2. Wait for transition, then show the submission modal
+        setTimeout(() => {
+            const submitModalEl = document.getElementById(`submitModal${assignmentId}`);
+            if (submitModalEl) {
+                const submitModal = new bootstrap.Modal(submitModalEl);
+                submitModal.show();
+            }
+        }, 400); // Wait for Bootstrap fade out
+    }
+
+    // Filter deadlines in the modal list
+    function filterModalDeadlines() {
+        const query = document.getElementById('deadlineSearch').value.toLowerCase();
+        const rows = document.querySelectorAll('.deadline-row');
+        
+        rows.forEach(row => {
+            const title = row.getAttribute('data-title');
+            if (title.includes(query)) {
+                row.classList.remove('d-none');
+                row.classList.add('d-flex');
+            } else {
+                row.classList.remove('d-flex');
+                row.classList.add('d-none');
+            }
+        });
+    }
+</script>
 
 {% endblock %}

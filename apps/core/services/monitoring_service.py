@@ -118,3 +118,11 @@ class MonitoringService:
 
         except Exception as e:
             print(f"🚨 MonitoringService Error: {str(e)}")
+
+    @classmethod
+    def sync_now(cls):
+        """Triggers an immediate sync of both Grafana and Statuspage metrics."""
+        # 1. Ship to Grafana
+        cls.ship_metrics()
+        # 2. Ship to Statuspage (via HealthCheck)
+        InfrastructureService.perform_health_check()

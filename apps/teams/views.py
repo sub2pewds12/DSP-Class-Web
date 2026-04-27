@@ -6,7 +6,13 @@ from django.http import HttpResponse, JsonResponse
 import requests
 
 def health_check(request):
-    """Lighweight endpoint for external monitoring services."""
+    """Lighweight endpoint for external monitoring services. 
+    Triggers a heartbeat pulse to ensure metrics remain active."""
+    try:
+        from apps.core.services.monitoring_service import MonitoringService
+        MonitoringService.log_pulse()
+    except Exception:
+        pass
     return HttpResponse("SYSTEM_OPERATIONAL", status=200)
 from .models import Team, Student, Lecturer, CustomUser, SystemSettings
 from apps.academia.models import ClassDocument, TeamSubmission, Assignment
@@ -17,7 +23,7 @@ from apps.academia.forms import (
     DocumentUploadForm, AssignmentForm, AssignmentSubmissionForm, 
     GradeSubmissionForm, TeamRegistrationForm, TeamProjectForm
 )
-from apps.academia.services import SubmissionService, AssignmentService
+from apps.academia.services import SubmissionService, AcademiaService
 from apps.users.services import UserService
 from apps.core.services import InfrastructureService
 from .services import TeamService
@@ -85,36 +91,10 @@ def dashboard_view(request, team_id=None):
                     return redirect('dashboard')
 
     # Use Service Layer for Context
-    context = AssignmentService.get_student_dashboard_context(request.user, team=team)
+    context = AcademiaService.get_student_dashboard_context(request.user, team=team)
     
-    # Simulation Mode: If no assignment is found, mock one for the "Mission Control" tile (DEBUG ONLY)
     next_deadline = context.get('next_deadline')
-    from django.conf import settings
-    if not next_deadline and settings.DEBUG:
-        from django.utils import timezone
-        from datetime import timedelta
-        class MockAssignment:
-            def __init__(self):
-                self.title = "Final Project Submission (SIMULATED)"
-                self.deadline = timezone.now() + timedelta(days=2, hours=14, minutes=30)
-        next_deadline = MockAssignment()
-
-    # Simulation Mode: Mock activity for "Latest Activities" feed if empty (DEBUG ONLY)
     team_activity = context.get('team_activity', [])
-    if not team_activity and settings.DEBUG:
-        from django.utils import timezone
-        from datetime import timedelta
-        class MockLog:
-            def __init__(self, actor_name, desc, minutes_ago):
-                self.actor = type('MockActor', (), {'username': actor_name})
-                self.description = desc
-                self.timestamp = timezone.now() - timedelta(minutes=minutes_ago)
-        
-        team_activity = [
-            MockLog("alex_dev", "Updated the project topic: 'Real-time Signal Processing with Python'", 12),
-            MockLog("sarah_design", "Changed their role to 'UI/UX Lead'", 45),
-            MockLog("system", "New resource 'DSP Algorithm Guide.pdf' was added", 120),
-        ]
 
     if team:
         return render(request, 'teams/dashboard.html', {
@@ -127,7 +107,12 @@ def dashboard_view(request, team_id=None):
             'project_form': TeamProjectForm(instance=team),
             'role_form': StudentRoleForm(instance=student),
             'assign_form': AssignmentSubmissionForm(),
-            'is_read_only': is_read_only
+            'is_read_only': is_read_only,
+            'role_metadata': context['role_metadata'],
+            'role_ids_only': context['role_ids_only'],
+            'upcoming_deadlines': context['upcoming_deadlines'],
+            'compact_deadlines': context['compact_deadlines'],
+            'now': context['now'],
         })
 
     return render(request, 'teams/register.html', {
@@ -144,13 +129,13 @@ def teacher_dashboard(request):
         return redirect('dashboard')
         
     # Offload all dashboard context gathering to service
-    context = AssignmentService.get_teacher_dashboard_context(request.user)
+    context = AcademiaService.get_teacher_dashboard_context(request.user)
 
     if request.method == 'POST':
         if 'create_assignment' in request.POST:
             assign_form = AssignmentForm(request.POST, request.FILES)
             if assign_form.is_valid():
-                AssignmentService.create_assignment(
+                AcademiaService.create_assignment(
                     user=request.user,
                     title=assign_form.cleaned_data['title'],
                     deadline=assign_form.cleaned_data['deadline'],
@@ -214,7 +199,7 @@ def release_grades(request, pk):
         return redirect('dashboard')
     
     assignment = get_object_or_404(Assignment, pk=pk)
-    AssignmentService.release_grades(assignment, request.user)
+    AcademiaService.release_grades(assignment, request.user)
     messages.success(request, f"Grades for '{assignment.title}' have been released.")
     return redirect('teacher_dashboard')
 
@@ -226,7 +211,7 @@ def upload_document(request):
     if request.method == 'POST':
         form = DocumentUploadForm(request.POST, request.FILES)
         if form.is_valid():
-            AssignmentService.upload_document(
+            AcademiaService.upload_document(
                 user=request.user,
                 title=form.cleaned_data['title'],
                 file=request.FILES['file']

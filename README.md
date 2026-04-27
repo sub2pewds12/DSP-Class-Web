@@ -31,6 +31,11 @@ A comprehensive, production-ready platform designed to manage student team regis
 - **Dev Center Portals**: Deep-linked management tools for Render, Cloudinary, and UptimeRobot analytics.
 - **Cloud Command Center**: Integrated storage analytics portal for deep visibility into media integrity and Cloudinary usage patterns.
 - **Connection Resilience**: Engineered for Supabase Transaction Pooling with aggressive idle-connection pruning (`CONN_MAX_AGE=0`).
+- **Bento-Style Student Hub**: High-density 4-column grid layout providing immediate visibility into team operations, submissions, and resources.
+- **Submission-First Workflow**: Rebranded assignment tracking that prioritizes active uploads with subtle real-time countdown badges and quick-action buttons.
+- **Integrated Academic Timeline**: Full-screen searchable timeline for tracking all project milestones, including passed assignments, with direct submission bridges.
+- **Operational Team Visibility**: Expanded team member management with role-specific iconography and detailed profile accessibility.
+- **Dynamic Project Portfolio**: Tightly integrated project detail management allowing teams to update their mission and scope directly from the primary dashboard.
 - **Seed Engine**: Custom `seed_dsp` command for surgical test data management.
 
 ## 🛠️ Management Commands
@@ -56,6 +61,7 @@ Detailed guides are available in the [`docs/`](docs/) folder:
 - [Local Development](docs/local_development.md) — Running the server and setting up your environment.
 - [Authentication & Roles](docs/authentication_guide.md) — User roles and the registration flow.
 - [Database Management](docs/database_management.md) — Migrations, resets, and storage architecture.
+- [Dashboard UI System](docs/dashboard_ui_guide.md) — Bento grid architecture and submission workflows.
 - [Deployment Checklist](docs/deployment_checklists.md) — Environment variables and Render setup.
 - [Quick Commands](docs/quick_commands.md) — Essential command line tools and reference links.
 - [Testing Manual](docs/testing_manual.md) — Automated tests and manual verification steps.

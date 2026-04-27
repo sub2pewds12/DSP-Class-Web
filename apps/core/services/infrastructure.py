@@ -367,11 +367,11 @@ class InfrastructureService:
         now_ts = time.time()
         if db_latency:
             db_metric_id = os.getenv('STATUSPAGE_METRIC_DB_LATENCY')
-            StatuspageService.submit_metric_point(db_metric_id, db_latency)
+            StatuspageService.submit_metric_point(db_metric_id, db_latency, timestamp=now_ts)
             
         if media_latency:
             media_metric_id = os.getenv('STATUSPAGE_METRIC_MEDIA_LATENCY')
-            StatuspageService.submit_metric_point(media_metric_id, media_latency)
+            StatuspageService.submit_metric_point(media_metric_id, media_latency, timestamp=now_ts)
             
         print(f"[HealthCheck] Latencies - DB: {db_latency}ms, Media: {media_latency}ms")
             

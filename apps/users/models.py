@@ -71,6 +71,7 @@ class Student(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='student_profile')
     team = models.ForeignKey('teams.Team', null=True, blank=True, on_delete=models.SET_NULL, related_name='members')
     role = models.CharField(max_length=255, blank=True, default="Member")
+    role_description = models.TextField(blank=True, help_text="Detailed description of your role responsibilities.")
     student_id = models.CharField(max_length=20, blank=True, unique=True, null=True)
     academic_year = models.CharField(max_length=10, blank=True, null=True, verbose_name="Batch")
     github_username = models.CharField(max_length=255, blank=True)

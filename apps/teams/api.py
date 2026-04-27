@@ -11,11 +11,13 @@ from apps.users.models import CustomUser, Student
 from apps.core.models import SystemError
 from apps.academia.models import Assignment, TeamSubmission, SubmissionFile, ClassDocument
 from .models import Team
-from apps.academia.services import SubmissionService, AssignmentService
+from apps.academia.services import SubmissionService, AcademiaService
 from apps.users.services import UserService
 from apps.core.services.audit_service import AuditService
 from apps.core.services.search_service import SearchService
 from apps.core.utils.email_service import send_html_email
+from apps.core.services.infrastructure import InfrastructureService
+from apps.core.services.monitoring_service import MonitoringService
 
 api = NinjaAPI(
     title="Smart Incident Hub & Academic API", 
@@ -40,6 +42,7 @@ class ProjectUpdateSchema(Schema):
 
 class RoleUpdateSchema(Schema):
     role: str
+    role_description: Optional[str] = ""
 
 # --- Lecturer Schemas ---
 
@@ -86,15 +89,21 @@ class StudentProfileSchema(Schema):
     username: str
     team: str
     role: str
+    role_description: Optional[str]
+    role_data: List[dict]
     project: str
     avatar_url: Optional[str]
 
 # --- System & Incident Management (Dev) ---
 
-@api.get("/health", tags=["System"])
+@api.get("/health", tags=["System"], auth=None)
 def health_check_api(request):
-    """Lighweight endpoint for external monitoring services."""
-    return {"status": "OK", "message": "SYSTEM_OPERATIONAL"}
+    """
+    Lighweight endpoint for external monitoring services.
+    Triggers automated metric shipping (Statuspage/Grafana).
+    """
+    MonitoringService.sync_now()
+    return {"status": "OK", "message": "SYSTEM_OPERATIONAL_AND_SYNCED"}
 
 
 
@@ -155,11 +164,11 @@ def get_team_pulse(request, after: str = None, offset: int = 0, limit: int = 10)
 
 @api.post("/student/project-update", response={200: SuccessResponse, 403: SuccessResponse}, tags=["Student"])
 def update_project_details(request, data: ProjectUpdateSchema):
-    """Allows Team Leaders to update their project name and description."""
+    """Allows any team member to update their project name and description."""
     student = get_object_or_404(Student, user=request.user)
     team = student.team
-    if not team or team.leader != student:
-        return 403, {"status": "error", "message": "Only the Team Leader can update project details."}
+    if not team:
+        return 403, {"status": "error", "message": "You must be in a team to update project details."}
     
     team.project_name = data.project_name
     team.project_description = data.project_description
@@ -169,26 +178,27 @@ def update_project_details(request, data: ProjectUpdateSchema):
         action="PROJECT_UPDATE",
         target_type="Team",
         target_id=str(team.id),
-        description=f"Team leader {request.user.username} updated the project details: '{data.project_name}'.",
+        description=f"Team member {request.user.get_full_name() or request.user.username} updated the project details: '{data.project_name}'.",
         metadata={"project_name": data.project_name}
     )
     return {"status": "success", "message": "Project details updated successfully."}
 
 @api.post("/student/role-update", response=SuccessResponse, tags=["Student"])
 def update_student_role(request, data: RoleUpdateSchema):
-    """Update your role description within your team (e.g., 'Frontend Dev')."""
+    """Update your role and detailed description within your team."""
     student = get_object_or_404(Student, user=request.user)
     student.role = data.role
+    student.role_description = data.role_description or ""
     student.save()
 
     AuditService.log_event(
         action="ROLE_UPDATE",
         target_type="Student",
         target_id=str(student.id),
-        description=f"Student {request.user.username} changed their role to {student.get_role_display()}.",
+        description=f"Student {request.user.username} updated their team roles.",
         metadata={"role": student.role}
     )
-    return {"status": "success", "message": "Your role has been updated."}
+    return {"status": "success", "message": "Your team roles have been updated."}
 
 @api.post("/student/submit-assignment", response={200: SuccessResponse, 400: SuccessResponse, 403: SuccessResponse}, tags=["Student"])
 def submit_assignment_api(request, assignment_id: int, files: List[UploadedFile] = File(...)):
@@ -241,7 +251,7 @@ def create_assignment_api(request, data: AssignmentSchema, instr_file: Optional[
         return 403, {"status": "error", "message": "Unauthorized: Requires Assignment Management permission."}
     
     # Simple deadline parsing
-    assign = AssignmentService.create_assignment(
+    assign = AcademiaService.create_assignment(
         user=request.user,
         title=data.title,
         deadline=data.deadline,
@@ -256,7 +266,7 @@ def upload_document_api(request, title: str, file: UploadedFile = File(...)):
     if not getattr(request.user, 'can_manage_assignments', False):
         return 403, {"status": "error", "message": "Unauthorized: Requires Assignment Management permission."}
     
-    doc = AssignmentService.upload_document(
+    doc = AcademiaService.upload_document(
         user=request.user,
         title=title,
         file=file
@@ -375,11 +385,16 @@ def get_student_profile(request, user_id: int):
     user = get_object_or_404(CustomUser, id=user_id)
     student = getattr(user, 'student_profile', None)
     
+    # Generate role data using the service
+    role_info = AcademiaService.get_student_roles(student) if student else {"role_data": [], "role_icon": "person"}
+
     return {
         "name": user.get_full_name(),
         "username": user.username,
         "team": student.team.name if student and student.team else "No Team",
         "role": student.role if student else "N/A",
+        "role_description": student.role_description if student else "",
+        "role_data": role_info['role_data'],
         "project": student.team.project_name if student and student.team else "N/A",
         "avatar_url": user.avatar.url if user.avatar else None
     }
