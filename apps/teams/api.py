@@ -1,5 +1,6 @@
 from ninja import NinjaAPI, Schema, File
 from ninja.files import UploadedFile
+from ninja.security import django_auth
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 from django.core.exceptions import PermissionDenied
@@ -22,7 +23,8 @@ from apps.core.services.monitoring_service import MonitoringService
 api = NinjaAPI(
     title="Smart Incident Hub & Academic API", 
     version="1.1.0",
-    description="Interactive Explorer for all platform actions (Student, Lecturer, and Dev portals)."
+    description="Interactive Explorer for all platform actions (Student, Lecturer, and Dev portals).",
+    auth=django_auth
 )
 
 # --- Common Schemas ---

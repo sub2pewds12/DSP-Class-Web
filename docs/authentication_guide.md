@@ -41,3 +41,10 @@ Gmail is **only** required if a user forgets their password and needs to reset i
 | `/dev-dashboard/` | Developer dashboard |
 | `/gallery/` | Public team showcase (no login required) |
 | `/guide/` | User guide (no login required) |
+
+## 5. API Security & Session Guards
+The system implements strict authentication checks at the API layer using **Django Ninja**.
+
+- **Global Auth Guard**: The primary API instance is protected by `django_auth`, which leverages the existing Django session system.
+- **Automatic Rejection**: Unauthenticated requests to academic endpoints (e.g., Team Pulse, Submissions) are automatically rejected with a `401 Unauthorized` status.
+- **Profile Validation**: Endpoints perform secondary checks to ensure users have the correct profile (Student/Lecturer) before allowing data mutation.

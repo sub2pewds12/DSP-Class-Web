@@ -31,8 +31,19 @@ A centralized modal accessible via the footer of the Submissions tile.
     - `Upcoming`: Future milestones beyond the next one.
 - **Submission Integration**: Clicking a timeline row allows students to submit files for that specific assignment immediately.
 
-## 4. UI Philosophies
+## 4. Document Preview & File Viewer
+The platform features an integrated, high-fidelity document viewer to replace default browser "auto-download" behavior.
+
+- **Unified Modal**: All resource links and submission attachments trigger the `#fileViewerModal` defined in the base template.
+- **Supported Formats**:
+    - **PDFs & Images**: Rendered natively using browser engines for maximum clarity.
+    - **Office Docs**: Rendered via secure Google Docs Viewer integration (DOCX, XLSX, PPTX).
+    - **Fallbacks**: Unsupported files display a "Preview Unavailable" screen with a direct download bridge.
+- **Persistent Access**: A high-visibility "Download" button is pinned to the viewer header, ensuring users can always save files locally.
+
+## 5. UI Philosophies
 - **Aesthetics**: Uses `bg-dark-blue` surfaces with `primary-red` accents for a premium "Command Center" feel.
+- **Minimalist Branding**: Removed decorative branding elements (dots) to focus on functional clarity and content.
 - **Glassmorphism**: Subtle borders (`border-soft`) and high-contrast cards create depth.
 - **Micro-interactions**: Hover states (`transition-all`) provide tactile feedback for interactive elements.
 - **Zero-Refresh**: Most actions (Project updates, timeline filtering) are handled via AJAX/JS to maintain state.

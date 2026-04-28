@@ -64,3 +64,25 @@ For local production simulation or containerized cloud hosting:
 2.  **Run**: `docker-compose up -d`
 3.  **Logs**: `docker-compose logs -f web`
 4.  **Admin Check**: Visit `localhost:8000/dev-dashboard/`
+
+## 6. CI/CD & Automated Workflows
+The project uses **GitHub Actions** for continuous integration and operational health.
+
+### CI Pipeline (`ci.yml`)
+Runs automatically on every `push` or `pull_request` to the `main` branch.
+- **Environment**: Ubuntu-latest, Python 3.10.
+- **Checks**:
+    - **Linting**: Uses `flake8` for syntax/logical errors and `black` for code style enforcement.
+    - **Unit Tests**: Runs `pytest` to ensure core models and API endpoints remain stable.
+
+### Self-Healing Keep-Alive (`keep-alive.yml`)
+To mitigate the 15-minute inactivity sleep on the **Render Free Tier**:
+- **Schedule**: Every 10 minutes.
+- **Action**: Pings the live site URL to keep the instance warm and responsive for users.
+
+### Build Orchestration (`build.sh`)
+Standardizes the deployment sequence on Render:
+1.  Installs production dependencies.
+2.  Prepares static assets via `collectstatic`.
+3.  Runs `repair_prod_migrations` (Custom utility to resolve drift).
+4.  Applies database migrations.

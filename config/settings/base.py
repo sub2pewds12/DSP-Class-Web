@@ -146,12 +146,12 @@ EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
 EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'your-email@gmail.com')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = f"DSP Class Control <{EMAIL_HOST_USER}>"
+DEFAULT_FROM_EMAIL = f"DSP Class Web <{EMAIL_HOST_USER}>"
 
 # Unfold Premium UI Configuration
 UNFOLD = {
-    "SITE_TITLE": "DSP Class Control",
-    "SITE_HEADER": "DSP Admin",
+    "SITE_TITLE": "DSP Class Web",
+    "SITE_HEADER": "DSP Class Web Admin",
     "SITE_SYMBOL": "speed",
     "COLORS": {
         "primary": {

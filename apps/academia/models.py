@@ -58,6 +58,24 @@ class SubmissionFile(models.Model):
     file = models.FileField(upload_to='team_submissions/')
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
+    @property
+    def filename(self):
+        import os
+        return os.path.basename(self.file.name)
+
+    @property
+    def formatted_size(self):
+        try:
+            size = self.file.size
+            if size < 1024:
+                return f"{size} B"
+            elif size < 1024 * 1024:
+                return f"{round(size / 1024, 1)} KB"
+            else:
+                return f"{round(size / (1024 * 1024), 1)} MB"
+        except:
+            return "Unknown"
+
     def __str__(self):
         return f"File for {self.submission.title}"
 

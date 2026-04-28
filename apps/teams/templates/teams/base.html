@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DSP Project Registration</title>
+    <title>DSP Class Web</title>
     <!-- Premium Frameworks -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -25,8 +25,7 @@
     <nav class="navbar navbar-expand-lg navbar-crimson border-bottom py-3">
         <div class="container">
             <a class="navbar-brand fw-800 text-primary-red d-flex align-items-center gap-2" href="{% url 'gallery' %}">
-                <div class="brand-dot"></div>
-                Project Registration
+                DSP Class Web
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExample">
                 <span class="navbar-toggler-icon"></span>
@@ -40,9 +39,7 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'guide' %}">Guide</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="https://dspclassweb.statuspage.io/" target="_blank">Status</a>
-                    </li>
+
                     <!-- Theme Toggle in Nav -->
                     <li class="nav-item px-2">
                         <button class="nav-theme-toggle" id="theme-toggle-btn" type="button" title="Toggle Visual Mode">
@@ -123,8 +120,7 @@
             <div class="row g-4">
                 <div class="col-lg-4 text-center text-lg-start">
                     <div class="navbar-brand fw-800 text-primary-red d-flex align-items-center justify-content-center justify-content-lg-start gap-2 mb-3">
-                        <div class="brand-dot"></div>
-                        DSP Project Registration
+                        DSP Class Web
                     </div>
                     <p class="text-muted small">A specialized platform for the Digital Signal Processing course, facilitating team formation and project management with a focus on integrity and collaboration.</p>
                 </div>
@@ -133,7 +129,7 @@
                     <ul class="list-unstyled small">
                         <li class="mb-2"><a href="{% url 'gallery' %}" class="text-muted text-decoration-none hover-red">Project Gallery</a></li>
                         <li class="mb-2"><a href="{% url 'guide' %}" class="text-muted text-decoration-none hover-red">User Guide</a></li>
-                        <li class="mb-2"><a href="https://dspclassweb.statuspage.io/" target="_blank" class="text-muted text-decoration-none hover-red">System Status</a></li>
+
                     </ul>
                 </div>
                 <div class="col-6 col-lg-2 text-center text-lg-start">
@@ -161,7 +157,7 @@
             </div>
             <hr class="my-5 opacity-10">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-                <div class="text-muted small">Digital Signal Processing Class. All rights reserved.</div>
+                <div class="text-muted small">DSP Class Web. All rights reserved.</div>
                 <div class="d-flex gap-4">
                     <a href="#" class="text-muted small text-decoration-none hover-red">Privacy</a>
                     <a href="#" class="text-muted small text-decoration-none hover-red">Terms</a>
@@ -170,6 +166,39 @@
             </div>
         </div>
     </footer>
+
+    <!-- File Viewer Modal -->
+    <div class="modal fade" id="fileViewerModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-fullscreen p-lg-5">
+            <div class="modal-content border-0 rounded-0 rounded-lg-5 overflow-hidden shadow-2xl bg-dark">
+                <div class="modal-header border-0 bg-dark text-white py-3 px-4 d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-3 overflow-hidden">
+                        <div class="bg-primary-red p-2 rounded-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <i class="bi bi-file-earmark-text-fill text-white fs-5" id="viewer-icon"></i>
+                        </div>
+                        <div class="overflow-hidden">
+                            <h5 class="modal-title fw-bold text-truncate mb-0" id="fileViewerTitle">File Preview</h5>
+                            <span class="text-muted small" id="fileViewerSub" style="font-size: 0.7rem;">Document Viewer</span>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <a href="#" id="viewer-download-btn" target="_blank" class="btn btn-soft-light btn-sm rounded-pill px-3 fw-bold transition-all d-none d-sm-flex align-items-center gap-2">
+                            <i class="bi bi-cloud-download"></i> Download
+                        </a>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                </div>
+                <div class="modal-body p-0 bg-main d-flex align-items-center justify-content-center position-relative overflow-hidden" id="viewer-container" style="min-height: 400px; background-color: rgba(0,0,0,0.05);">
+                    <!-- Content will be injected here -->
+                </div>
+                <div class="modal-footer border-0 bg-dark py-2 px-4 d-sm-none">
+                    <a href="#" id="viewer-download-btn-mobile" target="_blank" class="btn btn-primary-red w-100 rounded-pill fw-bold py-2">
+                        <i class="bi bi-cloud-download me-2"></i> Download
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -293,6 +322,59 @@
                 }
                 throw error;
             }
+        }
+
+        function openFilePreview(url, title) {
+            const modalEl = document.getElementById('fileViewerModal');
+            const modal = new bootstrap.Modal(modalEl);
+            const container = document.getElementById('viewer-container');
+            const titleEl = document.getElementById('fileViewerTitle');
+            const downloadBtn = document.getElementById('viewer-download-btn');
+            const downloadBtnMobile = document.getElementById('viewer-download-btn-mobile');
+            const iconEl = document.getElementById('viewer-icon');
+            
+            titleEl.textContent = title;
+            downloadBtn.href = url;
+            downloadBtnMobile.href = url;
+            
+            // Set download attribute if possible (some browsers ignore for cross-domain)
+            downloadBtn.setAttribute('download', title);
+            downloadBtnMobile.setAttribute('download', title);
+            
+            container.innerHTML = '<div class="spinner-border text-primary-red" role="status"></div>';
+            
+            const extension = title.split('.').pop().toLowerCase() || url.split('.').pop().split('?')[0].toLowerCase();
+            
+            // Set icon based on extension
+            if (['pdf'].includes(extension)) iconEl.className = 'bi bi-file-pdf-fill text-white fs-5';
+            else if (['doc', 'docx'].includes(extension)) iconEl.className = 'bi bi-file-word-fill text-white fs-5';
+            else if (['xls', 'xlsx'].includes(extension)) iconEl.className = 'bi bi-file-excel-fill text-white fs-5';
+            else if (['jpg', 'jpeg', 'png', 'gif', 'svg'].includes(extension)) iconEl.className = 'bi bi-file-image-fill text-white fs-5';
+            else iconEl.className = 'bi bi-file-earmark-text-fill text-white fs-5';
+
+            setTimeout(() => {
+                if (['jpg', 'jpeg', 'png', 'gif', 'svg'].includes(extension)) {
+                    container.innerHTML = `<img src="${url}" class="img-fluid animate-fade-in" style="max-height: 90vh; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">`;
+                } else if (extension === 'pdf') {
+                    container.innerHTML = `<iframe src="${url}" width="100%" height="100%" style="border: none;"></iframe>`;
+                } else if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(extension)) {
+                    const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+                    container.innerHTML = `<iframe src="${googleViewerUrl}" width="100%" height="100%" style="border: none;"></iframe>`;
+                } else {
+                    container.innerHTML = `
+                        <div class="text-center p-5 animate-fade-up">
+                            <i class="bi bi-file-earmark-zip text-muted display-1 mb-4 opacity-50"></i>
+                            <h4 class="text-white fw-bold mb-3">Preview Not Available</h4>
+                            <p class="text-muted mb-4">This file type (.${extension.toUpperCase()}) cannot be previewed directly in the browser.</p>
+                            <a href="${url}" download="${title}" class="btn btn-primary-red btn-lg rounded-pill px-5 fw-bold transition-all hover-scale">
+                                <i class="bi bi-cloud-download me-2"></i> Download File
+                            </a>
+                        </div>
+                    `;
+                }
+            }, 300);
+            
+            modal.show();
         }
     </script>
 </body>

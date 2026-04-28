@@ -77,22 +77,35 @@
             </div>
 
             {% if next_deadline %}
-            <div class="submission-focus-card bg-dark-blue rounded-4 p-3 mt-3 text-white border border-soft shadow-inner">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div class="badge bg-red-soft text-primary-red tiny-text text-uppercase fw-800 ls-1 px-2 py-1">Next Up</div>
-                    <div class="text-muted small" id="main-countdown-subtle" data-deadline="{{ next_deadline.deadline|date:'c' }}">
-                        <i class="bi bi-clock me-1"></i>
-                        <span id="days">--</span>d <span id="hours">--</span>h <span id="minutes">--</span>m
+            <div class="submission-focus-card bg-dark-blue rounded-4 p-4 mt-3 text-white border border-soft shadow-sm d-flex flex-column gap-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="badge bg-red-soft text-primary-red tiny-text text-uppercase fw-800 ls-1 px-3 py-2 rounded-pill">Next Up</span>
+                    <div class="text-muted small fw-bold d-flex align-items-center gap-2" id="main-countdown-subtle" data-deadline="{{ next_deadline.deadline|date:'c' }}">
+                        <i class="bi bi-clock-history"></i>
+                        <span><span id="days">--</span>d <span id="hours">--</span>h <span id="minutes">--</span>m</span>
                     </div>
                 </div>
                 
-                <h5 class="fw-800 mb-1 text-truncate" title="{{ next_deadline.title }}">{{ next_deadline.title }}</h5>
-                <p class="tiny-text text-muted mb-3">Due {{ next_deadline.deadline|date:"M d, H:i" }}</p>
+                <div>
+                    <h4 class="fw-800 mb-1 text-truncate" title="{{ next_deadline.title }}">{{ next_deadline.title }}</h4>
+                    <div class="d-flex align-items-center gap-2 mt-2">
+                        <span class="small text-muted"><i class="bi bi-calendar-event me-1"></i> Due {{ next_deadline.deadline|date:"M d, H:i" }}</span>
+                        <span class="text-muted mx-1">•</span>
+                        {% if next_deadline.is_submitted %}
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1"><i class="bi bi-check-circle-fill me-1"></i> Submitted</span>
+                        {% else %}
+                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-1"><i class="bi bi-hourglass-split me-1"></i> Pending</span>
+                        {% endif %}
+                    </div>
+                </div>
 
-                <button class="btn btn-primary-red w-100 py-2 rounded-4 fw-bold d-flex align-items-center justify-content-center gap-2" 
+                <button class="btn btn-primary-red w-100 py-2 rounded-3 fw-bold d-flex align-items-center justify-content-center gap-2 mt-2 transition-all hover-scale" 
                         onclick="showSubmissionModal({{ next_deadline.id }})">
-                    <i class="bi bi-cloud-arrow-up-fill"></i>
-                    Submit Files
+                    {% if next_deadline.is_submitted %}
+                        <i class="bi bi-check2-all"></i> Turned in
+                    {% else %}
+                        <i class="bi bi-cloud-arrow-up-fill"></i> Submit
+                    {% endif %}
                 </button>
             </div>
             {% else %}
@@ -110,7 +123,7 @@
                 </div>
                 <div class="upcoming-deadlines-list">
                     {% for assign in compact_deadlines|slice:"1:4" %}
-                    <div class="deadline-item d-flex align-items-center gap-3 mb-2 p-2 rounded-3 transition-all hover-bg-light cursor-pointer" 
+                    <div class="deadline-item d-flex align-items-center gap-3 mb-2 p-2 rounded-3 transition-all hover-bg-light cursor-pointer position-relative" 
                          onclick="showSubmissionModal({{ assign.id }})">
                         <div class="date-badge-compact text-center {% if assign.deadline < now %}opacity-50{% endif %}" style="width: 40px; height: 40px; flex-shrink: 0;">
                             <div class="small fw-bold text-primary-red mb-0" style="line-height: 1;">{{ assign.deadline|date:"d" }}</div>
@@ -119,14 +132,20 @@
                         <div class="flex-grow-1 text-truncate">
                             <div class="small fw-bold text-main" style="font-size: 0.75rem;">{{ assign.title }}</div>
                             <div class="tiny-text text-muted" style="font-size: 0.65rem;">
-                                {% if assign.deadline < now %}
-                                <span class="text-danger">Passed</span> • {{ assign.deadline|date:"M d" }}
+                                {% if assign.is_submitted %}
+                                    <span class="text-success"><i class="bi bi-check2-all"></i> Turned in</span> • {{ assign.team_submission.submitted_at|date:"M d, H:i" }}
+                                {% elif assign.deadline < now %}
+                                    <span class="text-danger">Passed</span> • {{ assign.deadline|date:"M d" }}
                                 {% else %}
-                                {{ assign.deadline|date:"M d, H:i" }}
+                                    {{ assign.deadline|date:"M d, H:i" }}
                                 {% endif %}
                             </div>
                         </div>
-                        <i class="bi bi-chevron-right text-muted opacity-25 small"></i>
+                        {% if assign.is_submitted %}
+                            <i class="bi bi-check-circle-fill text-success small"></i>
+                        {% else %}
+                            <i class="bi bi-chevron-right text-muted opacity-25 small"></i>
+                        {% endif %}
                     </div>
                     {% endfor %}
                 </div>
@@ -134,15 +153,16 @@
             {% endif %}
 
             <div class="mt-auto pt-3 border-top border-soft">
-                <button class="btn btn-link btn-sm text-primary-red fw-bold text-decoration-none p-0 w-100 text-start d-flex justify-content-between align-items-center" 
-                        data-bs-toggle="modal" data-bs-target="#allDeadlinesModal">
-                    <span style="font-size: 0.75rem;">Academic Timeline</span>
+                <a class="btn btn-link btn-sm text-primary-red fw-bold text-decoration-none p-0 w-100 text-start d-flex justify-content-between align-items-center" 
+                   role="button" href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#allDeadlinesModal"
+                   style="cursor: pointer; position: relative; z-index: 5;">
+                    <span style="font-size: 0.75rem;">Assignment Timeline</span>
                     <i class="bi bi-arrow-right"></i>
-                </button>
+                </a>
             </div>
         </div>
 
-        <!-- Area: Project Portfolio (Main Info) -->
+        <!-- Area: Project Details (Main Info) -->
         <div class="bento-card span-2" tabindex="0">
             <div class="d-flex justify-content-between align-items-start mb-4">
                 <div class="project-info-ribbon flex-grow-1 me-3">
@@ -173,7 +193,7 @@
                                 {% endif %}
                             </div>
                             <div class="d-flex align-items-center gap-2">
-                                <span class="tiny-text text-muted text-uppercase ls-2 fw-800">Team Portfolio</span>
+                                <span class="tiny-text text-muted text-uppercase ls-2 fw-800">Project Details</span>
                                 <span class="text-primary-red fw-bold">/</span>
                                 <span class="text-main fw-bold" id="display-project-name" style="font-size: 0.95rem;">
                                     {{ team.project_name|default:"Awaiting project name..." }}
@@ -184,10 +204,40 @@
                 </div>
             </div>
 
-            <div class="project-description-box mb-4">
-                <p class="text-muted mb-0 fw-500" id="display-project-description" style="line-height: 1.8; font-size: 0.9rem;">
-                    {{ team.project_description|default:"Team members can update the project description using the form below." }}
-                </p>
+            <div class="row g-4 mb-4">
+                <div class="col-lg-8">
+                    <div class="project-description-box h-100">
+                        <div class="tiny-text text-muted text-uppercase ls-1 fw-bold mb-2">Description</div>
+                        <p class="text-muted mb-0 fw-500" id="display-project-description" style="line-height: 1.8; font-size: 0.9rem;">
+                            {{ team.project_description|default:"Team members can update the project description using the form below. Provide a clear overview of your project's goals and scope." }}
+                        </p>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="project-stats-grid h-100">
+                        <div class="stat-card p-3 rounded-4 bg-soft border border-soft mb-3">
+                            <div class="tiny-text text-muted text-uppercase ls-1 fw-bold mb-2">Project Status</div>
+                            <div class="d-flex align-items-center gap-2">
+                                {% if team.project_name and team.project_description %}
+                                <span class="status-dot status-online"></span>
+                                <span class="text-main fw-bold small">Active & Defined</span>
+                                {% else %}
+                                <span class="status-dot pulse-red"></span>
+                                <span class="text-main fw-bold small">Awaiting Details</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="stat-card p-3 rounded-4 bg-soft border border-soft">
+                            <div class="tiny-text text-muted text-uppercase ls-1 fw-bold mb-2">Team Formation</div>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <span class="text-main fw-bold small">{{ team.members.count }} Members</span>
+                                <div class="progress flex-grow-1 mx-3" style="height: 4px; background: rgba(255,255,255,0.05);">
+                                    <div class="progress-bar bg-primary-red" style="width: {% widthratio team.members.count 5 100 %}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {% if not is_read_only %}
@@ -257,43 +307,48 @@
         <!-- Area: Team Members & Roles -->
         <div class="bento-card span-2" tabindex="0">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h5 class="mb-0 fw-bold"><i class="bi bi-people text-primary-red"></i> Operational Team</h5>
+                <h5 class="mb-0 fw-bold"><i class="bi bi-people text-primary-red"></i> Team Members</h5>
                 <div class="badge bg-red-soft text-primary-red rounded-pill px-3">{{ team.members.count }} Members</div>
             </div>
             <div class="row g-3">
                 {% for member in team.members.all %}
                 <div class="col-md-6">
-                    <div class="d-flex align-items-center gap-3 mb-3 member-card-v2 p-2 rounded-4"
+                    <div class="d-flex align-items-center gap-3 mb-3 member-card-v2 p-3 rounded-4 bg-soft-hover"
                         onclick="showPeerProfile({{ member.user.id }})"
                         title="Last active: {{ member.last_active|default:'Never'|date:'M d, H:i' }}">
                         <div class="position-relative">
                             {% if member.user.avatar %}
-                            <img src="{{ member.user.avatar.url }}" class="rounded-circle"
-                                style="width: 32px; height: 32px; object-fit: cover; border: 2px solid var(--glass-border);">
+                            <img src="{{ member.user.avatar.url }}" class="rounded-circle shadow-sm"
+                                style="width: 42px; height: 42px; object-fit: cover; border: 2px solid var(--glass-border);">
                             {% else %}
-                            <div class="avatar-xs rounded-circle bg-red-soft text-primary-red fw-bold d-flex align-items-center justify-content-center"
-                                style="width: 32px; height: 32px; font-size: 0.8rem;">
+                            <div class="avatar-sm rounded-circle bg-red-soft text-primary-red fw-bold d-flex align-items-center justify-content-center border border-soft shadow-sm"
+                                style="width: 42px; height: 42px; font-size: 1rem;">
                                 {{ member.user.get_full_name|slice:":1" }}
                             </div>
                             {% endif %}
-                            <!-- Online Status Indicator -->
                             <div class="status-dot position-absolute bottom-0 end-0 {% if member.is_online %}status-online{% else %}status-offline{% endif %}"
-                                style="border: 2px solid var(--bg-surface);"></div>
+                                style="border: 2px solid var(--bg-surface); width: 10px; height: 10px;"></div>
                         </div>
                         <div class="text-truncate flex-grow-1">
-                            <div class="text-main fw-600 small mb-0">
-                                {{ member.user.get_full_name }}
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <div class="text-main fw-700 small text-truncate">
+                                    {{ member.user.get_full_name }}
+                                </div>
                                 {% if team.leader == member %}
-                                <i class="bi bi-star-fill text-warning ms-1" style="font-size: 0.6rem;"
-                                    title="Team Leader"></i>
+                                <span class="badge bg-warning text-dark tiny-text fw-800 px-2">LEADER</span>
                                 {% endif %}
                             </div>
-                            <div class="d-flex flex-wrap gap-1 mt-1">
-                                {% for r in member.role_data %}
-                                <div class="glass-badge" title="{{ r.label }}">
-                                    <i class="bi bi-{{ r.icon }}"></i>
-                                </div>
-                                {% endfor %}
+                            <div class="d-flex flex-wrap gap-1">
+                                {% if member.role_data %}
+                                    {% for r in member.role_data %}
+                                    <div class="glass-badge py-1" title="{{ r.label }}">
+                                        <i class="bi bi-{{ r.icon }}"></i>
+                                        <span class="d-none d-xl-inline" style="font-size: 0.6rem; margin-left: 2px;">{{ r.label }}</span>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="tiny-text text-muted">No roles assigned</span>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -308,7 +363,7 @@
             <div class="resource-list scroll-hide" style="max-height: 180px; overflow-y: auto;">
                 {% for doc in documents %}
                 {% if doc.file %}
-                <a href="{{ doc.file.url }}" target="_blank"
+                <a href="javascript:void(0)" onclick="openFilePreview('{{ doc.file.url }}', '{{ doc.title }}')"
                     class="d-flex align-items-center gap-3 p-2 rounded-3 hover-bg-light transition-all text-decoration-none mb-1">
                     <div class="bg-soft text-primary-red rounded p-2">
                         <i class="bi bi-file-earmark-text small"></i>
@@ -384,36 +439,97 @@
 <div class="modal fade" id="submitModal{{ assign.id }}" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-5 overflow-hidden">
-            <form onsubmit="event.preventDefault(); submitAssignment({{ assign.id }});">
-                <div class="modal-header border-0 bg-dark text-white py-4">
-                    <h5 class="modal-title fw-bold">Submit Assignment: {{ assign.title }}</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+            <form method="POST" action="{% url 'dashboard' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="assignment_id" value="{{ assign.id }}">
+                <input type="hidden" name="upload_assignment" value="1">
+                <div class="modal-header border-0 bg-dark text-white py-4 position-relative">
+                    <div class="position-absolute top-0 start-0 w-100 h-100 opacity-25" style="background: radial-gradient(circle at top right, var(--primary-red), transparent);"></div>
+                    <div class="position-relative">
+                        <h5 class="modal-title fw-bold">Submit: {{ assign.title }}</h5>
+                        {% if assign.is_submitted %}
+                        <div class="small text-muted mt-1 d-flex align-items-center gap-1" style="font-size: 0.75rem; opacity: 0.8;">
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                            Turned in {{ assign.team_submission.submitted_at|date:"D M j, Y" }} at {{ assign.team_submission.submitted_at|time:"g:i A" }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white position-relative" data-bs-dismiss="modal"
                         aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-4">
+                <div class="modal-body p-5 bg-main">
                     <div class="mb-4">
-                        <label class="form-label small fw-bold text-uppercase text-muted">Submission Title</label>
+                        <label class="form-label small fw-bold text-uppercase text-muted ls-1">Submission Title</label>
                         <input type="text" name="title"
-                            class="form-control rounded-4 bg-soft text-main border-0 shadow-sm"
-                            placeholder="e.g. Iteration 1 Report" required>
+                            class="form-control rounded-3 bg-dark text-white border border-soft shadow-sm py-2"
+                            placeholder="e.g. Iteration 1 Report" required
+                            value="{{ assign.team_submission.title|default:'' }}">
                     </div>
+
+                    {% if assign.is_submitted and assign.team_submission.files.all %}
+                        <div class="mb-4 animate-fade-up" style="animation-delay: 0.1s;">
+                            <label class="form-label small fw-bold text-uppercase text-muted ls-1 mb-3">Currently Submitted Files</label>
+                            <div class="existing-files-list w-100">
+                                {% for sub_file in assign.team_submission.files.all %}
+                                    <div class="d-flex align-items-center justify-content-between p-3 mb-2 bg-dark-blue border border-soft rounded-4 shadow-sm transition-all hover-border-primary">
+                                        <div class="d-flex align-items-center flex-grow-1">
+                                            <div class="bg-soft rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; min-width: 40px;">
+                                                <i class="bi bi-file-earmark-check fs-5 text-success"></i>
+                                            </div>
+                                            <div class="d-flex flex-column" style="min-width: 0; flex: 1;">
+                                                <span class="text-white fw-bold small" style="word-break: break-word; line-height: 1.2;">{{ sub_file.filename }}</span>
+                                                <span class="text-muted tiny-text">{{ sub_file.formatted_size }} • Uploaded {{ sub_file.uploaded_at|timesince }} ago</span>
+                                            </div>
+                                        </div>
+                                        <a href="javascript:void(0)" onclick="openFilePreview('{{ sub_file.file.url }}', '{{ sub_file.filename }}')" class="btn btn-sm btn-link text-primary-red p-0 ms-3 transition-all hover-scale-sm" title="View file">
+                                            <i class="bi bi-eye fs-5"></i>
+                                        </a>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <div class="text-muted tiny-text mt-2 italic">
+                                <i class="bi bi-info-circle me-1"></i> These files are already saved. You can upload more below to add them to your submission.
+                            </div>
+                        </div>
+                        <hr class="border-soft my-4">
+                    {% endif %}
+
                     <div class="mb-4">
-                        <label class="form-label small fw-bold text-uppercase text-muted">Attachments (Docs, Images,
-                            PNG, ZIP...)</label>
-                        <input type="file" name="files"
-                            class="form-control rounded-4 bg-soft text-main border-0 shadow-sm" multiple required>
-                        <div class="form-text small opacity-75">You can select up to 10 files at once. Each file must be
-                            a document or image.</div>
-                    </div>
-                    <div class="p-3 bg-red-soft rounded-4 small text-danger">
-                        <i class="bi bi-info-circle-fill me-2"></i> Note: New uploads will replace **all** previously
-                        submitted files for this assignment.
+                        <label class="form-label small fw-bold text-uppercase text-muted ls-1">Upload New Files</label>
+                        
+                        <!-- Modern Drop Zone -->
+                        <div class="drop-zone bg-dark border border-soft rounded-4 p-5 text-center cursor-pointer transition-all hover-border-primary position-relative overflow-hidden" id="dropZone{{ assign.id }}" onclick="document.getElementById('fileInput{{ assign.id }}').click()">
+                            <div class="drop-zone-content position-relative z-1">
+                                <div class="icon-circle bg-dark-blue rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow-sm" style="width: 64px; height: 64px; border: 1px solid rgba(255,255,255,0.05);">
+                                    <i class="bi bi-cloud-arrow-up fs-3 text-primary-red"></i>
+                                </div>
+                                <h6 class="fw-bold text-white mb-2">Drag & drop files here</h6>
+                                <p class="small text-muted mb-0 px-4">Support for Documents, Code, Images, and Archives.</p>
+                                <div class="mt-3">
+                                    <span class="badge bg-soft text-light border border-soft px-3 py-2 rounded-pill">Browse Files</span>
+                                </div>
+                            </div>
+                            <input type="file" id="fileInput{{ assign.id }}" name="files" class="d-none" multiple required
+                                   accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.rtf,.zip,.rar,.7z,.tar,.gz,.jpg,.jpeg,.png,.gif,.svg,.py,.ipynb,.m,.cpp,.c,.h,.java,.html,.css,.js,.json"
+                                   onchange="handleFileSelect(this, {{ assign.id }})">
+                        </div>
+
+                        <!-- File Preview List -->
+                        <div id="fileList{{ assign.id }}" class="file-preview-list w-100 mt-4">
+                            <!-- JS will inject file items here -->
+                        </div>
+
+                        <div class="form-text small text-muted mt-3 d-flex align-items-start gap-2">
+                            <i class="bi bi-info-circle text-primary-red mt-1"></i>
+                            <div><strong>Note:</strong> Maximum 10 files allowed. New uploads will be appended to your existing submission.</div>
+                        </div>
                     </div>
                 </div>
-                <div class="modal-footer border-0 p-4">
+                <div class="modal-footer border-0 p-4 bg-main">
                     <button type="submit"
-                        class="btn btn-primary-red w-100 py-3 rounded-pill shadow submit-btn-loading">Upload Project
-                        File</button>
+                        class="btn btn-primary-red w-100 py-2 rounded-3 shadow-sm fw-bold transition-all hover-scale submit-btn-loading">
+                        <i class="bi bi-check-all me-2"></i> {% if assign.is_submitted %}Update Submission{% else %}Submit{% endif %}
+                    </button>
                 </div>
             </form>
         </div>
@@ -1034,7 +1150,7 @@
                         <i class="bi bi-calendar-event h4 mb-0"></i>
                     </div>
                     <div>
-                        <h5 class="modal-title fw-800 mb-0">Academic Timeline</h5>
+                        <h5 class="modal-title fw-800 mb-0">Assignment Timeline</h5>
                         <p class="small opacity-75 mb-0">All project milestones and submissions</p>
                     </div>
                 </div>
@@ -1086,6 +1202,18 @@
 </div>
 
 <script>
+    // Function to show the submission modal for a specific assignment
+    function showSubmissionModal(assignmentId) {
+        const modalEl = document.getElementById(`submitModal${assignmentId}`);
+        if (modalEl) {
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        } else {
+            console.error(`[Modal Error] Modal for assignment ${assignmentId} not found.`);
+            showToast('Error', 'Submission modal not found', 'error');
+        }
+    }
+
     // Bridge function to handle submission modals from within the timeline modal
     function openSubmitFromModal(assignmentId) {
         // 1. Hide the timeline modal
@@ -1119,6 +1247,129 @@
             }
         });
     }
+
+    /* --- Modern Submission System JS --- */
+    const assignmentFiles = {};
+
+    function handleFileSelect(input, assignId) {
+        const files = Array.from(input.files);
+        if (!assignmentFiles[assignId]) assignmentFiles[assignId] = [];
+        
+        files.forEach(file => {
+            if (assignmentFiles[assignId].length < 10) {
+                assignmentFiles[assignId].push(file);
+            }
+        });
+        
+        updateFilePreview(assignId);
+        syncFileInput(assignId);
+    }
+
+    function updateFilePreview(assignId) {
+        const list = document.getElementById(`fileList${assignId}`);
+        if (!list) return;
+        list.innerHTML = '';
+        
+        assignmentFiles[assignId].forEach((file, index) => {
+            const item = document.createElement('div');
+            item.className = 'file-item w-100';
+            
+            let icon = 'bi-file-earmark';
+            const ext = file.name.split('.').pop().toLowerCase();
+            const isImage = ['png', 'jpg', 'jpeg', 'gif', 'svg'].includes(ext);
+            
+            if (['pdf'].includes(ext)) icon = 'bi-file-earmark-pdf';
+            else if (['doc', 'docx'].includes(ext)) icon = 'bi-file-earmark-word';
+            else if (isImage) icon = 'bi-file-earmark-image';
+            else if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) icon = 'bi-file-earmark-zip';
+            else if (['py', 'js', 'cpp', 'c', 'html', 'css', 'json'].includes(ext)) icon = 'bi-file-earmark-code';
+            
+            const sizeInMB = file.size / (1024 * 1024);
+            const sizeStr = sizeInMB < 0.1 ? (file.size / 1024).toFixed(1) + ' KB' : sizeInMB.toFixed(2) + ' MB';
+            
+            item.innerHTML = `
+                <div class="d-flex align-items-start justify-content-between p-3 mb-2 bg-dark border border-soft rounded-4 shadow-sm transition-all hover-border-primary hover-scale-sm w-100">
+                    <div class="d-flex align-items-center w-100 pe-3 overflow-hidden">
+                        <div class="file-preview-thumbnail bg-dark-blue rounded-3 d-flex align-items-center justify-content-center me-3" 
+                             style="width: 48px; height: 48px; min-width: 48px; border: 1px solid rgba(255,255,255,0.05); overflow: hidden;">
+                            <i class="bi ${icon} fs-4 text-primary-red"></i>
+                        </div>
+                        <div class="d-flex flex-column" style="min-width: 0; flex: 1;">
+                            <span class="text-white fw-bold small mb-1" style="word-break: break-word; line-height: 1.2;">${file.name}</span>
+                            <span class="text-muted tiny-text">${sizeStr}</span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-link text-muted hover-text-danger p-0 flex-shrink-0 transition-all mt-1" onclick="removeFile(${assignId}, ${index})" title="Remove file">
+                        <i class="bi bi-x-circle-fill fs-5"></i>
+                    </button>
+                </div>
+            `;
+            
+            // Async Image Preview
+            if (isImage) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const thumb = item.querySelector('.file-preview-thumbnail');
+                    if (thumb) {
+                        thumb.innerHTML = `<img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover;">`;
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+            
+            list.appendChild(item);
+        });
+    }
+
+    function removeFile(assignId, index) {
+        assignmentFiles[assignId].splice(index, 1);
+        updateFilePreview(assignId);
+        syncFileInput(assignId);
+    }
+
+    function syncFileInput(assignId) {
+        const input = document.getElementById(`fileInput${assignId}`);
+        if (!input) return;
+        const dataTransfer = new DataTransfer();
+        assignmentFiles[assignId].forEach(file => dataTransfer.items.add(file));
+        input.files = dataTransfer.files;
+    }
+
+    function initSubmissionDragAndDrop() {
+        const dropZones = document.querySelectorAll('.drop-zone');
+        dropZones.forEach(zone => {
+            const assignId = zone.id.replace('dropZone', '');
+            
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                zone.addEventListener(eventName, e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, false);
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                zone.addEventListener(eventName, () => zone.classList.add('drag-over'), false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                zone.addEventListener(eventName, () => zone.classList.remove('drag-over'), false);
+            });
+
+            zone.addEventListener('drop', e => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                const input = document.getElementById(`fileInput${assignId}`);
+                if (input) {
+                    const manualFiles = new DataTransfer();
+                    Array.from(files).forEach(f => manualFiles.items.add(f));
+                    input.files = manualFiles.files;
+                    handleFileSelect(input, assignId);
+                }
+            }, false);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', initSubmissionDragAndDrop);
 </script>
 
 {% endblock %}

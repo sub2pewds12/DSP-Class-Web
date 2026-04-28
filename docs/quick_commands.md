@@ -58,13 +58,16 @@ A one-page cheat sheet for common commands and essential links.
 | **Seed Test Data** | `.\.venv\Scripts\python.exe manage.py seed_dsp` |
 | **Clear Test Data** | `.\.venv\Scripts\python.exe manage.py seed_dsp --clear` |
 
-### Testing & Verification
+### Testing & Verification (CI-Aligned)
 | Action | Command |
 | :--- | :--- |
-| **Run Tests** | `.\.venv\Scripts\python.exe manage.py test teams` |
-| **Run Verbose Tests** | `.\.venv\Scripts\python.exe manage.py test teams -v 2` |
-| **Health Check** | `.\.venv\Scripts\python.exe manage.py check` |
-| **Collect Static** | `.\.venv\Scripts\python.exe manage.py collectstatic --noinput` |
+| **Run Unit Tests** | `pytest` |
+| **Coverage Report** | `pytest --cov=apps` |
+| **Linting (Logic)** | `flake8 .` |
+| **Formatting Check** | `black . --check` |
+| **Auto-Format Code** | `black .` |
+| **Django Check** | `python manage.py check` |
+| **Static Preparation** | `python manage.py collectstatic --noinput` |
 
 ---
 

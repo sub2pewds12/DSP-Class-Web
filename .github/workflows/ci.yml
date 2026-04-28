@@ -1,0 +1,46 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    
+    env:
+      SECRET_KEY: "django-insecure-ci-test-key-for-github-actions"
+      DATABASE_URL: "sqlite:///db.sqlite3"
+      CLOUDINARY_CLOUD_NAME: "test"
+      CLOUDINARY_API_KEY: "test"
+      CLOUDINARY_API_SECRET: "test"
+      ALLOWED_HOSTS: "localhost,127.0.0.1"
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        cache: 'pip'
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+
+    - name: Code Quality (Linting)
+      run: |
+        # Stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Black check (formatting)
+        black . --check
+
+    - name: Run Unit Tests
+      run: |
+        pytest

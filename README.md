@@ -35,6 +35,8 @@ A comprehensive, production-ready platform designed to manage student team regis
 - **Submission-First Workflow**: Rebranded assignment tracking that prioritizes active uploads with subtle real-time countdown badges and quick-action buttons.
 - **Integrated Academic Timeline**: Full-screen searchable timeline for tracking all project milestones, including passed assignments, with direct submission bridges.
 - **Operational Team Visibility**: Expanded team member management with role-specific iconography and detailed profile accessibility.
+- **In-Browser Document Preview**: High-fidelity file viewer for PDFs, images, and Office documents (DOCX, XLSX, PPTX) integrated directly into the dashboard via a unified modal.
+- **Session-Hardened API**: Global `django_auth` guard enforced on all academic endpoints to prevent unauthorized access and improve system stability.
 - **Dynamic Project Portfolio**: Tightly integrated project detail management allowing teams to update their mission and scope directly from the primary dashboard.
 - **Seed Engine**: Custom `seed_dsp` command for surgical test data management.
 

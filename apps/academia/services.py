@@ -28,41 +28,61 @@ class SubmissionService:
             
         team = user.student_profile.team
         
+        # File type validation
+        allowed_extensions = [
+            '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.csv', '.rtf',
+            '.zip', '.rar', '.7z', '.tar', '.gz',
+            '.jpg', '.jpeg', '.png', '.gif', '.svg',
+            '.py', '.ipynb', '.m', '.cpp', '.c', '.h', '.java', '.html', '.css', '.js', '.json'
+        ]
+        import os
+        for f in files:
+            ext = os.path.splitext(f.name)[1].lower()
+            if ext not in allowed_extensions:
+                raise ValueError(f"File type '{ext}' is not supported. Allowed types are: {', '.join(allowed_extensions)}")
+        
         with transaction.atomic():
-            # Enforcement: New submissions replace ALL previous files for this assignment
+            # Append Logic: Find existing submission or create a new one
             old_subs = TeamSubmission.objects.filter(team=team, assignment=assignment)
             if old_subs.exists():
+                submission = old_subs.first()
+                # Update metadata for the new append action
+                from django.utils import timezone
+                submission.title = title
+                submission.submitted_by = user
+                submission.submitted_at = timezone.now()
+                submission.save()
+                
                 AuditService.log_event(
-                    action="SUBMISSION_OVERWRITE",
+                    action="SUBMISSION_APPEND",
                     target_type="Assignment",
                     target_id=str(assignment.id),
-                    description=f"Team '{team.name}' updated their submission for '{assignment.title}'. Old records purged.",
-                    metadata={"team": team.name, "assignment": assignment.title}
+                    description=f"Team '{team.name}' appended files to their submission for '{assignment.title}'.",
+                    metadata={"team": team.name, "assignment": assignment.title, "new_files": len(files)}
                 )
-            old_subs.delete()
-            
-            submission = TeamSubmission.objects.create(
-                team=team,
-                assignment=assignment,
-                title=title,
-                submitted_by=user
-            )
+            else:
+                submission = TeamSubmission.objects.create(
+                    team=team,
+                    assignment=assignment,
+                    title=title,
+                    submitted_by=user
+                )
+                
+                AuditService.log_event(
+                    action="SUBMISSION_CREATE",
+                    target_type="Assignment",
+                    target_id=str(assignment.id),
+                    description=f"Team '{team.name}' created a new submission for '{assignment.title}'.",
+                    metadata={"team_id": team.id, "files_count": len(files)}
+                )
             
             for f in files:
                 SubmissionFile.objects.create(submission=submission, file=f)
             
-            # Audit the creation
+            # Audit the deadline status
             status = "on time"
             if submission.submitted_at and assignment.deadline and submission.submitted_at > assignment.deadline:
                 status = "LATE"
-                
-            AuditService.log_event(
-                action="SUBMISSION_CREATE",
-                target_type="Assignment",
-                target_id=str(assignment.id),
-                description=f"Team '{team.name}' submitted files for '{assignment.title}' ({status}).",
-                metadata={"team_id": team.id, "files_count": len(files), "status": status}
-            )
                 
         # Invalidate dashboard caches
         cache.delete_many(["dashboard_teacher", "dashboard_students"])
@@ -344,11 +364,12 @@ class AcademiaService:
                 Q(actor_id__in=team_member_ids) | Q(metadata__team_id=team.id)
             ).select_related('actor').order_by('-timestamp')[:10]
 
-            # Attach team-specific submissions
-            team_subs = team.submissions.all().order_by('-submitted_at')
+            # Attach team-specific submissions with their files
+            team_subs = team.submissions.prefetch_related('files').all().order_by('-submitted_at')
             for a in assignments:
                 matching_sub = next((s for s in team_subs if s.assignment_id == a.id), None)
                 a.team_submission = matching_sub
+                a.is_submitted = matching_sub is not None
 
             # NEW: Enrichment: Member Status & Roles
             from django.db.models import Max

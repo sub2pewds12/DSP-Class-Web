@@ -11,7 +11,7 @@ from apps.academia.models import ClassDocument, TeamSubmission, Assignment
 User = get_user_model()
 
 class Command(BaseCommand):
-    help = 'Populates or clears the DSP project registration database'
+    help = 'Populates or clears the DSP Class Web database'
 
     def add_arguments(self, parser):
         parser.add_argument('--clear', action='store_true', help='Clear all data instead of populating')
